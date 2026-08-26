@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Trạm Y Tế Xã Mộ Đức - Cổng Thông Tin & Quản Lý PWA</title>
     
+    <!-- Link PWA Manifest File -->
+    <link rel="manifest" href="manifest.json">
+    
     <!-- PWA Primary Meta Tags -->
     <meta name="theme-color" content="#0284c7">
     <meta name="description" content="Hệ thống quản lý PWA tích hợp Lịch trực, Bảng chấm công, Lịch khám bệnh, Lịch làm việc Ban Giám đốc và Nghỉ phép tại Trạm Y Tế Xã Mộ Đức">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="TYT Mộ Đức">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3063/3063176.png">
     
     <!-- Icons and Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -102,9 +106,13 @@
 
                 <!-- Right Quick Utilities -->
                 <div class="flex items-center space-x-2 sm:space-x-3">
+                    <button onclick="installPWA()" class="inline-flex items-center space-x-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-300 text-xs font-medium px-3 py-2 rounded-lg transition shadow-sm">
+                        <i class="fa-solid fa-mobile-screen-button text-sky-600"></i>
+                        <span class="hidden md:inline">Cài App PWA</span>
+                    </button>
                     <button onclick="openSheetModal()" class="inline-flex items-center space-x-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-medium px-3 py-2 rounded-lg transition shadow-sm">
                         <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                        <span class="hidden md:inline">Cấu Hình Google Sheet</span>
+                        <span class="hidden md:inline">Cấu Hình Sheet</span>
                     </button>
                     <a href="tel:02553888115" class="inline-flex items-center space-x-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow-sm">
                         <i class="fa-solid fa-phone-volume animate-bounce"></i>
@@ -158,7 +166,7 @@
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
                             <span class="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full border border-white/30 backdrop-blur-md">
-                                Center Command Center • Thế Hệ Mới
+                                Command Center • PWA Mobile App
                             </span>
                             <h2 class="text-2xl sm:text-3xl font-bold mt-2">Tổng Quan Hoạt Động Y Tế Xã Mộ Đức</h2>
                             <p class="text-sky-100 text-sm mt-1 max-w-2xl">
@@ -218,7 +226,7 @@
                         <span class="text-xs font-medium">Tiêm Chủng</span>
                         <i class="fa-solid fa-syringe text-rose-600"></i>
                     </div>
-                    <p id="kpiVaccineDrive" class="text-2xl font-black text-rose-600">25/08</p>
+                    <p id="kpiVaccineDrive" class="text-2xl font-black text-rose-600">28/08</p>
                     <p class="text-[11px] text-slate-500 mt-1">TCMR Trẻ Em</p>
                 </div>
 
@@ -250,7 +258,7 @@
                             <div class="p-3.5 bg-red-50 border-l-4 border-red-500 rounded-r-xl">
                                 <div class="flex justify-between items-start">
                                     <span class="text-xs font-bold text-red-800 bg-red-100 px-2 py-0.5 rounded">KHẨN • DỊCH BỆNH</span>
-                                    <span class="text-[11px] text-slate-500">24/08/2026</span>
+                                    <span class="text-[11px] text-slate-500">26/08/2026</span>
                                 </div>
                                 <h4 class="font-bold text-slate-800 text-sm mt-1">Tăng cường phòng chống Sốt xuất huyết & Tay chân miệng</h4>
                                 <p class="text-xs text-slate-600 mt-1">Yêu cầu 04 điểm trạm chuẩn bị đầy đủ cơ số thuốc, hóa chất phun diệt muỗi và phân công trực 24/24 tiếp nhận ca bệnh.</p>
@@ -259,7 +267,7 @@
                             <div class="p-3.5 bg-sky-50 border-l-4 border-sky-500 rounded-r-xl">
                                 <div class="flex justify-between items-start">
                                     <span class="text-xs font-bold text-sky-800 bg-sky-100 px-2 py-0.5 rounded">TIÊM CHỦNG</span>
-                                    <span class="text-[11px] text-slate-500">22/08/2026</span>
+                                    <span class="text-[11px] text-slate-500">25/08/2026</span>
                                 </div>
                                 <h4 class="font-bold text-slate-800 text-sm mt-1">Đợt Tiêm Chủng Mở Rộng Tháng 8/2026</h4>
                                 <p class="text-xs text-slate-600 mt-1">Thực hiện tiêm vắc xin 5 trong 1 và Sởi - Rubella tại Điểm Trạm Chính Đức Tân và Điểm số 2 Đức Hòa vào ngày 28/08/2026.</p>
@@ -268,7 +276,7 @@
                             <div class="p-3.5 bg-amber-50 border-l-4 border-amber-500 rounded-r-xl">
                                 <div class="flex justify-between items-start">
                                     <span class="text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">HÀNH CHÍNH</span>
-                                    <span class="text-[11px] text-slate-500">20/08/2026</span>
+                                    <span class="text-[11px] text-slate-500">24/08/2026</span>
                                 </div>
                                 <h4 class="font-bold text-slate-800 text-sm mt-1">Đăng ký lịch nghỉ phép & nghỉ bù Tháng 9/2026</h4>
                                 <p class="text-xs text-slate-600 mt-1">Cán bộ nhân viên gửi đơn trực tuyến trước ngày 28/08/2026 để Ban Giám đốc duyệt phân ca trực Lễ 2/9.</p>
@@ -867,9 +875,9 @@ function doPost(e) {
 
         // INITIAL EXECUTIVE SCHEDULE
         const INITIAL_EXECUTIVE_DATA = [
-            { time: "25/08/2026 (08h00)", leader: "BS. Phạm Minh Đức", topic: "Họp Giao Ban Công Tác Y Tế Tháng 8 với UBND Xã", location: "UBND Xã Mộ Đức", participants: "UBND Xã, Ban Giám Đốc", status: "Chờ diễn ra" },
-            { time: "26/08/2026 (09h00)", leader: "BS. CKI. Nguyễn Văn Thuyên", topic: "Kiểm tra công tác Cấp cứu & Kho Thuốc tại Điểm Số 2", location: "Điểm Y Tế Số 2 (Đức Hòa)", participants: "ĐD Trúc, YS Phương", status: "Đã xếp lịch" },
-            { time: "27/08/2026 (14h00)", leader: "BS. Lê Văn Phu", topic: "Giám sát Đợt Tiêm Chủng Mở Rộng Trẻ Em", location: "Điểm Trạm Chính (Đức Tân)", participants: "Tổ Tiêm Chủng", status: "Đã xếp lịch" }
+            { time: "26/08/2026 (08h00)", leader: "BS. Phạm Minh Đức", topic: "Họp Giao Ban Công Tác Y Tế Tháng 8 với UBND Xã", location: "UBND Xã Mộ Đức", participants: "UBND Xã, Ban Giám Đốc", status: "Chờ diễn ra" },
+            { time: "27/08/2026 (09h00)", leader: "BS. CKI. Nguyễn Văn Thuyên", topic: "Kiểm tra công tác Cấp cứu & Kho Thuốc tại Điểm Số 2", location: "Điểm Y Tế Số 2 (Đức Hòa)", participants: "ĐD Trúc, YS Phương", status: "Đã xếp lịch" },
+            { time: "28/08/2026 (14h00)", leader: "BS. Lê Văn Phu", topic: "Giám sát Đợt Tiêm Chủng Mở Rộng Trẻ Em", location: "Điểm Trạm Chính (Đức Tân)", participants: "Tổ Tiêm Chủng", status: "Đã xếp lịch" }
         ];
 
         // INITIAL TIMECARD DATA
@@ -1082,35 +1090,35 @@ function doPost(e) {
             const container = document.getElementById('dashOnDutyCards');
             if (!container) return;
             
-            const todayData = INITIAL_DUTY_DATA[0]; // Sample today's schedule
+            const todayData = INITIAL_DUTY_DATA[10]; // Today: 26/08/2026
             container.innerHTML = `
                 <div class="p-3 bg-sky-50 rounded-xl border border-sky-200 flex justify-between items-center">
                     <div>
                         <span class="text-[10px] font-bold text-sky-800 uppercase">Điểm Trạm Chính (Đức Tân)</span>
                         <p class="font-extrabold text-slate-900 text-sm mt-0.5">${todayData.ducTan}</p>
                     </div>
-                    <span class="text-xs bg-sky-600 text-white font-bold px-2.5 py-1 rounded-lg">Trực Đêm</span>
+                    <span class="text-xs bg-sky-600 text-white font-bold px-2.5 py-1 rounded-lg">Trực 24/24</span>
                 </div>
                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
                     <div>
                         <span class="text-[10px] font-bold text-slate-600 uppercase">Điểm Số 1 (Mộ Đức)</span>
                         <p class="font-extrabold text-slate-900 text-sm mt-0.5">${todayData.moDuc}</p>
                     </div>
-                    <span class="text-xs bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg">Trực Đêm</span>
+                    <span class="text-xs bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg">Trực 24/24</span>
                 </div>
                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
                     <div>
                         <span class="text-[10px] font-bold text-slate-600 uppercase">Điểm Số 2 (Đức Hòa)</span>
                         <p class="font-extrabold text-slate-900 text-sm mt-0.5">${todayData.ducHoa}</p>
                     </div>
-                    <span class="text-xs bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg">Trực Đêm</span>
+                    <span class="text-xs bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg">Trực 24/24</span>
                 </div>
                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
                     <div>
                         <span class="text-[10px] font-bold text-slate-600 uppercase">Điểm Số 3 (Đức Phú)</span>
                         <p class="font-extrabold text-slate-900 text-sm mt-0.5">${todayData.ducPhu}</p>
                     </div>
-                    <span class="text-xs bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg">Trực Đêm</span>
+                    <span class="text-xs bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg">Trực 24/24</span>
                 </div>
             `;
         }
@@ -1268,6 +1276,8 @@ function doPost(e) {
                     }
                     deferredPrompt = null;
                 });
+            } else {
+                showToast('Để cài PWA trên iPhone/Safari: Bấm Chia Sẻ -> Thêm vào Màn hình chính', 'info');
             }
         }
 
@@ -1280,7 +1290,7 @@ function doPost(e) {
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'tyt-moduc-pwa-v1';
+                    const CACHE_NAME = 'tyt-moduc-pwa-v2';
                     self.addEventListener('install', (e) => {
                         self.skipWaiting();
                     });
