@@ -676,11 +676,23 @@
     </div>
 
     <script>
+        // =========================================================================
+        // CẤU HÌNH CÁC GOOGLE SHEET API TRỰC TIẾP TRONG CODE THEO TỪNG PHÂN HỆ:
+        // Dán URL Google Apps Script tương ứng với từng phân hệ vào giữa hai dấu ngoặc kép:
+        // =========================================================================
+        const GOOGLE_SHEET_URLS = {
+            lichTruc: "",       // Google Sheet API Lịch trực 04 điểm trạm
+            chamCong: "",       // Google Sheet API Bảng chấm công Bio-Sync
+            lichBgd: "",        // Google Sheet API Lịch làm việc Ban Giám đốc
+            khamBenh: "",       // Google Sheet API Lịch khám bệnh BHYT
+            tiemChung: "",      // Google Sheet API Lịch tiêm chủng mở rộng
+            nghiPhep: ""        // Google Sheet API Quản lý nghỉ phép / nghỉ bù
+        };
+
         const ROUTES = ['dashboard', 'lich-truc', 'bang-cham-cong', 'lich-lam-viec-bgd', 'lich-kham-benh', 'lich-tiem-chung', 'nghi-phep', 'gioi-thieu'];
         let deferredPrompt = null;
-        let googleSheetUrl = localStorage.getItem('TYT_GOOGLE_SHEET_URL') || '';
-
-        /* WEEKLY MATRIX CONSTANTS & DATA */
+        let googleSheetUrl = GOOGLE_SHEET_URLS.lichTruc || localStorage.getItem('TYT_GOOGLE_SHEET_URL') || '';
+        
         const DAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
         const ROLES = [
             'Điểm trạm chính (Đức Tân)', 
@@ -1002,11 +1014,11 @@
         }
 
         async function loadFromGoogleSheets(targetWeek = weekStart) {
-            const url = googleSheetUrl || document.getElementById('sheetApiUrlInput')?.value.trim();
+            const url = GOOGLE_SHEET_URLS.lichTruc || googleSheetUrl;
             if(!url) {
                 renderAllModules();
                 const syncTimeEl = document.getElementById('last-sync-time');
-                if (syncTimeEl) syncTimeEl.innerText = "Dùng bộ nhớ cục bộ (Chưa dán URL Google Sheet)";
+                if (syncTimeEl) syncTimeEl.innerText = "Dùng bộ nhớ cục bộ (Chưa nhập URL Google Sheet Lịch trực)";
                 return;
             }
 
