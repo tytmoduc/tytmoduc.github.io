@@ -133,9 +133,9 @@
                 <button id="nav-dashboard" onclick="navigateTo('dashboard')" class="px-3 py-2 rounded-md hover:text-white hover:bg-slate-700 transition flex items-center space-x-2">
                     <i class="fa-solid fa-chart-pie text-sky-400"></i> <span>Trang Chủ (BGĐ)</span>
                 </button>
-                <button id="nav-lich-truc" onclick="navigateTo('lich-truc')" class="px-3 py-2 rounded-md hover:text-white hover:bg-slate-700 transition flex items-center space-x-2">
+                <a href="lich-truc.html" class="px-3 py-2 rounded-md hover:text-white hover:bg-slate-700 transition flex items-center space-x-2">
                     <i class="fa-solid fa-calendar-days text-teal-400"></i> <span>Lịch Trực 04 Điểm</span>
-                </button>
+                </a>
                 <button id="nav-bang-cham-cong" onclick="navigateTo('bang-cham-cong')" class="px-3 py-2 rounded-md hover:text-white hover:bg-slate-700 transition flex items-center space-x-2">
                     <i class="fa-solid fa-fingerprint text-emerald-400"></i> <span>Bảng Chấm Công</span>
                 </button>
@@ -186,7 +186,7 @@
 
             <!-- Key Executive KPIs -->
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-sky-300 transition cursor-pointer" onclick="navigateTo('lich-truc')">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-sky-300 transition cursor-pointer" onclick="window.location.href='lich-truc.html'">
                     <div class="flex items-center justify-between text-slate-500 mb-2">
                         <span class="text-xs font-medium">Trực Hôm Nay</span>
                         <i class="fa-solid fa-user-shield text-sky-600"></i>
@@ -280,7 +280,7 @@
                                 <i class="fa-solid fa-user-clock text-sky-600"></i>
                                 <span>Phân Công Trực Hôm Nay Tại 04 Điểm Trạm</span>
                             </h3>
-                            <button onclick="navigateTo('lich-truc')" class="text-xs text-sky-600 hover:text-sky-800 font-semibold">Xem tất cả &rarr;</button>
+                            <a href="lich-truc.html" class="text-xs text-sky-600 hover:text-sky-800 font-semibold">Xem chi tiết &rarr;</a>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="dashOnDutyCards"></div>
                     </div>
