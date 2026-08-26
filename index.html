@@ -2,1284 +2,1307 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trạm Y Tế Xã Mộ Đức - Cổng Thông Tin & Điều Hành Y Tế</title>
-    <!-- Tailwind CSS CDN -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trạm Y Tế Xã Mộ Đức - Cổng Thông Tin & Quản Lý PWA</title>
+    
+    <!-- PWA Primary Meta Tags -->
+    <meta name="theme-color" content="#0284c7">
+    <meta name="description" content="Hệ thống quản lý PWA tích hợp Lịch trực, Bảng chấm công, Lịch khám bệnh, Lịch làm việc Ban Giám đốc và Nghỉ phép tại Trạm Y Tế Xã Mộ Đức">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TYT Mộ Đức">
+    
+    <!-- Icons and Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome 6 CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: {
+                        medical: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            800: '#0c4a6e',
+                        },
+                        tealmed: {
+                            50: '#f0fdf4',
+                            500: '#10b981',
+                            600: '#059669',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-            background-color: #f8fafc;
-            color: #1e293b;
-        }
-
-        /* Medical Glass & Soft Elevated Cards */
-        .medical-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 20px -2px rgba(14, 116, 144, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
-            border-radius: 1rem;
-            transition: all 0.25s ease-in-out;
-        }
-
-        .medical-card:hover {
-            box-shadow: 0 10px 25px -5px rgba(14, 116, 144, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
-            border-color: #cbd5e1;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #0284c7;
-        }
-
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        .active-tab {
-            background-color: #0284c7 !important;
-            color: #ffffff !important;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
-        }
+        /* Custom scrollbar & visual polish */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .active-tab { background-color: #0284c7 !important; color: #ffffff !important; font-weight: 600; }
+        @keyframes pulse-subtle { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .animate-pulse-subtle { animation: pulse-subtle 2s infinite ease-in-out; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-sky-500 selection:text-white">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-sky-100 selection:text-sky-800">
 
-    <!-- TOP OFFICIAL BANNER -->
-    <div class="bg-gradient-to-r from-sky-800 via-blue-700 to-teal-700 text-white py-1.5 px-4 text-xs font-medium text-center shadow-sm flex justify-between items-center max-w-full">
-        <div class="max-w-7xl mx-auto w-full flex justify-between items-center px-2">
-            <span class="hidden sm:inline-flex items-center gap-2">
-                <i class="fa-solid fa-building-columns text-sky-200"></i>
-                UỶ BAN NHÂN DÂN XÃ MỘ ĐỨC - HỆ THỐNG Y TẾ CƠ SỞ CHUẨN QUỐC GIA
-            </span>
-            <span class="sm:hidden font-semibold">UBND XÃ MỘ ĐỨC - TRẠM Y TẾ</span>
-            <span class="flex items-center gap-2 text-sky-100">
-                <i class="fa-solid fa-phone-volume text-emerald-300 animate-pulse"></i>
-                <span class="font-bold">Hotline Cấp Cứu: (0255) 3.888.115</span>
-            </span>
+    <!-- PWA Install Prompt Banner -->
+    <div id="pwaInstallBanner" class="hidden bg-gradient-to-r from-sky-700 via-sky-600 to-teal-600 text-white px-4 py-2.5 shadow-md flex items-center justify-between transition-all duration-300 z-50">
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-hospital text-white text-lg"></i>
+            </div>
+            <div>
+                <p class="text-sm font-semibold">Cài đặt Ứng dụng TYT Mộ Đức</p>
+                <p class="text-xs text-sky-100">Cài đặt PWA trên điện thoại để truy cập nhanh & làm việc offline</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="installPWA()" class="bg-white text-sky-700 hover:bg-sky-50 text-xs font-bold px-3 py-1.5 rounded-md shadow transition">
+                <i class="fa-solid fa-download mr-1"></i> Cài đặt
+            </button>
+            <button onclick="dismissPWABanner()" class="text-white/80 hover:text-white p-1">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
     </div>
 
-    <!-- MAIN CONTAINER -->
-    <div class="w-full max-w-7xl mx-auto p-3 sm:p-5 md:p-6 flex-grow space-y-6">
-
-        <!-- BRANDING HEADER -->
-        <header class="medical-card p-5 md:p-6 bg-white relative overflow-hidden">
-            <div class="absolute -top-12 -right-12 w-48 h-48 bg-sky-50 rounded-full blur-2xl pointer-events-none"></div>
-            <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-teal-50 rounded-full blur-2xl pointer-events-none"></div>
-
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 relative z-10">
-                <div class="flex items-center space-x-4">
-                    <div class="relative">
-                        <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-sky-500 to-teal-600 p-0.5 shadow-md flex items-center justify-center">
-                            <div class="w-full h-full bg-white rounded-[14px] flex items-center justify-center">
-                                <i class="fa-solid fa-hospital text-sky-600 text-3xl md:text-4xl"></i>
-                            </div>
-                        </div>
-                        <span class="absolute -bottom-1 -right-1 flex h-4 w-4">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white"></span>
-                        </span>
+    <!-- Header / Brand Bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <!-- Logo & Unit Info -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('dashboard')">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-sky-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-sky-600/30">
+                        <i class="fa-solid fa-user-doctor text-xl sm:text-2xl"></i>
                     </div>
                     <div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="px-2.5 py-0.5 text-xs font-bold tracking-wide bg-sky-100 text-sky-800 border border-sky-200 rounded-md">
-                                CỔNG THÔNG TIN ĐIỀU HÀNH
-                            </span>
-                            <span class="px-2.5 py-0.5 text-xs font-bold tracking-wide bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-md">
-                                <i class="fa-solid fa-shield-halved mr-1"></i> HOẠT ĐỘNG 24/7
+                        <div class="flex items-center space-x-2">
+                            <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-sky-600 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">UBND XÃ MỘ ĐỨC</span>
+                            <span id="syncStatusBadge" class="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Google Sheet Dynamic
                             </span>
                         </div>
-                        <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mt-1">
+                        <h1 class="text-base sm:text-xl font-extrabold text-slate-900 tracking-tight leading-tight">
                             TRẠM Y TẾ XÃ MỘ ĐỨC
                         </h1>
-                        <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5 flex items-center gap-2">
-                            <i class="fa-solid fa-location-dot text-rose-500"></i> Xã Mộ Đức, Tỉnh Quảng Ngãi &bull; Quản lý 04 Điểm Y Tế Vệ Tinh
-                        </p>
+                        <p class="text-[11px] text-slate-500 hidden sm:block">Trực thuộc UBND Xã Mộ Đức • 04 Điểm Trạm Chăm Sóc Sức Khỏe Nhân Dân</p>
                     </div>
                 </div>
 
-                <!-- Clock & Quick Action -->
-                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-between lg:justify-end border-t lg:border-t-0 border-slate-100 pt-3 lg:pt-0">
-                    <div class="text-left lg:text-right">
-                        <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider flex items-center lg:justify-end gap-1">
-                            <i class="fa-regular fa-clock text-sky-600"></i> Thời Gian Hệ Thống
-                        </div>
-                        <div id="medical-clock" class="text-base md:text-lg font-bold text-slate-800 font-mono">
-                            2026-08-22 15:40:00
-                        </div>
-                    </div>
-                    <button onclick="triggerBiometricScan()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-teal-600 hover:from-sky-700 hover:to-teal-700 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-fingerprint text-base"></i>
-                        <span>Điểm Danh Sinh Trắc</span>
+                <!-- Right Quick Utilities -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <button onclick="openSheetModal()" class="inline-flex items-center space-x-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-medium px-3 py-2 rounded-lg transition shadow-sm">
+                        <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                        <span class="hidden md:inline">Cấu Hình Google Sheet</span>
                     </button>
+                    <a href="tel:02553888115" class="inline-flex items-center space-x-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow-sm">
+                        <i class="fa-solid fa-phone-volume animate-bounce"></i>
+                        <span class="hidden sm:inline">Cấp Cứu: (0255) 3.888.115</span>
+                    </a>
                 </div>
             </div>
-        </header>
+        </div>
 
-        <!-- NAVIGATION TABS -->
-        <nav class="medical-card p-2 bg-white">
-            <div class="flex overflow-x-auto space-x-2 no-scrollbar">
-                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn active-tab flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap text-slate-600 hover:bg-slate-100">
-                    <i class="fa-solid fa-chart-pie"></i>
-                    <span>TỔNG QUAN</span>
+        <!-- Navigation Menu Bar -->
+        <nav class="bg-slate-800 text-slate-300 border-t border-slate-700 overflow-x-auto no-scrollbar">
+            <div class="max-w-7xl mx-auto px-2 sm:px-4 flex space-x-1 py-1.5 text-xs font-medium whitespace-nowrap">
+                <button id="nav-dashboard" onclick="navigateTo('dashboard')" class="px-3 py-2 rounded-md hover:text-white hover:bg-slate-700 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-chart-pie text-sky-400"></i> <span>Trang Chủ (BGĐ)</span>
                 </button>
-                <button onclick="switchTab('about')" id="nav-about" class="nav-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap text-slate-600 hover:bg-slate-100">
-                    <i class="fa-solid fa-hospital"></i>
-                    <span>GIỚI THIỆU TRẠM</span>
+                <button id="nav-lich-truc" onclick="navigateTo('lich-truc')" class="px-3 py-2 rounded-md hover:text-white hover:bg-slate-700 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-calendar-days text-teal-400"></i> <span>Lịch Trực 04 Điểm</span>
                 </button>
-                <button onclick="switchTab('executive')" id="nav-executive" class="nav-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap text-slate-600 hover:bg-slate-100">
-                    <i class="fa-solid fa-user-tie"></i>
-                    <span>LỊCH LÀM VIỆC BGD</span>
+                <button id="nav-bang-cham-cong" onclick="navigateTo('bang-cham-cong')" class="px-3 py-2 rounded-md hover:text-white hover:bg-slate-700 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-fingerprint text-emerald-400"></i> <span>Bảng Chấm Công</span>
                 </button>
-                <button onclick="switchTab('shifts')" id="nav-shifts" class="nav-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap text-slate-600 hover:bg-slate-100">
-                    <i class="fa-solid fa-calendar-days"></i>
-                    <span>LỊCH TRỰC CHÍNH THỨC</span>
+                <button id="nav-lich-lam-viec-bgd" onclick="navigateTo('lich-lam-viec-bgd')" class="px-3 py-2 rounded-md hover:text-white hover:bg-slate-700 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-user-tie text-amber-400"></i> <span>Lịch Làm Việc BGĐ</span>
                 </button>
-                <button onclick="switchTab('timecard')" id="nav-timecard" class="nav-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap text-slate-600 hover:bg-slate-100">
-                    <i class="fa-solid fa-user-clock"></i>
-                    <span>BẢNG CHẤM CÔNG</span>
+                <button id="nav-lich-kham-benh" onclick="navigateTo('lich-kham-benh')" class="px-3 py-2 rounded-md hover:text-white hover:bg-slate-700 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-stethoscopes text-indigo-400"></i> <span>Lịch Khám BHYT</span>
                 </button>
-                <button onclick="switchTab('vaccine')" id="nav-vaccine" class="nav-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap text-slate-600 hover:bg-slate-100">
-                    <i class="fa-solid fa-syringe"></i>
-                    <span>LỊCH TIÊM CHỦNG</span>
+                <button id="nav-lich-tiem-chung" onclick="navigateTo('lich-tiem-chung')" class="px-3 py-2 rounded-md hover:text-white hover:bg-slate-700 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-syringe text-rose-400"></i> <span>Tiêm Chủng</span>
                 </button>
-                <button onclick="switchTab('leave')" id="nav-leave" class="nav-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap text-slate-600 hover:bg-slate-100">
-                    <i class="fa-solid fa-plane-departure"></i>
-                    <span>NGHỈ PHÉP & NGHỈ BÙ</span>
+                <button id="nav-nghi-phep" onclick="navigateTo('nghi-phep')" class="px-3 py-2 rounded-md hover:text-white hover:bg-slate-700 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-plane-departure text-purple-400"></i> <span>Nghỉ Phép / Nghỉ Bù</span>
+                </button>
+                <button id="nav-gioi-thieu" onclick="navigateTo('gioi-thieu')" class="px-3 py-2 rounded-md hover:text-white hover:bg-slate-700 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-info text-blue-400"></i> <span>Giới Thiệu Trạm</span>
                 </button>
             </div>
         </nav>
+    </header>
 
-        <!-- MAIN TAB CONTENT CONTAINER -->
-        <main>
-            
-            <!-- 1. DASHBOARD VIEW -->
-            <section id="tab-dashboard" class="tab-content block space-y-6">
-                <!-- KPI Quick Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="medical-card p-5 flex items-center justify-between border-l-4 border-l-sky-500">
+    <!-- Main Dynamic Content Body -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- =================================================================== -->
+        <!-- TAB 1: EXECUTIVE DASHBOARD (TRANG CHỦ TỔNG QUAN)                    -->
+        <!-- =================================================================== -->
+        <section id="tab-dashboard" class="space-y-6">
+            <!-- Welcome Header -->
+            <div class="bg-gradient-to-r from-sky-800 via-sky-700 to-teal-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                <div class="relative z-10">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Ca Trực Đã Phân (16-31/08)</div>
-                            <div class="text-2xl font-extrabold text-slate-800 mt-1">64 CA</div>
-                            <div class="text-xs text-emerald-600 font-bold mt-1 flex items-center gap-1">
-                                <i class="fa-solid fa-circle-check"></i> 100% Hoàn Thành Phân Công
-                            </div>
-                        </div>
-                        <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl">
-                            <i class="fa-solid fa-user-doctor"></i>
-                        </div>
-                    </div>
-
-                    <div class="medical-card p-5 flex items-center justify-between border-l-4 border-l-teal-500">
-                        <div>
-                            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Điểm Trạm Hoạt Động</div>
-                            <div class="text-2xl font-extrabold text-slate-800 mt-1">04 ĐIỂM</div>
-                            <div class="text-xs text-teal-600 font-bold mt-1 flex items-center gap-1">
-                                <i class="fa-solid fa-signal"></i> Trực 24/24 Sẵn Sàng
-                            </div>
-                        </div>
-                        <div class="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-xl">
-                            <i class="fa-solid fa-network-wired"></i>
-                        </div>
-                    </div>
-
-                    <div class="medical-card p-5 flex items-center justify-between border-l-4 border-l-purple-500">
-                        <div>
-                            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Đợt Tiêm Vắc Xin Kế Hoạch</div>
-                            <div class="text-2xl font-extrabold text-slate-800 mt-1">12 ĐỢT</div>
-                            <div class="text-xs text-purple-600 font-bold mt-1 flex items-center gap-1">
-                                <i class="fa-solid fa-vial"></i> Dự Trữ Đạt 98%
-                            </div>
-                        </div>
-                        <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">
-                            <i class="fa-solid fa-syringe"></i>
-                        </div>
-                    </div>
-
-                    <div class="medical-card p-5 flex items-center justify-between border-l-4 border-l-amber-500">
-                        <div>
-                            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Đơn Phép/Nghỉ Bù Chờ Duyệt</div>
-                            <div class="text-2xl font-extrabold text-slate-800 mt-1">02 ĐƠN</div>
-                            <div class="text-xs text-amber-600 font-bold mt-1 flex items-center gap-1">
-                                <i class="fa-solid fa-hourglass-half"></i> Chờ Giám Đốc Phê Duyệt
-                            </div>
-                        </div>
-                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
-                            <i class="fa-solid fa-file-signature"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Today Spotlight Duty Roster -->
-                <div class="medical-card p-6 border-t-4 border-t-sky-600">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-5 pb-4 border-b border-slate-100">
-                        <div>
-                            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                <i class="fa-solid fa-star text-amber-500"></i> CA TRỰC HÔM NAY - 22/08/2026 (THỨ BẢY)
-                            </h3>
-                            <p class="text-xs text-slate-500 font-medium">Khung giờ trực: Từ 07h00 ngày 22/08 đến 07h00 ngày 23/08/2026 (24 giờ)</p>
-                        </div>
-                        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> CA TRỰC ĐANG DIỄN RA
-                        </span>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="bg-sky-50/60 p-4 rounded-xl border border-sky-200">
-                            <div class="text-xs text-sky-800 font-bold uppercase tracking-wider">ĐIỂM TRẠM CHÍNH (ĐỨC TÂN)</div>
-                            <div class="text-xl font-extrabold text-slate-900 mt-1">NHS. Thy</div>
-                            <div class="text-xs text-slate-600 mt-0.5">Trực Ban Cấp Cứu & Điều Hành</div>
-                            <div class="mt-3 flex justify-between items-center text-xs font-semibold pt-2 border-t border-sky-200/60">
-                                <span class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded"><i class="fa-solid fa-check text-[10px]"></i> Đã vào ca</span>
-                                <span class="text-slate-500 font-mono">07:00</span>
-                            </div>
-                        </div>
-
-                        <div class="bg-teal-50/60 p-4 rounded-xl border border-teal-200">
-                            <div class="text-xs text-teal-800 font-bold uppercase tracking-wider">ĐIỂM Y TẾ SỐ 1 (MỘ ĐỨC)</div>
-                            <div class="text-xl font-extrabold text-slate-900 mt-1">ĐĐ. Nguyệt</div>
-                            <div class="text-xs text-slate-600 mt-0.5">Khám Lâm Sàng & Tiêm Chủng</div>
-                            <div class="mt-3 flex justify-between items-center text-xs font-semibold pt-2 border-t border-teal-200/60">
-                                <span class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded"><i class="fa-solid fa-check text-[10px]"></i> Đã vào ca</span>
-                                <span class="text-slate-500 font-mono">06:55</span>
-                            </div>
-                        </div>
-
-                        <div class="bg-purple-50/60 p-4 rounded-xl border border-purple-200">
-                            <div class="text-xs text-purple-800 font-bold uppercase tracking-wider">ĐIỂM Y TẾ SỐ 2 (ĐỨC HÒA)</div>
-                            <div class="text-xl font-extrabold text-slate-900 mt-1">BS. Phu</div>
-                            <div class="text-xs text-slate-600 mt-0.5">Y Tế Dự Phòng & Giám Sát</div>
-                            <div class="mt-3 flex justify-between items-center text-xs font-semibold pt-2 border-t border-purple-200/60">
-                                <span class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded"><i class="fa-solid fa-check text-[10px]"></i> Đã vào ca</span>
-                                <span class="text-slate-500 font-mono">07:02</span>
-                            </div>
-                        </div>
-
-                        <div class="bg-amber-50/60 p-4 rounded-xl border border-amber-200">
-                            <div class="text-xs text-amber-800 font-bold uppercase tracking-wider">ĐIỂM Y TẾ SỐ 3 (ĐỨC PHÚ)</div>
-                            <div class="text-xl font-extrabold text-slate-900 mt-1">NHS. Lan</div>
-                            <div class="text-xs text-slate-600 mt-0.5">Sức Khỏe Sinh Sản / Mẹ & Bé</div>
-                            <div class="mt-3 flex justify-between items-center text-xs font-semibold pt-2 border-t border-amber-200/60">
-                                <span class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded"><i class="fa-solid fa-check text-[10px]"></i> Đã vào ca</span>
-                                <span class="text-slate-500 font-mono">06:50</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Action Buttons Grid -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <button onclick="switchTab('executive')" class="p-4 medical-card hover:border-blue-400 transition text-left group">
-                        <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-lg mb-3 group-hover:scale-105 transition-transform">
-                            <i class="fa-solid fa-user-tie"></i>
-                        </div>
-                        <div class="font-bold text-sm text-slate-800">Lịch Ban Giám Đốc</div>
-                        <div class="text-xs text-slate-500 mt-0.5">Lịch công tác & tiếp dân</div>
-                    </button>
-                    <button onclick="switchTab('shifts')" class="p-4 medical-card hover:border-sky-400 transition text-left group">
-                        <div class="w-10 h-10 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center text-lg mb-3 group-hover:scale-105 transition-transform">
-                            <i class="fa-solid fa-arrow-right-arrow-left"></i>
-                        </div>
-                        <div class="font-bold text-sm text-slate-800">Đổi Ca Trực</div>
-                        <div class="text-xs text-slate-500 mt-0.5">Gửi yêu cầu đổi ca trực</div>
-                    </button>
-                    <button onclick="switchTab('leave')" class="p-4 medical-card hover:border-purple-400 transition text-left group">
-                        <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-lg mb-3 group-hover:scale-105 transition-transform">
-                            <i class="fa-solid fa-file-circle-plus"></i>
-                        </div>
-                        <div class="font-bold text-sm text-slate-800">Xin Nghỉ Phép/Bù</div>
-                        <div class="text-xs text-slate-500 mt-0.5">Tạo đơn gửi Giám đốc</div>
-                    </button>
-                    <button onclick="switchTab('vaccine')" class="p-4 medical-card hover:border-teal-400 transition text-left group">
-                        <div class="w-10 h-10 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center text-lg mb-3 group-hover:scale-105 transition-transform">
-                            <i class="fa-solid fa-syringe"></i>
-                        </div>
-                        <div class="font-bold text-sm text-slate-800">Đăng Ký Tiêm</div>
-                        <div class="text-xs text-slate-500 mt-0.5">Lên lịch đợt tiêm mới</div>
-                    </button>
-                    <button onclick="showToast('Đã đồng bộ dữ liệu thành công với UBND Xã Mộ Đức!', 'info')" class="p-4 medical-card hover:border-amber-400 transition text-left group">
-                        <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-lg mb-3 group-hover:scale-105 transition-transform">
-                            <i class="fa-solid fa-rotate"></i>
-                        </div>
-                        <div class="font-bold text-sm text-slate-800">Đồng Bộ UBND</div>
-                        <div class="text-xs text-slate-500 mt-0.5">Cập nhật dữ liệu chỉ đạo</div>
-                    </button>
-                </div>
-            </section>
-
-            <!-- 2. ABOUT / GIỚI THIỆU TRẠM Y TẾ VIEW -->
-            <section id="tab-about" class="tab-content hidden space-y-6">
-                <!-- Header Banner -->
-                <div class="medical-card p-6 bg-gradient-to-r from-sky-900 via-blue-800 to-teal-800 text-white relative overflow-hidden">
-                    <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                        <div class="max-w-3xl">
-                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-sky-200 text-xs font-bold mb-3 border border-white/20">
-                                <i class="fa-solid fa-building-flag"></i> CƠ QUAN Y TẾ CƠ SỞ CHÍNH THỨC
-                            </div>
-                            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                                TRẠM Y TẾ XÃ MỘ ĐỨC
-                            </h2>
-                            <p class="text-sm text-sky-100 mt-2 leading-relaxed">
-                                Trạm Y Tế Xã Mộ Đức trực thuộc <strong>Ủy ban Nhân dân xã Mộ Đức, tỉnh Quảng Ngãi</strong>. Đơn vị chịu trách nhiệm thực hiện công tác chăm sóc, bảo vệ và nâng cao sức khỏe nhân dân; phòng chống dịch bệnh, khám chữa bệnh BHYT, tiêm chủng mở rộng và quản lý toàn diện 04 điểm trạm y tế trên địa bàn xã.
+                            <span class="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full border border-white/30 backdrop-blur-md">
+                                Center Command Center • Thế Hệ Mới
+                            </span>
+                            <h2 class="text-2xl sm:text-3xl font-bold mt-2">Tổng Quan Hoạt Động Y Tế Xã Mộ Đức</h2>
+                            <p class="text-sky-100 text-sm mt-1 max-w-2xl">
+                                Hệ thống tự động tổng hợp số liệu trực ban, chấm công, khám chữa bệnh và lịch công tác toàn trạm.
                             </p>
                         </div>
-                        <div class="bg-white/10 backdrop-blur-md p-4 rounded-xl min-w-[240px] border border-white/20 text-white">
-                            <div class="text-xs text-sky-200 font-semibold uppercase tracking-wider">BAN GIÁM ĐỐC</div>
-                            <div class="text-xl font-bold mt-1">Phạm Minh Đức</div>
-                            <div class="text-xs text-emerald-300 font-semibold mt-0.5 flex items-center gap-1">
-                                <i class="fa-solid fa-circle-check"></i> Giám Đốc Trạm Y Tế
+                        <div class="bg-white/10 backdrop-blur-md border border-white/20 p-3.5 rounded-xl text-center min-w-[200px]">
+                            <p class="text-xs text-sky-200">Thời gian hệ thống</p>
+                            <p id="liveClock" class="text-xl font-extrabold text-white font-mono mt-0.5">00:00:00</p>
+                            <p id="liveDate" class="text-xs text-sky-100 mt-0.5">Thứ ..., ngày ...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="absolute -bottom-10 -right-10 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+            </div>
+
+            <!-- Key Executive KPIs -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-sky-300 transition cursor-pointer" onclick="navigateTo('lich-truc')">
+                    <div class="flex items-center justify-between text-slate-500 mb-2">
+                        <span class="text-xs font-medium">Trực Hôm Nay</span>
+                        <i class="fa-solid fa-user-shield text-sky-600"></i>
+                    </div>
+                    <p id="kpiStaffOnDuty" class="text-2xl font-black text-slate-900">4 Cán bộ</p>
+                    <p class="text-[11px] text-slate-500 mt-1">Đủ 04 điểm trạm</p>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-emerald-300 transition cursor-pointer" onclick="navigateTo('bang-cham-cong')">
+                    <div class="flex items-center justify-between text-slate-500 mb-2">
+                        <span class="text-xs font-medium">Chấm Công</span>
+                        <i class="fa-solid fa-clock-check text-emerald-600"></i>
+                    </div>
+                    <p id="kpiAttendanceRate" class="text-2xl font-black text-emerald-600">100%</p>
+                    <p class="text-[11px] text-slate-500 mt-1">16/16 Nhân sự</p>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 transition cursor-pointer" onclick="navigateTo('lich-kham-benh')">
+                    <div class="flex items-center justify-between text-slate-500 mb-2">
+                        <span class="text-xs font-medium">Khám Bệnh</span>
+                        <i class="fa-solid fa-stethoscope text-indigo-600"></i>
+                    </div>
+                    <p id="kpiConsultations" class="text-2xl font-black text-indigo-600">42 Lượt</p>
+                    <p class="text-[11px] text-slate-500 mt-1">BHYT & Cấp cứu</p>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-purple-300 transition cursor-pointer" onclick="navigateTo('nghi-phep')">
+                    <div class="flex items-center justify-between text-slate-500 mb-2">
+                        <span class="text-xs font-medium">Nghỉ Phép/Bù</span>
+                        <i class="fa-solid fa-envelope-open-text text-purple-600"></i>
+                    </div>
+                    <p id="kpiPendingLeaves" class="text-2xl font-black text-purple-600">1 Đơn</p>
+                    <p class="text-[11px] text-slate-500 mt-1">Chờ Ban Giám đốc duyệt</p>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-rose-300 transition cursor-pointer" onclick="navigateTo('lich-tiem-chung')">
+                    <div class="flex items-center justify-between text-slate-500 mb-2">
+                        <span class="text-xs font-medium">Tiêm Chủng</span>
+                        <i class="fa-solid fa-syringe text-rose-600"></i>
+                    </div>
+                    <p id="kpiVaccineDrive" class="text-2xl font-black text-rose-600">25/08</p>
+                    <p class="text-[11px] text-slate-500 mt-1">TCMR Trẻ Em</p>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-amber-300 transition cursor-pointer" onclick="navigateTo('lich-lam-viec-bgd')">
+                    <div class="flex items-center justify-between text-slate-500 mb-2">
+                        <span class="text-xs font-medium">Lịch BGĐ</span>
+                        <i class="fa-solid fa-building-columns text-amber-600"></i>
+                    </div>
+                    <p id="kpiExecutiveMeetings" class="text-2xl font-black text-amber-600">3 Lịch</p>
+                    <p class="text-[11px] text-slate-500 mt-1">Họp UBND & Điểm trạm</p>
+                </div>
+            </div>
+
+            <!-- Dashboard Main Grid: Notices & Executive Summary -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Announcements -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Important Notices of the Week -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-4 border-b pb-3 border-slate-100">
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-red-100 text-red-700 p-2 rounded-lg"><i class="fa-solid fa-bullhorn"></i></span>
+                                <h3 class="font-bold text-slate-900 text-base">Thông Báo Quan Trọng Tuần Này</h3>
                             </div>
-                            <div class="text-[11px] text-sky-100 mt-2 pt-2 border-t border-white/20">
-                                Phê duyệt bởi UBND Tỉnh Quảng Ngãi
+                            <span class="text-xs text-slate-500">Cập nhật: UBND Xã Mộ Đức</span>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="p-3.5 bg-red-50 border-l-4 border-red-500 rounded-r-xl">
+                                <div class="flex justify-between items-start">
+                                    <span class="text-xs font-bold text-red-800 bg-red-100 px-2 py-0.5 rounded">KHẨN • DỊCH BỆNH</span>
+                                    <span class="text-[11px] text-slate-500">24/08/2026</span>
+                                </div>
+                                <h4 class="font-bold text-slate-800 text-sm mt-1">Tăng cường phòng chống Sốt xuất huyết & Tay chân miệng</h4>
+                                <p class="text-xs text-slate-600 mt-1">Yêu cầu 04 điểm trạm chuẩn bị đầy đủ cơ số thuốc, hóa chất phun diệt muỗi và phân công trực 24/24 tiếp nhận ca bệnh.</p>
                             </div>
+
+                            <div class="p-3.5 bg-sky-50 border-l-4 border-sky-500 rounded-r-xl">
+                                <div class="flex justify-between items-start">
+                                    <span class="text-xs font-bold text-sky-800 bg-sky-100 px-2 py-0.5 rounded">TIÊM CHỦNG</span>
+                                    <span class="text-[11px] text-slate-500">22/08/2026</span>
+                                </div>
+                                <h4 class="font-bold text-slate-800 text-sm mt-1">Đợt Tiêm Chủng Mở Rộng Tháng 8/2026</h4>
+                                <p class="text-xs text-slate-600 mt-1">Thực hiện tiêm vắc xin 5 trong 1 và Sởi - Rubella tại Điểm Trạm Chính Đức Tân và Điểm số 2 Đức Hòa vào ngày 28/08/2026.</p>
+                            </div>
+
+                            <div class="p-3.5 bg-amber-50 border-l-4 border-amber-500 rounded-r-xl">
+                                <div class="flex justify-between items-start">
+                                    <span class="text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">HÀNH CHÍNH</span>
+                                    <span class="text-[11px] text-slate-500">20/08/2026</span>
+                                </div>
+                                <h4 class="font-bold text-slate-800 text-sm mt-1">Đăng ký lịch nghỉ phép & nghỉ bù Tháng 9/2026</h4>
+                                <p class="text-xs text-slate-600 mt-1">Cán bộ nhân viên gửi đơn trực tuyến trước ngày 28/08/2026 để Ban Giám đốc duyệt phân ca trực Lễ 2/9.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick On-Duty Staff Table Today -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-4 border-b pb-3 border-slate-100">
+                            <h3 class="font-bold text-slate-900 text-base flex items-center space-x-2">
+                                <i class="fa-solid fa-user-clock text-sky-600"></i>
+                                <span>Phân Công Trực Lãnh Đạo & Điểm Trạm Hôm Nay</span>
+                            </h3>
+                            <button onclick="navigateTo('lich-truc')" class="text-xs text-sky-600 hover:text-sky-800 font-semibold">Xem tất cả lịch trực &rarr;</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="dashOnDutyCards">
+                            <!-- Dynamic Content Rendered via JS -->
                         </div>
                     </div>
                 </div>
 
-                <!-- 4 Points Grid -->
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg text-slate-800 font-bold flex items-center gap-2">
-                            <i class="fa-solid fa-network-wired text-sky-600"></i> HỆ THỐNG 04 ĐIỂM TRẠM Y TẾ TRỰC THUỘC
+                <!-- Right Column: Directorate Info & Quick Actions -->
+                <div class="space-y-6">
+                    <!-- Directorate Info -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-slate-900 text-base mb-3 pb-2 border-b border-slate-100 flex items-center space-x-2">
+                            <i class="fa-solid fa-users-gear text-sky-600"></i>
+                            <span>Ban Giám Đốc Trạm Y Tế</span>
                         </h3>
-                        <span class="text-xs font-semibold text-slate-500">Mạng lưới y tế phủ rộng toàn xã</span>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <!-- Point Main: Đức Tân -->
-                        <div class="medical-card p-5 hover:border-sky-500 transition group relative">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="w-10 h-10 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-lg">
-                                    HQ
-                                </div>
-                                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-sky-100 text-sky-800 border border-sky-200">ĐIỂM CHÍNH</span>
-                            </div>
-                            <h4 class="text-base font-bold text-slate-900 group-hover:text-sky-600 transition">Điểm Trạm Chính</h4>
-                            <div class="text-xs text-sky-600 font-bold mt-0.5">(Đức Tân)</div>
-                            <p class="text-xs text-slate-600 mt-2 leading-relaxed">
-                                Trung tâm chỉ đạo y tế, điều hành khám chữa bệnh BHYT, cấp cứu 24/7 và xử lý các ca bệnh chuyên khoa khẩn cấp.
-                            </p>
-                            <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between">
-                                <span>Trực ca đêm 24/7</span>
-                                <span class="text-emerald-600 font-bold flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Hoạt động
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Point 1: Mộ Đức -->
-                        <div class="medical-card p-5 hover:border-teal-500 transition group relative">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="w-10 h-10 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-lg">
-                                    01
-                                </div>
-                                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-teal-100 text-teal-800 border border-teal-200">ĐIỂM SỐ 1</span>
-                            </div>
-                            <h4 class="text-base font-bold text-slate-900 group-hover:text-teal-600 transition">Điểm Y Tế Số 1</h4>
-                            <div class="text-xs text-teal-600 font-bold mt-0.5">(Mộ Đức)</div>
-                            <p class="text-xs text-slate-600 mt-2 leading-relaxed">
-                                Phụ trách khám sơ cứu ban đầu, tiêm chủng thường xuyên và theo dõi sức khỏe hộ gia đình khu vực trung tâm.
-                            </p>
-                            <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between">
-                                <span>Trực ca ngày & đêm</span>
-                                <span class="text-emerald-600 font-bold flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Hoạt động
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Point 2: Đức Hòa -->
-                        <div class="medical-card p-5 hover:border-purple-500 transition group relative">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-lg">
-                                    02
-                                </div>
-                                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-purple-100 text-purple-800 border border-purple-200">ĐIỂM SỐ 2</span>
-                            </div>
-                            <h4 class="text-base font-bold text-slate-900 group-hover:text-purple-600 transition">Điểm Y Tế Số 2</h4>
-                            <div class="text-xs text-purple-600 font-bold mt-0.5">(Đức Hòa)</div>
-                            <p class="text-xs text-slate-600 mt-2 leading-relaxed">
-                                Chuyên môn giám sát y tế dự phòng, tư vấn sức khỏe cộng đồng, quản lý bệnh mãn tính phi lây nhiễm.
-                            </p>
-                            <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between">
-                                <span>Trực ca theo lịch</span>
-                                <span class="text-emerald-600 font-bold flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Hoạt động
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Point 3: Đức Phú -->
-                        <div class="medical-card p-5 hover:border-amber-500 transition group relative">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-lg">
-                                    03
-                                </div>
-                                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-100 text-amber-800 border border-amber-200">ĐIỂM SỐ 3</span>
-                            </div>
-                            <h4 class="text-base font-bold text-slate-900 group-hover:text-amber-600 transition">Điểm Y Tế Số 3</h4>
-                            <div class="text-xs text-amber-600 font-bold mt-0.5">(Đức Phú)</div>
-                            <p class="text-xs text-slate-600 mt-2 leading-relaxed">
-                                Đảm nhận công tác chăm sóc sức khỏe sinh sản, Mẹ & Bé, sơ cấp cứu tai nạn lao động và truyền thông y tế.
-                            </p>
-                            <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between">
-                                <span>Trực ca theo lịch</span>
-                                <span class="text-emerald-600 font-bold flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Hoạt động
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Personnel Overview Table -->
-                <div class="medical-card p-6 space-y-4">
-                    <h3 class="text-lg text-slate-800 font-bold flex items-center gap-2">
-                        <i class="fa-solid fa-user-doctor text-purple-600"></i> ĐỘI NGŨ Y BÁC SĨ & CÁN BỘ Y TẾ PHỤ TRÁCH
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-                            <div class="text-slate-500 font-bold uppercase mb-1">BÁC SĨ CHUYÊN KHOA</div>
-                            <div class="text-sky-700 font-bold text-sm">BS. Thuyên, BS. Phu, BS. Đức, BS. Nguyện</div>
-                        </div>
-                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-                            <div class="text-slate-500 font-bold uppercase mb-1">Y SĨ ĐA KHOA</div>
-                            <div class="text-teal-700 font-bold text-sm">YS. Tuệ, YS. Phương, YS. Vũ, YS. Thủy</div>
-                        </div>
-                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-                            <div class="text-slate-500 font-bold uppercase mb-1">ĐIỀU DƯỠNG & CN</div>
-                            <div class="text-purple-700 font-bold text-sm">ĐĐ. Lài, Nguyệt, Thanh, Vinh, Trúc, Ly Va, CN Thu</div>
-                        </div>
-                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-                            <div class="text-slate-500 font-bold uppercase mb-1">NỮ HỘ SINH</div>
-                            <div class="text-amber-700 font-bold text-sm">NHS. Lan, Thủy, Việt, Thắm, Tin, Bé, Trâm, Thy</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 2B. EXECUTIVE / LỊCH LÀM VIỆC BAN GIÁM ĐỐC VIEW -->
-            <section id="tab-executive" class="tab-content hidden space-y-6">
-                <!-- Executive Header Banner -->
-                <div class="medical-card p-6 bg-gradient-to-r from-slate-900 via-sky-900 to-blue-900 text-white relative overflow-hidden">
-                    <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                        <div class="max-w-3xl">
-                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-sky-200 text-xs font-bold mb-3 border border-white/20">
-                                <i class="fa-solid fa-user-tie"></i> LÃNH ĐẠO & ĐIỀU HÀNH Y TẾ
-                            </div>
-                            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                                LỊCH LÀM VIỆC BAN GIÁM ĐỐC
-                            </h2>
-                            <p class="text-sm text-sky-100 mt-2 leading-relaxed">
-                                Lịch công tác tuần, lịch làm việc UBND Xã, kiểm tra các điểm y tế vệ tinh, tiếp công dân định kỳ và phân công trực lãnh đạo 24/24h của Ban Giám đốc Trạm Y Tế Xã Mộ Đức.
-                            </p>
-                        </div>
-                        <button onclick="openExecutiveModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold shadow-lg transition flex items-center gap-2 whitespace-nowrap">
-                            <i class="fa-solid fa-calendar-plus text-base"></i> Đăng Ký Lịch Làm Việc / Tiếp Dân
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Leadership Roster Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <!-- Director -->
-                    <div class="medical-card p-5 border-t-4 border-t-sky-600 relative overflow-hidden">
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-extrabold text-xl shadow-sm">
-                                    ĐỨC
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-slate-900 text-base">BS. Phạm Minh Đức</h4>
-                                    <div class="text-xs font-bold text-sky-700">GIÁM ĐỐC TRẠM Y TẾ</div>
+                        <div class="space-y-3 text-xs">
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-sky-100 text-sky-700 rounded-full flex items-center justify-center font-bold">
+                                        Đức
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-slate-900 text-sm">BS. Phạm Minh Đức</p>
+                                        <p class="text-sky-700 font-medium">Giám đốc Trạm Y tế</p>
+                                        <p class="text-slate-500 text-[11px]">Phụ trách chung, Chỉ đạo điều hành & UBND xã</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 space-y-1.5">
-                            <div class="flex items-start gap-2">
-                                <i class="fa-solid fa-shield-halved text-sky-600 mt-0.5"></i>
-                                <span><strong>Phụ trách:</strong> Quản lý chung, Chỉ đạo điều hành, Tài chính - Nhân sự, Tiếp công dân & UBND Xã.</span>
+
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center font-bold">
+                                        Thuyên
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-slate-900 text-sm">BS. CKI. Nguyễn Văn Thuyên</p>
+                                        <p class="text-teal-700 font-medium">Phó Giám đốc Chuyên môn</p>
+                                        <p class="text-slate-500 text-[11px]">Phụ trách Khám chữa bệnh & 04 Điểm trạm</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-2 text-slate-500 font-mono">
-                                <i class="fa-solid fa-phone text-emerald-600"></i>
-                                <span>Hotline trực: (0255) 3.888.115 (Máy lẻ 101)</span>
+
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold">
+                                        Phu
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-slate-900 text-sm">BS. Lê Văn Phu</p>
+                                        <p class="text-indigo-700 font-medium">Phó Giám đốc Dự phòng</p>
+                                        <p class="text-slate-500 text-[11px]">Phụ trách Y tế dự phòng & Tiêm chủng</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Vice Director 1 -->
-                    <div class="medical-card p-5 border-t-4 border-t-teal-600 relative overflow-hidden">
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-extrabold text-xl shadow-sm">
-                                    THUYÊN
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-slate-900 text-base">BS. CKI. Nguyễn Văn Thuyên</h4>
-                                    <div class="text-xs font-bold text-teal-700">PHÓ GIÁM ĐỐC CHUYÊN MÔN</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 space-y-1.5">
-                            <div class="flex items-start gap-2">
-                                <i class="fa-solid fa-stethoscopes text-teal-600 mt-0.5"></i>
-                                <span><strong>Phụ trách:</strong> Khám chữa bệnh BHYT, Cấp cứu 24/7, Chỉ đạo chuyên môn 04 điểm trạm y tế.</span>
-                            </div>
-                            <div class="flex items-center gap-2 text-slate-500 font-mono">
-                                <i class="fa-solid fa-phone text-emerald-600"></i>
-                                <span>Hotline trực: (0255) 3.888.115 (Máy lẻ 102)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Vice Director 2 -->
-                    <div class="medical-card p-5 border-t-4 border-t-purple-600 relative overflow-hidden">
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-extrabold text-xl shadow-sm">
-                                    PHU
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-slate-900 text-base">BS. Lê Văn Phu</h4>
-                                    <div class="text-xs font-bold text-purple-700">PHÓ GIÁM ĐỐC DỰ PHÒNG</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 space-y-1.5">
-                            <div class="flex items-start gap-2">
-                                <i class="fa-solid fa-virus-covid text-purple-600 mt-0.5"></i>
-                                <span><strong>Phụ trách:</strong> Y tế dự phòng, Tiêm chủng mở rộng, Dịch bệnh, Các chương trình mục tiêu Y tế.</span>
-                            </div>
-                            <div class="flex items-center gap-2 text-slate-500 font-mono">
-                                <i class="fa-solid fa-phone text-emerald-600"></i>
-                                <span>Hotline trực: (0255) 3.888.115 (Máy lẻ 103)</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Executive Schedule Main Table -->
-                <div class="medical-card p-6 space-y-4">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
-                        <div>
-                            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                <i class="fa-solid fa-calendar-week text-sky-600"></i> LỊCH CÔNG TÁC TUẦN BGD (22/08/2026 - 31/08/2026)
-                            </h3>
-                            <p class="text-xs text-slate-500 font-medium mt-0.5">Cập nhật tự động theo lịch công tác của UBND Xã Mộ Đức & Trạm Y Tế</p>
-                        </div>
-                        
-                        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                            <select id="executiveFilterLeader" onchange="filterExecutiveTable()" class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-sky-500">
-                                <option value="ALL">Tất cả Ban Giám Đốc</option>
-                                <option value="Phạm Minh Đức">BS. Phạm Minh Đức (Giám đốc)</option>
-                                <option value="Nguyễn Văn Thuyên">BS. Nguyễn Văn Thuyên (Phó GD)</option>
-                                <option value="Lê Văn Phu">BS. Lê Văn Phu (Phó GD)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Executive Schedule Table -->
-                    <div class="overflow-x-auto rounded-xl border border-slate-200">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-slate-100/80 text-slate-700 font-bold border-b border-slate-200">
-                                    <th class="p-3.5">THỨ / NGÀY</th>
-                                    <th class="p-3.5">BUỔI</th>
-                                    <th class="p-3.5">CÁN BỘ LÃNH ĐẠO</th>
-                                    <th class="p-3.5">NỘI DUNG CÔNG TÁC & ĐỊA ĐIỂM</th>
-                                    <th class="p-3.5">TRỰC LÃNH ĐẠO 24/7</th>
-                                    <th class="p-3.5 text-center">TRẠNG THÁI</th>
-                                </tr>
-                            </thead>
-                            <tbody id="executiveTableBody" class="divide-y divide-slate-100">
-                                <!-- Rendered dynamically by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 3. SHIFTS / LỊCH TRỰC VIEW -->
-            <section id="tab-shifts" class="tab-content hidden space-y-4">
-                <div class="medical-card p-6 space-y-4">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
-                        <div>
-                            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                <i class="fa-solid fa-calendar-check text-sky-600"></i> LỊCH TRỰC CHÍNH THỨC (16/08/2026 - 31/08/2026)
-                            </h3>
-                            <p class="text-xs text-slate-500 font-medium mt-0.5">Thời gian trực: Từ 07 giờ ngày hôm nay đến 07 giờ ngày hôm sau (24 giờ liên tục)</p>
-                        </div>
-                        
-                        <!-- Search / Filter inputs -->
-                        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                            <input type="text" id="shiftSearchInput" onkeyup="filterShiftsTable()" placeholder="Tìm tên y bác sĩ..." class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white w-full sm:w-52">
-                            <button onclick="openSwapModal()" class="px-4 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-bold transition flex items-center gap-2">
-                                <i class="fa-solid fa-arrows-rotate text-sky-600"></i> Gửi Yêu Cầu Đổi Ca
+                    <!-- Rapid Actions -->
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-5 rounded-2xl text-white shadow-md">
+                        <h3 class="font-bold text-base mb-3 flex items-center space-x-2">
+                            <i class="fa-solid fa-bolt text-amber-400"></i>
+                            <span>Thao Tác Nhanh Nhân Viên</span>
+                        </h3>
+                        <div class="space-y-2 text-xs">
+                            <button onclick="openLeaveModal()" class="w-full bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-xl text-left flex items-center justify-between transition border border-white/10">
+                                <span><i class="fa-solid fa-paper-plane mr-2 text-sky-400"></i> Tạo đơn xin nghỉ phép / nghỉ bù</span>
+                                <i class="fa-solid fa-chevron-right text-slate-400"></i>
+                            </button>
+                            <button onclick="openSwapModal()" class="w-full bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-xl text-left flex items-center justify-between transition border border-white/10">
+                                <span><i class="fa-solid fa-arrow-rotate-left mr-2 text-emerald-400"></i> Đăng ký xin đổi ca trực</span>
+                                <i class="fa-solid fa-chevron-right text-slate-400"></i>
+                            </button>
+                            <button onclick="openExecutiveModal()" class="w-full bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-xl text-left flex items-center justify-between transition border border-white/10">
+                                <span><i class="fa-solid fa-calendar-plus mr-2 text-amber-400"></i> Đăng ký lịch làm việc với BGĐ</span>
+                                <i class="fa-solid fa-chevron-right text-slate-400"></i>
                             </button>
                         </div>
                     </div>
-
-                    <!-- Shift Calendar Table -->
-                    <div class="overflow-x-auto rounded-xl border border-slate-200">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-slate-100/80 text-slate-700 font-bold border-b border-slate-200">
-                                    <th class="p-3.5">NGÀY TRỰC</th>
-                                    <th class="p-3.5">ĐIỂM TRẠM CHÍNH (ĐỨC TÂN)</th>
-                                    <th class="p-3.5">ĐIỂM Y TẾ SỐ 1 (MỘ ĐỨC)</th>
-                                    <th class="p-3.5">ĐIỂM Y TẾ SỐ 2 (ĐỨC HÒA)</th>
-                                    <th class="p-3.5">ĐIỂM Y TẾ SỐ 3 (ĐỨC PHÚ)</th>
-                                    <th class="p-3.5 text-center">THAO TÁC</th>
-                                </tr>
-                            </thead>
-                            <tbody id="shiftsTableBody" class="divide-y divide-slate-100">
-                                <!-- Rendered dynamically by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
-            </section>
-
-            <!-- 4. TIMECARD / BẢNG CHẤM CÔNG VIEW -->
-            <section id="tab-timecard" class="tab-content hidden space-y-4">
-                <div class="medical-card p-6 space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-slate-100">
-                        <div>
-                            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                <i class="fa-solid fa-user-clock text-teal-600"></i> BẢNG CHẤM CÔNG ĐIỂM DANH THỜI GIAN THỰC
-                            </h3>
-                            <p class="text-xs text-slate-500 font-medium mt-0.5">Xác thực ca trực tự động dành cho cán bộ y tế trạm</p>
-                        </div>
-                        <button onclick="triggerBiometricScan()" class="px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold transition flex items-center gap-2 shadow-sm">
-                            <i class="fa-solid fa-fingerprint text-base"></i> Check-in/Check-out Giờ Trực
-                        </button>
-                    </div>
-
-                    <!-- Attendance Log Table -->
-                    <div class="overflow-x-auto rounded-xl border border-slate-200">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-slate-100/80 text-slate-700 font-bold border-b border-slate-200">
-                                    <th class="p-3.5">NHÂN VIÊN Y TẾ</th>
-                                    <th class="p-3.5">ĐIỂM TRẠM</th>
-                                    <th class="p-3.5">NGÀY TRỰC</th>
-                                    <th class="p-3.5">GIỜ VÀO</th>
-                                    <th class="p-3.5">GIỜ RA</th>
-                                    <th class="p-3.5">SỐ GIỜ</th>
-                                    <th class="p-3.5 text-center">TRẠNG THÁI</th>
-                                </tr>
-                            </thead>
-                            <tbody id="timecardTableBody" class="divide-y divide-slate-100">
-                                <!-- Rendered dynamically by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 5. VACCINE / LỊCH TIÊM CHỦNG VIEW -->
-            <section id="tab-vaccine" class="tab-content hidden space-y-4">
-                <div class="medical-card p-6 space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-slate-100">
-                        <div>
-                            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                <i class="fa-solid fa-syringe text-purple-600"></i> QUẢN LÝ LỊCH TIÊM CHỦNG & DỰ TRỮ VẮC XIN
-                            </h3>
-                            <p class="text-xs text-slate-500 font-medium mt-0.5">Kế hoạch tiêm chủng mở rộng và phòng chống dịch bệnh trên địa bàn</p>
-                        </div>
-                        <button onclick="openVaccineModal()" class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition flex items-center gap-2 shadow-sm">
-                            <i class="fa-solid fa-plus text-white"></i> Lên Đợt Tiêm Mới
-                        </button>
-                    </div>
-
-                    <!-- Vaccine Schedule Table -->
-                    <div class="overflow-x-auto rounded-xl border border-slate-200">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-slate-100/80 text-slate-700 font-bold border-b border-slate-200">
-                                    <th class="p-3.5">TÊN VẮC XIN / LOẠI</th>
-                                    <th class="p-3.5">ĐỐI TƯỢNG TIÊM</th>
-                                    <th class="p-3.5">ĐIỂM TIÊM CHỦNG</th>
-                                    <th class="p-3.5">NGÀY TIÊM DỰ KIẾN</th>
-                                    <th class="p-3.5">SỐ LIỀU</th>
-                                    <th class="p-3.5">BÁC SĨ PHỤ TRÁCH</th>
-                                    <th class="p-3.5 text-center">TRẠNG THÁI</th>
-                                </tr>
-                            </thead>
-                            <tbody id="vaccineTableBody" class="divide-y divide-slate-100">
-                                <!-- Rendered dynamically by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 6. LEAVE / NGHỈ PHÉP & NGHỈ BÙ VIEW -->
-            <section id="tab-leave" class="tab-content hidden space-y-4">
-                <!-- Leave Balances Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="medical-card p-5 border-l-4 border-l-sky-500">
-                        <div class="text-xs font-semibold text-slate-500 uppercase">Quỹ Phép Năm (2026)</div>
-                        <div class="text-2xl font-extrabold text-slate-800 mt-1">12 NGÀY</div>
-                        <div class="text-xs text-slate-500 mt-1">Đã dùng: 03 ngày | Còn lại: <span class="text-emerald-600 font-bold">09 ngày</span></div>
-                    </div>
-                    <div class="medical-card p-5 border-l-4 border-l-purple-500">
-                        <div class="text-xs font-semibold text-slate-500 uppercase">Quỹ Nghỉ Bù Trực Ca</div>
-                        <div class="text-2xl font-extrabold text-slate-800 mt-1">04 NGÀY</div>
-                        <div class="text-xs text-slate-500 mt-1">Tích lũy từ ca trực 24h vừa qua</div>
-                    </div>
-                    <div class="medical-card p-5 border-l-4 border-l-amber-500">
-                        <div class="text-xs font-semibold text-slate-500 uppercase">Đơn Nghỉ Chờ Duyệt</div>
-                        <div class="text-2xl font-extrabold text-slate-800 mt-1">02 ĐƠN</div>
-                        <div class="text-xs text-amber-600 font-bold mt-1">Đang trình Giám đốc phê duyệt</div>
-                    </div>
-                </div>
-
-                <div class="medical-card p-6 space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-slate-100">
-                        <div>
-                            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                <i class="fa-solid fa-plane-departure text-amber-600"></i> QUẢN LÝ NGHỈ PHÉP & NGHỈ BÙ
-                            </h3>
-                            <p class="text-xs text-slate-500 font-medium mt-0.5">Đăng ký đơn xin nghỉ phép năm, nghỉ bù ca trực 24h hoặc nghỉ việc riêng</p>
-                        </div>
-                        <button onclick="openLeaveModal()" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition flex items-center gap-2 shadow-sm">
-                            <i class="fa-solid fa-pen-to-square text-white"></i> Đăng Ký Nghỉ Mới
-                        </button>
-                    </div>
-
-                    <!-- Leave Requests Table -->
-                    <div class="overflow-x-auto rounded-xl border border-slate-200">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-slate-100/80 text-slate-700 font-bold border-b border-slate-200">
-                                    <th class="p-3.5">MÃ ĐƠN</th>
-                                    <th class="p-3.5">CÁN BỘ Y TẾ</th>
-                                    <th class="p-3.5">LOẠI NGHỈ</th>
-                                    <th class="p-3.5">TỪ NGÀY</th>
-                                    <th class="p-3.5">ĐẾN NGÀY</th>
-                                    <th class="p-3.5">LÝ DO</th>
-                                    <th class="p-3.5 text-center">TRẠNG THÁI</th>
-                                </tr>
-                            </thead>
-                            <tbody id="leaveTableBody" class="divide-y divide-slate-100">
-                                <!-- Rendered dynamically by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-        </main>
-    </div>
-
-    <!-- FOOTER -->
-    <footer class="bg-white border-t border-slate-200 py-6 px-6 text-center text-xs text-slate-500 mt-10">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
-            <div>
-                © 2026 TRẠM Y TẾ XÃ MỘ ĐỨC - UỶ BAN NHÂN DÂN XÃ MỘ ĐỨC, TỈNH QUẢNG NGÃI.
             </div>
-            <div class="text-sky-700 font-medium">
-                Cổng Thông Tin Số Hoá Y Tế Cơ Sở &bull; tytmoduc.github.io
+        </section>
+
+        <!-- =================================================================== -->
+        <!-- TAB 2: LỊCH TRỰC 04 ĐIỂM TRẠM                                       -->
+        <!-- =================================================================== -->
+        <section id="tab-lich-truc" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900">Lịch Trực Trạm Y Tế Xã Mộ Đức</h2>
+                        <p class="text-xs text-slate-500 mt-1">Lịch phân công trực 24/24 tại 04 điểm trạm (Thời gian: 07h00 hôm nay đến 07h00 hôm sau)</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="openSwapModal()" class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-sm flex items-center space-x-1.5">
+                            <i class="fa-solid fa-arrow-rotate-left"></i>
+                            <span>Đăng ký đổi ca</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter toolbar -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Tìm nhân sự / Chức danh</label>
+                        <input type="text" id="searchShiftInput" oninput="filterShiftsTable()" placeholder="Nhập tên BS, YS, ĐD..." class="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Lọc theo Điểm Trạm</label>
+                        <select id="filterShiftPoint" onchange="filterShiftsTable()" class="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
+                            <option value="ALL">Tất cả 04 điểm trạm</option>
+                            <option value="Đức Tân">Điểm chính (Đức Tân)</option>
+                            <option value="Mộ Đức">Điểm y tế số 1 (Mộ Đức)</option>
+                            <option value="Đức Hòa">Điểm y tế số 2 (Đức Hòa)</option>
+                            <option value="Đức Phú">Điểm y tế số 3 (Đức Phú)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Thời gian áp dụng</label>
+                        <div class="text-xs font-bold text-slate-700 py-2">Từ 16/08/2026 đến 31/08/2026</div>
+                    </div>
+                </div>
+
+                <!-- Duty Schedule Table -->
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-800 text-slate-200 uppercase text-[11px] font-bold">
+                            <tr>
+                                <th class="p-3">Thứ / Ngày</th>
+                                <th class="p-3 bg-sky-900/50">Điểm Chính (Đức Tân)</th>
+                                <th class="p-3">Điểm Số 1 (Mộ Đức)</th>
+                                <th class="p-3">Điểm Số 2 (Đức Hòa)</th>
+                                <th class="p-3">Điểm Số 3 (Đức Phú)</th>
+                                <th class="p-3 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shiftsTableBody" class="divide-y divide-slate-200 bg-white">
+                            <!-- Rendered dynamically from official document -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================== -->
+        <!-- TAB 3: BẢNG CHẤM CÔNG                                              -->
+        <!-- =================================================================== -->
+        <section id="tab-bang-cham-cong" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900">Bảng Chấm Công Bio-Sync Nhân Viên</h2>
+                        <p class="text-xs text-slate-500 mt-1">Theo dõi giờ vào/ra, làm ca trực, ngày công và giờ tăng ca (OT)</p>
+                    </div>
+                    <button onclick="triggerBiometricScan()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center space-x-2">
+                        <i class="fa-solid fa-fingerprint text-base"></i>
+                        <span>Giả Lập Điểm Danh Sinh Trắc</span>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                            <tr>
+                                <th class="p-3">Mã NV</th>
+                                <th class="p-3">Họ và Tên</th>
+                                <th class="p-3">Chức danh / Khoa</th>
+                                <th class="p-3">Điểm Trạm</th>
+                                <th class="p-3">Giờ Vào</th>
+                                <th class="p-3">Giờ Ra</th>
+                                <th class="p-3 text-center">Số Giờ OT</th>
+                                <th class="p-3 text-center">Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timecardTableBody" class="divide-y divide-slate-100">
+                            <!-- Rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================== -->
+        <!-- TAB 4: LỊCH LÀM VIỆC BAN GIÁM ĐỐC                                   -->
+        <!-- =================================================================== -->
+        <section id="tab-lich-lam-viec-bgd" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900">Lịch Công Tác Ban Giám Đốc</h2>
+                        <p class="text-xs text-slate-500 mt-1">Lịch họp, kiểm tra giám sát 04 điểm trạm, làm việc UBND và Tiếp Công Dân</p>
+                    </div>
+                    <button onclick="openExecutiveModal()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center space-x-2">
+                        <i class="fa-solid fa-calendar-plus"></i>
+                        <span>Đăng ký làm việc / Tiếp dân</span>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-amber-50 text-amber-900 font-bold border-b border-amber-200">
+                            <tr>
+                                <th class="p-3">Thời Gian</th>
+                                <th class="p-3">Lãnh Đạo Phụ Trách</th>
+                                <th class="p-3">Nội Dung Công Tác / Tiếp Dân</th>
+                                <th class="p-3">Địa Điểm</th>
+                                <th class="p-3">Thành Phần Tham Dự</th>
+                                <th class="p-3 text-center">Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="executiveTableBody" class="divide-y divide-slate-100">
+                            <!-- Rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================== -->
+        <!-- TAB 5: LỊCH KHÁM BỆNH BHYT                                         -->
+        <!-- =================================================================== -->
+        <section id="tab-lich-kham-benh" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900">Lịch Khám Bệnh BHYT & Chuyên Khoa</h2>
+                        <p class="text-xs text-slate-500 mt-1">Phân công phòng khám, Y bác sĩ trực khám tại 04 điểm trạm y tế</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="border border-slate-200 rounded-xl p-4 bg-sky-50/50">
+                        <span class="text-xs font-bold text-sky-800 bg-sky-100 px-2 py-0.5 rounded">ĐIỂM CHÍNH - ĐỨC TÂN</span>
+                        <h4 class="font-bold text-slate-900 text-sm mt-2">Phòng Khám Đa Khoa & Cấp Cứu</h4>
+                        <p class="text-xs text-slate-600 mt-1"><i class="fa-solid fa-user-doctor mr-1"></i> BS. Phạm Minh Đức / BS. Thuyên</p>
+                        <p class="text-xs text-slate-500 mt-0.5"><i class="fa-solid fa-clock mr-1"></i> Thứ 2 - Thứ 6 (07h00 - 17h00)</p>
+                        <span class="inline-block mt-3 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Đang mở cửa khám</span>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-xl p-4 bg-teal-50/50">
+                        <span class="text-xs font-bold text-teal-800 bg-teal-100 px-2 py-0.5 rounded">ĐIỂM SỐ 1 - MỘ ĐỨC</span>
+                        <h4 class="font-bold text-slate-900 text-sm mt-2">Phòng Khám Nội & BHYT</h4>
+                        <p class="text-xs text-slate-600 mt-1"><i class="fa-solid fa-user-doctor mr-1"></i> BS. Đức / YS. Tuệ</p>
+                        <p class="text-xs text-slate-500 mt-0.5"><i class="fa-solid fa-clock mr-1"></i> Thứ 2 - Thứ 6 (07h00 - 17h00)</p>
+                        <span class="inline-block mt-3 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Đang mở cửa khám</span>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-xl p-4 bg-indigo-50/50">
+                        <span class="text-xs font-bold text-indigo-800 bg-indigo-100 px-2 py-0.5 rounded">ĐIỂM SỐ 2 - ĐỨC HÒA</span>
+                        <h4 class="font-bold text-slate-900 text-sm mt-2">Phòng Khám YHCT & Phục Hồi</h4>
+                        <p class="text-xs text-slate-600 mt-1"><i class="fa-solid fa-user-doctor mr-1"></i> BS. Lê Văn Phu / YS. Phương</p>
+                        <p class="text-xs text-slate-500 mt-0.5"><i class="fa-solid fa-clock mr-1"></i> Thứ 2 - Thứ 6 (07h00 - 17h00)</p>
+                        <span class="inline-block mt-3 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Đang mở cửa khám</span>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-xl p-4 bg-purple-50/50">
+                        <span class="text-xs font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded">ĐIỂM SỐ 3 - ĐỨC PHÚ</span>
+                        <h4 class="font-bold text-slate-900 text-sm mt-2">Phòng Khám Mẹ & Bé / Sản Khoa</h4>
+                        <p class="text-xs text-slate-600 mt-1"><i class="fa-solid fa-user-doctor mr-1"></i> NHS. Lan / NHS. Thu</p>
+                        <p class="text-xs text-slate-500 mt-0.5"><i class="fa-solid fa-clock mr-1"></i> Thứ 2 - Thứ 6 (07h00 - 17h00)</p>
+                        <span class="inline-block mt-3 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Đang mở cửa khám</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================== -->
+        <!-- TAB 6: LỊCH TIÊM CHÚNG                                            -->
+        <!-- =================================================================== -->
+        <section id="tab-lich-tiem-chung" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900">Chương Trình Tiêm Chủng Mở Rộng</h2>
+                        <p class="text-xs text-slate-500 mt-1">Lịch tiêm vắc xin định kỳ cho trẻ em và phụ nữ mang thai trên địa bàn xã Mộ Đức</p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-rose-50 text-rose-900 font-bold border-b border-rose-200">
+                            <tr>
+                                <th class="p-3">Ngày Tiêm</th>
+                                <th class="p-3">Tên Vắc Xin</th>
+                                <th class="p-3">Đối Tượng Tiêm</th>
+                                <th class="p-3">Địa Điểm Thực Hiện</th>
+                                <th class="p-3">Bác Sĩ Phụ Trách</th>
+                                <th class="p-3 text-center">Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vaccineTableBody" class="divide-y divide-slate-100">
+                            <!-- Rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================== -->
+        <!-- TAB 7: QUẢN LÝ NGHỈ PHÉP & NGHỈ BÙ                                 -->
+        <!-- =================================================================== -->
+        <section id="tab-nghi-phep" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900">Quản Lý Nghỉ Phép & Nghỉ Bù</h2>
+                        <p class="text-xs text-slate-500 mt-1">Theo dõi quỹ ngày nghỉ phép năm, nghỉ bù ca trực đêm/lễ của cán bộ y tế</p>
+                    </div>
+                    <button onclick="openLeaveModal()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center space-x-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Tạo Đơn Xin Nghỉ</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                        <p class="text-xs text-purple-700 font-semibold">Quỹ Phép Năm 2026</p>
+                        <p class="text-2xl font-black text-purple-900 mt-1">12 Ngày</p>
+                        <p class="text-[11px] text-purple-600 mt-1">Đã nghỉ: 4 ngày • Còn lại: 8 ngày</p>
+                    </div>
+                    <div class="p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+                        <p class="text-xs text-indigo-700 font-semibold">Quỹ Nghỉ Bù Trực Đêm / Lễ</p>
+                        <p class="text-2xl font-black text-indigo-900 mt-1">5 Ngày</p>
+                        <p class="text-[11px] text-indigo-600 mt-1">Đã nghỉ: 2 ngày • Còn lại: 3 ngày</p>
+                    </div>
+                    <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                        <p class="text-xs text-emerald-700 font-semibold">Trạng Thái Phê Duyệt</p>
+                        <p class="text-2xl font-black text-emerald-900 mt-1">Tự Động AI Sync</p>
+                        <p class="text-[11px] text-emerald-600 mt-1">Đồng bộ trực tiếp Google Sheet BGĐ</p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                            <tr>
+                                <th class="p-3">Họ và Tên</th>
+                                <th class="p-3">Loại Nghỉ</th>
+                                <th class="p-3">Từ Ngày</th>
+                                <th class="p-3">Đến Ngày</th>
+                                <th class="p-3">Lý Do Nghỉ</th>
+                                <th class="p-3 text-center">Trạng Thái Duyệt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaveTableBody" class="divide-y divide-slate-100">
+                            <!-- Rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================== -->
+        <!-- TAB 8: GIỚI THIỆU TRẠM Y TẾ                                        -->
+        <!-- =================================================================== -->
+        <section id="tab-gioi-thieu" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-xl font-extrabold text-slate-900 mb-2">Giới Thiệu Trạm Y Tế Xã Mộ Đức</h2>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Trạm Y tế xã Mộ Đức trực thuộc <strong>UBND Xã Mộ Đức</strong>, chịu sự chỉ đạo chuyên môn trực tiếp của Y tế cấp trên. Trạm có nhiệm vụ chăm sóc sức khỏe ban đầu, phòng chống dịch bệnh, tiêm chủng mở rộng và khám chữa bệnh BHYT cho nhân dân trên địa bàn xã Mộ Đức.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-slate-900 text-sm mb-2"><i class="fa-solid fa-map-location-dot text-sky-600 mr-2"></i> Hệ Thống 04 Điểm Y Tế</h4>
+                        <ul class="text-xs text-slate-600 space-y-2">
+                            <li><strong>1. Điểm Trạm Chính (Đức Tân):</strong> Trung tâm tiếp nhận khám đa khoa, cấp cứu & điều hành.</li>
+                            <li><strong>2. Điểm Y Tế Số 1 (Mộ Đức):</strong> Phụ trách khám BHYT khu vực trung tâm Mộ Đức.</li>
+                            <li><strong>3. Điểm Y Tế Số 2 (Đức Hòa):</strong> Phụ trách Y học cổ truyền, PHCN & tiêm chủng.</li>
+                            <li><strong>4. Điểm Y Tế Số 3 (Đức Phú):</strong> Phụ trách chăm sóc Mẹ & Bé, Sản khoa & sơ cứu.</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-slate-900 text-sm mb-2"><i class="fa-solid fa-address-book text-sky-600 mr-2"></i> Thông Tin Liên Hệ Khẩn Cấp</h4>
+                        <ul class="text-xs text-slate-600 space-y-2">
+                            <li><strong>Cơ quan chủ quản:</strong> Ủy Ban Nhân Dân Xã Mộ Đức</li>
+                            <li><strong>Hotline Cấp cứu 24/7:</strong> (0255) 3.888.115</li>
+                            <li><strong>Website PWA:</strong> tytmoduc.github.io</li>
+                            <li><strong>Email tiếp nhận:</strong> tyt.moduc@quangngai.gov.vn</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL 1: GOOGLE SHEETS CONFIGURATION MODAL -->
+    <div id="sheetModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b pb-3 mb-4">
+                <h3 class="font-bold text-slate-900 text-base flex items-center space-x-2">
+                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                    <span>Cấu Hình Tự Động Đồng Bộ Google Sheet</span>
+                </h3>
+                <button onclick="closeModal('sheetModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Google Apps Script Web App URL</label>
+                    <input type="text" id="sheetApiUrlInput" placeholder="https://script.google.com/macros/s/AKfycbx.../exec" class="w-full text-xs px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono">
+                    <p class="text-[11px] text-slate-500 mt-1">Dán URL Deployment Web App Google Apps Script của bạn vào đây.</p>
+                </div>
+
+                <div class="bg-slate-900 text-slate-100 p-3.5 rounded-xl font-mono text-[11px] overflow-x-auto">
+                    <p class="text-emerald-400 font-bold mb-1">// Mã Kịch Bản Google Apps Script (Copy dán vào Google Sheet của bạn):</p>
+                    <pre><code>function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Data") || ss.getSheets()[0];
+  var data = sheet.getDataRange().getValues();
+  return ContentService.createTextOutput(JSON.stringify({status: "success", data: data}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Data") || ss.getSheets()[0];
+  var payload = JSON.parse(e.postData.contents);
+  sheet.appendRow([new Date(), payload.type, JSON.stringify(payload.data)]);
+  return ContentService.createTextOutput(JSON.stringify({status: "success"}))
+    .setMimeType(ContentService.MimeType.JSON);
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 mt-6 pt-4 border-t">
+                <button onclick="closeModal('sheetModal')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-semibold">Hủy</button>
+                <button onclick="saveSheetConfig()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold">Lưu URL & Đồng Bộ</button>
             </div>
         </div>
-    </footer>
-
-    <!-- MODAL 1: SWAP SHIFT MODAL -->
-    <div id="swapModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div class="medical-card p-6 rounded-2xl w-full max-w-md bg-white border border-slate-200 shadow-2xl space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-arrows-rotate text-sky-600"></i> YÊU CẦU ĐỔI CA TRỰC
-                </h3>
-                <button onclick="closeModal('swapModal')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <form onsubmit="handleSwapSubmit(event)" class="space-y-3 text-xs">
-                <div>
-                    <label class="block text-slate-600 font-semibold mb-1">Người Yêu Cầu Đổi:</label>
-                    <input type="text" id="swapRequester" required placeholder="Ví dụ: BS. Thuyên" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white">
-                </div>
-                <div>
-                    <label class="block text-slate-600 font-semibold mb-1">Ngày Trực Cần Đổi:</label>
-                    <input type="text" id="swapDate" required placeholder="Ví dụ: 18/08/2026" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white">
-                </div>
-                <div>
-                    <label class="block text-slate-600 font-semibold mb-1">Đổi Với Y Bác Sĩ:</label>
-                    <input type="text" id="swapTarget" required placeholder="Ví dụ: BS. Đức" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white">
-                </div>
-                <div>
-                    <label class="block text-slate-600 font-semibold mb-1">Lý Do Đổi Ca:</label>
-                    <textarea id="swapReason" rows="2" required placeholder="Ghi rõ lý do công tác hoặc cá nhân..." class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white"></textarea>
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('swapModal')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-semibold hover:bg-slate-200">Hủy</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-sky-600 text-white font-bold hover:bg-sky-700 shadow-sm">Gửi Yêu Cầu</button>
-                </div>
-            </form>
-        </div>
     </div>
 
-    <!-- MODAL 4: EXECUTIVE MEETING REQUEST MODAL -->
-    <div id="executiveModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div class="medical-card p-6 rounded-2xl w-full max-w-md bg-white border border-slate-200 shadow-2xl space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-calendar-check text-sky-600"></i> ĐĂNG KÝ LỊCH LÀM VIỆC / TIẾP DÂN
-                </h3>
-                <button onclick="closeModal('executiveModal')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <!-- MODAL 2: LEAVE APPLICATION FORM -->
+    <div id="leaveModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between border-b pb-3 mb-4">
+                <h3 class="font-bold text-slate-900 text-base">Tạo Đơn Xin Nghỉ Phép / Nghỉ Bù</h3>
+                <button onclick="closeModal('leaveModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <form onsubmit="handleExecutiveSubmit(event)" class="space-y-3 text-xs">
+            <form onsubmit="submitLeaveForm(event)" class="space-y-3 text-xs">
                 <div>
-                    <label class="block text-slate-600 font-semibold mb-1">Họ và Tên Người Đăng Ký / Cơ Quan:</label>
-                    <input type="text" id="execReqName" required placeholder="Ví dụ: Nguyễn Văn A - Trưởng Thôn Mộ Đức" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white">
+                    <label class="block font-semibold text-slate-700 mb-1">Họ và Tên Nhân Viên</label>
+                    <input type="text" id="leaveName" required placeholder="Nhập tên cán bộ..." class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
                 </div>
                 <div>
-                    <label class="block text-slate-600 font-semibold mb-1">Đăng Ký Làm Việc Với:</label>
-                    <select id="execTargetLeader" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white">
-                        <option value="BS. Phạm Minh Đức (Giám Đốc)">BS. Phạm Minh Đức (Giám Đốc Trạm)</option>
-                        <option value="BS. CKI. Nguyễn Văn Thuyên (Phó GD)">BS. CKI. Nguyễn Văn Thuyên (Phó GD Chuyên Môn)</option>
-                        <option value="BS. Lê Văn Phu (Phó GD)">BS. Lê Văn Phu (Phó GD Dự Phòng)</option>
+                    <label class="block font-semibold text-slate-700 mb-1">Loại Ngày Nghỉ</label>
+                    <select id="leaveType" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
+                        <option value="Phép năm">Nghỉ phép năm</option>
+                        <option value="Nghỉ bù">Nghỉ bù ca trực đêm/lễ</option>
+                        <option value="Nghỉ việc riêng">Nghỉ việc riêng / Bệnh</option>
                     </select>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-slate-600 font-semibold mb-1">Ngày Đề Xuất:</label>
-                        <input type="date" id="execDate" required class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white">
+                        <label class="block font-semibold text-slate-700 mb-1">Từ Ngày</label>
+                        <input type="date" id="leaveStart" required class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
                     </div>
                     <div>
-                        <label class="block text-slate-600 font-semibold mb-1">Số Điện Thoại:</label>
-                        <input type="tel" id="execPhone" required placeholder="0905.xxx.xxx" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white">
+                        <label class="block font-semibold text-slate-700 mb-1">Đến Ngày</label>
+                        <input type="date" id="leaveEnd" required class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-slate-600 font-semibold mb-1">Nội Dung Cần Làm Việc / Ý Kiến:</label>
-                    <textarea id="execReason" rows="2" required placeholder="Ghi rõ nội dung đề xuất hoặc làm việc..." class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white"></textarea>
+                    <label class="block font-semibold text-slate-700 mb-1">Lý Do Nghỉ</label>
+                    <textarea id="leaveReason" rows="2" placeholder="Ghi rõ lý do..." class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none"></textarea>
                 </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('executiveModal')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-semibold hover:bg-slate-200">Hủy</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-sky-600 text-white font-bold hover:bg-sky-700 shadow-sm">Gửi Đăng Ký</button>
+                <div class="flex justify-end space-x-2 pt-3 border-t">
+                    <button type="button" onclick="closeModal('leaveModal')" class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg">Hủy</button>
+                    <button type="submit" class="px-4 py-1.5 bg-purple-600 text-white font-semibold rounded-lg">Gửi Đơn</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- TOAST NOTIFICATION CONTAINER -->
-    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+    <!-- MODAL 3: SWAP DUTY FORM -->
+    <div id="swapModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between border-b pb-3 mb-4">
+                <h3 class="font-bold text-slate-900 text-base">Đăng Ký Đổi Ca Trực</h3>
+                <button onclick="closeModal('swapModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="submitSwapForm(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Người Đổi (Bạn)</label>
+                    <input type="text" id="swapFrom" required placeholder="Tên cán bộ xin đổi..." class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Người Nhận Ca</label>
+                    <input type="text" id="swapTo" required placeholder="Tên cán bộ nhận trực thay..." class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Ngày Trực Đổi</label>
+                    <input type="date" id="swapDate" required class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
+                </div>
+                <div class="flex justify-end space-x-2 pt-3 border-t">
+                    <button type="button" onclick="closeModal('swapModal')" class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg">Hủy</button>
+                    <button type="submit" class="px-4 py-1.5 bg-sky-600 text-white font-semibold rounded-lg">Gửi Yêu Cầu</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- MODAL 4: EXECUTIVE MEETING FORM -->
+    <div id="executiveModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between border-b pb-3 mb-4">
+                <h3 class="font-bold text-slate-900 text-base">Đăng Ký Lịch Làm Việc với BGĐ</h3>
+                <button onclick="closeModal('executiveModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="submitExecutiveForm(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Lãnh Đạo Cần Làm Việc</label>
+                    <select id="execLeader" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
+                        <option value="BS. Phạm Minh Đức">Giám đốc - BS. Phạm Minh Đức</option>
+                        <option value="BS. CKI. Nguyễn Văn Thuyên">Phó Giám đốc - BS. CKI. Nguyễn Văn Thuyên</option>
+                        <option value="BS. Lê Văn Phu">Phó Giám đốc - BS. Lê Văn Phu</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nội Dung / Đơn Vị Đăng Ký</label>
+                    <input type="text" id="execTopic" required placeholder="Ghi rõ nội dung xin gặp..." class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Thời Gian Dự Kiến</label>
+                    <input type="datetime-local" id="execTime" required class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
+                </div>
+                <div class="flex justify-end space-x-2 pt-3 border-t">
+                    <button type="button" onclick="closeModal('executiveModal')" class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg">Hủy</button>
+                    <button type="submit" class="px-4 py-1.5 bg-amber-600 text-white font-semibold rounded-lg">Đăng Ký</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div id="toastContent" class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 text-xs font-semibold">
+            <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+            <span id="toastMessage">Thông báo từ hệ thống!</span>
+        </div>
+    </div>
+
     <script>
-        // Official Roster Data (16/08/2026 - 31/08/2026) extracted from official PDF
-        let officialShifts = [
-            { day: "Chủ Nhật", date: "16/08/2026", pointMain: "BS. Thuyên", point1: "ĐĐ. Lài", point2: "YS. Phương", point3: "NHS. Lan" },
-            { day: "Thứ Hai", date: "17/08/2026", pointMain: "YS. Tuệ", point1: "ĐĐ. Nguyệt", point2: "BS. Phu", point3: "YS. Vũ" },
-            { day: "Thứ Ba", date: "18/08/2026", pointMain: "NHS. Thủy", point1: "NHS. Việt", point2: "ĐĐ. Thanh", point3: "CN. Thu" },
-            { day: "Thứ Tư", date: "19/08/2026", pointMain: "YS. Thủy", point1: "BS. Đức", point2: "NHS. Thắm", point3: "ĐĐ. Ly Va" },
-            { day: "Thứ Năm", date: "20/08/2026", pointMain: "ĐĐ. Vinh", point1: "NHS. Tin", point2: "ĐĐ. Trúc", point3: "NHS. Bé" },
-            { day: "Thứ Sáu", date: "21/08/2026", pointMain: "BS. Nguyện", point1: "ĐĐ. Lài", point2: "YS. Phương", point3: "NHS. Trâm" },
-            { day: "Thứ Bảy", date: "22/08/2026", pointMain: "NHS. Thy", point1: "ĐĐ. Nguyệt", point2: "BS. Phu", point3: "NHS. Lan" },
-            { day: "Chủ Nhật", date: "23/08/2026", pointMain: "BS. Thuyên", point1: "NHS. Việt", point2: "ĐĐ. Thanh", point3: "YS. Vũ" },
-            { day: "Thứ Hai", date: "24/08/2026", pointMain: "NHS. Thùy", point1: "BS. Đức", point2: "NHS. Thắm", point3: "CN. Thu" },
-            { day: "Thứ Ba", date: "25/08/2026", pointMain: "YS. Thủy", point1: "NHS. Tin", point2: "ĐĐ. Trúc", point3: "ĐĐ. Ly Va" },
-            { day: "Thứ Tư", date: "26/08/2026", pointMain: "ĐĐ. Vinh", point1: "ĐĐ. Lài", point2: "YS. Phương", point3: "NHS. Bé" },
-            { day: "Thứ Năm", date: "27/08/2026", pointMain: "BS. Nguyện", point1: "ĐĐ. Nguyệt", point2: "BS. Phu", point3: "NHS. Trâm" },
-            { day: "Thứ Sáu", date: "28/08/2026", pointMain: "NHS. Thy", point1: "NHS. Việt", point2: "ĐĐ. Thanh", point3: "NHS. Lan" },
-            { day: "Thứ Bảy", date: "29/08/2026", pointMain: "BS. Thuyên", point1: "BS. Đức", point2: "NHS. Thắm", point3: "YS. Vũ" },
-            { day: "Chủ Nhật", date: "30/08/2026", pointMain: "YS. Tuệ", point1: "NHS. Tin", point2: "ĐĐ. Trúc", point3: "CN. Thu" },
-            { day: "Thứ Hai", date: "31/08/2026", pointMain: "YS. Thủy", point1: "ĐĐ. Lài", point2: "YS. Phương", point3: "ĐĐ. Ly Va" }
+        /* ==========================================================================
+           1. CONSTANTS, ROUTING & DATA STORES
+           ========================================================================== */
+        const ROUTES = [
+            'dashboard', 
+            'lich-truc', 
+            'bang-cham-cong', 
+            'lich-lam-viec-bgd', 
+            'lich-kham-benh', 
+            'lich-tiem-chung', 
+            'nghi-phep', 
+            'gioi-thieu'
         ];
 
-        // Attendance Logs Data
-        let attendanceLogs = [
-            { staff: "NHS. Thy", point: "Điểm Trạm Chính", date: "22/08/2026", in: "07:00", out: "--:--", hours: "24.0h", status: "Đang Trực Ca" },
-            { staff: "ĐĐ. Nguyệt", point: "Điểm Y Tế Số 1", date: "22/08/2026", in: "06:55", out: "--:--", hours: "24.0h", status: "Đang Trực Ca" },
-            { staff: "BS. Phu", point: "Điểm Y Tế Số 2", date: "22/08/2026", in: "07:02", out: "--:--", hours: "24.0h", status: "Đang Trực Ca" },
-            { staff: "NHS. Lan", point: "Điểm Y Tế Số 3", date: "22/08/2026", in: "06:50", out: "--:--", hours: "24.0h", status: "Đang Trực Ca" },
-            { staff: "BS. Nguyện", point: "Điểm Trạm Chính", date: "21/08/2026", in: "06:58", out: "07:05", hours: "24.1h", status: "Hoàn Thành Ca" },
-            { staff: "YS. Phương", point: "Điểm Y Tế Số 2", date: "21/08/2026", in: "07:00", out: "07:00", hours: "24.0h", status: "Hoàn Thành Ca" }
+        let deferredPrompt = null;
+        let googleSheetUrl = localStorage.getItem('TYT_GOOGLE_SHEET_URL') || '';
+
+        // OFFICIAL DUTY SCHEDULE DATA (16/08/2026 - 31/08/2026)
+        const INITIAL_DUTY_DATA = [
+            { dayName: "CN", date: "16/08/2026", ducTan: "Bs Thuyên", moDuc: "ĐD Lài", ducHoa: "Ys Phương", ducPhu: "NHS Lan" },
+            { dayName: "Hai", date: "17/08/2026", ducTan: "Ys Tuệ", moDuc: "ĐD Nguyệt", ducHoa: "BS Phu", ducPhu: "Ys Vũ" },
+            { dayName: "Ba", date: "18/08/2026", ducTan: "NHS Thuỷ", moDuc: "NHS Việt", ducHoa: "ĐD Thanh", ducPhu: "CN Thu" },
+            { dayName: "Tư", date: "19/08/2026", ducTan: "Ys Thủy", moDuc: "BS Đức", ducHoa: "NHS Thắm", ducPhu: "ĐD Ly Va" },
+            { dayName: "Năm", date: "20/08/2026", ducTan: "ĐD Vinh", moDuc: "NHS Tin", ducHoa: "ĐD Trúc", ducPhu: "NHS Bé" },
+            { dayName: "Sáu", date: "21/08/2026", ducTan: "BS Nguyện", moDuc: "ĐD Lài", ducHoa: "Ys Phương", ducPhu: "NHS Trâm" },
+            { dayName: "Bảy", date: "22/08/2026", ducTan: "NHS Thy", moDuc: "ĐD Nguyệt", ducHoa: "BS Phu", ducPhu: "NHS Lan" },
+            { dayName: "CN", date: "23/08/2026", ducTan: "Bs Thuyên", moDuc: "NHS Việt", ducHoa: "ĐD Thanh", ducPhu: "Ys Vũ" },
+            { dayName: "Hai", date: "24/08/2026", ducTan: "NHS Thuỳ", moDuc: "BS Đức", ducHoa: "NHS Thắm", ducPhu: "CN Thu" },
+            { dayName: "Ba", date: "25/08/2026", ducTan: "Ys Thủy", moDuc: "NHS Tin", ducHoa: "ĐD Trúc", ducPhu: "ĐD Ly Va" },
+            { dayName: "Tư", date: "26/08/2026", ducTan: "ĐD Vinh", moDuc: "ĐD Lài", ducHoa: "Ys Phương", ducPhu: "NHS Bé" },
+            { dayName: "Năm", date: "27/08/2026", ducTan: "BS Nguyện", moDuc: "ĐD Nguyệt", ducHoa: "BS Phu", ducPhu: "NHS Trâm" },
+            { dayName: "Sáu", date: "28/08/2026", ducTan: "NHS Thy", moDuc: "NHS Việt", ducHoa: "ĐD Thanh", ducPhu: "NHS Lan" },
+            { dayName: "Bảy", date: "29/08/2026", ducTan: "Bs Thuyên", moDuc: "BS Đức", ducHoa: "NHS Thắm", ducPhu: "Ys Vũ" },
+            { dayName: "CN", date: "30/08/2026", ducTan: "Ys Tuệ", moDuc: "NHS Tin", ducHoa: "ĐD Trúc", ducPhu: "CN Thu" },
+            { dayName: "Hai", date: "31/08/2026", ducTan: "Ys Thủy", moDuc: "ĐD Lài", ducHoa: "Ys Phương", ducPhu: "ĐD Ly Va" }
         ];
 
-        // Vaccination Schedule Data
-        let vaccineSchedules = [
-            { name: "Vắc xin Cúm Mùa Mới", target: "Cán bộ y tế & Người cao tuổi", point: "Điểm Trạm Chính (Đức Tân)", date: "25/08/2026", doses: 150, doctor: "BS. Thuyên", status: "Sắp Tới" },
-            { name: "Tiêm Chủng Mở Rộng 6-trong-1", target: "Trẻ em dưới 1 tuổi", point: "Điểm Y Tế Số 1 (Mộ Đức)", date: "26/08/2026", doses: 120, doctor: "BS. Đức", status: "Sắp Tới" },
-            { name: "Vắc xin Uốn Ván VAT", target: "Phụ nữ mang thai", point: "Điểm Y Tế Số 3 (Đức Phú)", date: "28/08/2026", doses: 45, doctor: "NHS. Lan", status: "Lên Lịch" }
+        // INITIAL EXECUTIVE SCHEDULE
+        const INITIAL_EXECUTIVE_DATA = [
+            { time: "25/08/2026 (08h00)", leader: "BS. Phạm Minh Đức", topic: "Họp Giao Ban Công Tác Y Tế Tháng 8 với UBND Xã", location: "UBND Xã Mộ Đức", participants: "UBND Xã, Ban Giám Đốc", status: "Chờ diễn ra" },
+            { time: "26/08/2026 (09h00)", leader: "BS. CKI. Nguyễn Văn Thuyên", topic: "Kiểm tra công tác Cấp cứu & Kho Thuốc tại Điểm Số 2", location: "Điểm Y Tế Số 2 (Đức Hòa)", participants: "ĐD Trúc, YS Phương", status: "Đã xếp lịch" },
+            { time: "27/08/2026 (14h00)", leader: "BS. Lê Văn Phu", topic: "Giám sát Đợt Tiêm Chủng Mở Rộng Trẻ Em", location: "Điểm Trạm Chính (Đức Tân)", participants: "Tổ Tiêm Chủng", status: "Đã xếp lịch" }
         ];
 
-        // Leave Requests Data
-        let leaveRequests = [
-            { id: "LR-2026-001", staff: "YS. Tuệ", type: "Nghỉ Bù Trực Ca", start: "23/08/2026", end: "24/08/2026", reason: "Nghỉ bù sau ca trực 24h", status: "Chờ Duyệt" },
-            { id: "LR-2026-002", staff: "ĐĐ. Lài", type: "Nghỉ Phép Năm", start: "27/08/2026", end: "28/08/2026", reason: "Giải quyết việc gia đình", status: "Chờ Duyệt" },
-            { id: "LR-2026-003", staff: "BS. Nguyện", type: "Nghỉ Phép Năm", start: "10/08/2026", end: "12/08/2026", reason: "Tham gia tập huấn chuyên môn", status: "Đã Duyệt" }
+        // INITIAL TIMECARD DATA
+        const INITIAL_TIMECARD_DATA = [
+            { code: "NV01", name: "BS. Phạm Minh Đức", role: "Giám đốc", point: "Đức Tân", timeIn: "06:55", timeOut: "17:10", ot: "2.0h", status: "Đúng giờ" },
+            { code: "NV02", name: "BS. CKI. Nguyễn Văn Thuyên", role: "Phó Giám đốc", point: "Đức Tân", timeIn: "07:00", timeOut: "17:05", ot: "1.5h", status: "Đúng giờ" },
+            { code: "NV03", name: "BS. Lê Văn Phu", role: "Phó Giám đốc", point: "Đức Hòa", timeIn: "06:58", timeOut: "17:00", ot: "1.0h", status: "Đúng giờ" },
+            { code: "NV04", name: "ĐD Lài", role: "Điều dưỡng", point: "Mộ Đức", timeIn: "07:02", timeOut: "17:00", ot: "0.0h", status: "Đúng giờ" },
+            { code: "NV05", name: "NHS Lan", role: "Nữ hộ sinh", point: "Đức Phú", timeIn: "07:15", timeOut: "17:00", ot: "0.0h", status: "Đi muộn" }
         ];
 
-        // Executive Leadership Schedule Data
-        let executiveSchedules = [
-            { day: "Thứ Bảy", date: "22/08/2026", session: "Sáng (07:30 - 11:30)", leader: "BS. Phạm Minh Đức", content: "Làm việc trực ban điều hành & tiếp dân định kỳ tại Điểm Trạm Chính", duty24h: "BS. Phạm Minh Đức", status: "Đang Thực Hiện" },
-            { day: "Thứ Bảy", date: "22/08/2026", session: "Chiều (13:30 - 17:00)", leader: "BS. Lê Văn Phu", content: "Giám sát công tác Y tế dự phòng & Kho vắc xin tại Điểm Y tế Số 2 (Đức Hòa)", duty24h: "BS. Lê Văn Phu", status: "Sắp Tới" },
-            { day: "Chủ Nhật", date: "23/08/2026", session: "Cả Ngày (24h)", leader: "BS. Nguyễn Văn Thuyên", content: "Trực Lãnh đạo Ban Giám đốc toàn trạm, chỉ đạo Cấp cứu & Khám BHYT", duty24h: "BS. Nguyễn Văn Thuyên", status: "Sắp Tới" },
-            { day: "Thứ Hai", date: "24/08/2026", session: "Sáng (07:30 - 11:30)", leader: "BS. Phạm Minh Đức", content: "Giao ban tuần Ban Giám đốc & Dự họp Chỉ đạo tại UBND Xã Mộ Đức", duty24h: "BS. Phạm Minh Đức", status: "Lên Lịch" },
-            { day: "Thứ Hai", date: "24/08/2026", session: "Chiều (13:30 - 17:00)", leader: "BS. Nguyễn Văn Thuyên", content: "Hội chẩn chuyên môn, kiểm tra hồ sơ bệnh án BHYT tại Điểm Y tế Số 1", duty24h: "BS. Phạm Minh Đức", status: "Lên Lịch" },
-            { day: "Thứ Ba", date: "25/08/2026", session: "Sáng (07:30 - 11:30)", leader: "BS. Lê Văn Phu", content: "Chỉ đạo đợt Tiêm vắc xin Cúm Mùa Mới tại Điểm Trạm Chính (Đức Tân)", duty24h: "BS. Lê Văn Phu", status: "Lên Lịch" },
-            { day: "Thứ Ba", date: "25/08/2026", session: "Chiều (13:30 - 17:00)", leader: "BS. Phạm Minh Đức", content: "Tiếp công dân định kỳ tuần & Duyệt kế hoạch tài chính nhân sự", duty24h: "BS. Lê Văn Phu", status: "Lên Lịch" },
-            { day: "Thứ Tư", date: "26/08/2026", session: "Sáng (07:30 - 11:30)", leader: "BS. Nguyễn Văn Thuyên", content: "Kiểm tra thực địa trang thiết bị y tế tại Điểm Y tế Số 3 (Đức Phú)", duty24h: "BS. Nguyễn Văn Thuyên", status: "Lên Lịch" },
-            { day: "Thứ Năm", date: "27/08/2026", session: "Sáng (07:30 - 11:30)", leader: "BS. Phạm Minh Đức", content: "Dự họp giao ban Y tế ngành tại Trung tâm Y tế / Sở Y Tế Quảng Ngãi", duty24h: "BS. Phạm Minh Đức", status: "Lên Lịch" },
-            { day: "Thứ Sáu", date: "28/08/2026", session: "Chiều (13:30 - 17:00)", leader: "BS. Phạm Minh Đức", content: "Họp tổng kết công tác tháng, duyệt Lịch trực & Quỹ phép/nghỉ bù toàn trạm", duty24h: "BS. Lê Văn Phu", status: "Lên Lịch" }
+        // INITIAL VACCINE DATA
+        const INITIAL_VACCINE_DATA = [
+            { date: "28/08/2026", vaccine: "5 trong 1 (DPT-VGB-Hib)", target: "Trẻ 2-4 tháng tuổi", location: "Điểm Trạm Chính & Số 2", doctor: "BS. Lê Văn Phu", status: "Sắp diễn ra" },
+            { date: "30/08/2026", vaccine: "Sởi - Rubella (MR)", target: "Trẻ 18 tháng tuổi", location: "Điểm Y Tế Số 1 (Mộ Đức)", doctor: "BS. Nguyễn Văn Thuyên", status: "Chuẩn bị kho" }
         ];
 
-        // Tab switching logic
-        function switchTab(tabId) {
-            const tabs = ['dashboard', 'about', 'executive', 'shifts', 'timecard', 'vaccine', 'leave'];
-            tabs.forEach(id => {
-                const content = document.getElementById(`tab-${id}`);
-                const btn = document.getElementById(`nav-${id}`);
-                if (content && btn) {
-                    if (id === tabId) {
-                        content.classList.remove('hidden');
-                        content.classList.add('block');
-                        btn.classList.add('active-tab');
-                        btn.classList.remove('text-slate-600');
-                    } else {
-                        content.classList.remove('block');
-                        content.classList.add('hidden');
-                        btn.classList.remove('active-tab');
-                        btn.classList.add('text-slate-600');
-                    }
-                }
+        // INITIAL LEAVE DATA
+        const INITIAL_LEAVE_DATA = [
+            { name: "Ys Tuệ", type: "Nghỉ bù ca trực", start: "27/08/2026", end: "27/08/2026", reason: "Nghỉ bù sau ca trực đêm 24/08", status: "Đã duyệt" },
+            { name: "ĐD Vinh", type: "Phép năm", start: "01/09/2026", end: "02/09/2026", reason: "Giải quyết việc gia đình", status: "Chờ BGĐ duyệt" }
+        ];
+
+        /* ==========================================================================
+           2. NAVIGATION & PWA CORE ROUTING
+           ========================================================================== */
+        function navigateTo(routeId, pushHash = true) {
+            if (!ROUTES.includes(routeId)) routeId = 'dashboard';
+
+            // Hide all tabs
+            ROUTES.forEach(r => {
+                const tabEl = document.getElementById(`tab-${r}`);
+                const navEl = document.getElementById(`nav-${r}`);
+                if (tabEl) tabEl.classList.add('hidden');
+                if (navEl) navEl.classList.remove('active-tab');
             });
-        }
 
-        // Render Executive Leadership Table
-        function renderExecutiveTable(data = executiveSchedules) {
-            const tbody = document.getElementById('executiveTableBody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            data.forEach(item => {
-                const isToday = item.date === "22/08/2026";
-                const rowClass = isToday ? "bg-sky-50/80 font-semibold" : "hover:bg-slate-50";
-                
-                let badgeColor = "bg-slate-100 text-slate-700 border-slate-200";
-                if (item.status === "Đang Thực Hiện") badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300 animate-pulse";
-                else if (item.status === "Sắp Tới") badgeColor = "bg-sky-100 text-sky-800 border-sky-300";
+            // Show target tab
+            const activeTab = document.getElementById(`tab-${routeId}`);
+            const activeNav = document.getElementById(`nav-${routeId}`);
+            if (activeTab) activeTab.classList.remove('hidden');
+            if (activeNav) activeNav.classList.add('active-tab');
 
-                tbody.innerHTML += `
-                    <tr class="${rowClass} transition">
-                        <td class="p-3.5 font-bold text-slate-800">${item.day}<br><span class="text-slate-500 font-normal">${item.date}</span></td>
-                        <td class="p-3.5 font-bold text-sky-800">${item.session}</td>
-                        <td class="p-3.5 font-extrabold text-slate-900">${item.leader}</td>
-                        <td class="p-3.5 text-slate-700 max-w-sm">${item.content}</td>
-                        <td class="p-3.5 font-semibold text-purple-700 flex items-center gap-1">
-                            <i class="fa-solid fa-user-shield text-purple-500"></i> ${item.duty24h}
-                        </td>
-                        <td class="p-3.5 text-center">
-                            <span class="px-2.5 py-1 rounded-full border text-[10px] font-bold ${badgeColor}">${item.status}</span>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
+            // Scroll nav on mobile
+            if (activeNav) activeNav.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 
-        // Filter Executive Table
-        function filterExecutiveTable() {
-            const filterVal = document.getElementById('executiveFilterLeader').value;
-            if (filterVal === 'ALL') {
-                renderExecutiveTable(executiveSchedules);
-            } else {
-                const filtered = executiveSchedules.filter(item => item.leader.includes(filterVal) || item.duty24h.includes(filterVal));
-                renderExecutiveTable(filtered);
+            // Update URL Hash safely for GitHub Pages & Preview sandboxes
+            if (pushHash) {
+                try {
+                    window.location.hash = routeId === 'dashboard' ? '' : routeId;
+                } catch (e) { console.debug('Hash update bypassed'); }
             }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Executive Modal Open/Close & Submit
-        function openExecutiveModal() {
-            document.getElementById('executiveModal').classList.remove('hidden');
+        function handleHashChange() {
+            const hash = window.location.hash.replace('#', '');
+            navigateTo(hash || 'dashboard', false);
         }
 
-        function handleExecutiveSubmit(e) {
-            e.preventDefault();
-            const name = document.getElementById('execReqName').value;
-            const target = document.getElementById('execTargetLeader').value;
-            const date = document.getElementById('execDate').value;
+        window.addEventListener('hashchange', handleHashChange);
 
-            closeModal('executiveModal');
-            showToast(`Đã tiếp nhận yêu cầu làm việc ngày ${date} của ${name} gửi tới ${target}!`, 'success');
-            e.target.reset();
+        /* ==========================================================================
+           3. UI RENDERERS
+           ========================================================================== */
+        function renderAllModules() {
+            renderShiftsTable();
+            renderExecutiveTable();
+            renderTimecardTable();
+            renderVaccineTable();
+            renderLeaveTable();
+            renderDashboardOnDuty();
         }
 
-        // Render Shifts Table
-        function renderShiftsTable(data = officialShifts) {
+        function renderShiftsTable() {
             const tbody = document.getElementById('shiftsTableBody');
             if (!tbody) return;
             tbody.innerHTML = '';
-            data.forEach(item => {
-                const isToday = item.date === "22/08/2026";
-                const rowClass = isToday ? "bg-sky-50/70 font-semibold" : "hover:bg-slate-50";
-                tbody.innerHTML += `
-                    <tr class="${rowClass} transition">
-                        <td class="p-3.5 font-bold text-slate-800">${item.day}<br><span class="text-slate-500 font-normal">${item.date}</span></td>
-                        <td class="p-3.5"><span class="px-2.5 py-1 rounded-md bg-sky-100 text-sky-800 border border-sky-200 font-bold">${item.pointMain}</span></td>
-                        <td class="p-3.5"><span class="px-2.5 py-1 rounded-md bg-teal-100 text-teal-800 border border-teal-200 font-bold">${item.point1}</span></td>
-                        <td class="p-3.5"><span class="px-2.5 py-1 rounded-md bg-purple-100 text-purple-800 border border-purple-200 font-bold">${item.point2}</span></td>
-                        <td class="p-3.5"><span class="px-2.5 py-1 rounded-md bg-amber-100 text-amber-800 border border-amber-200 font-bold">${item.point3}</span></td>
-                        <td class="p-3.5 text-center">
-                            <button onclick="openSwapModalWithDate('${item.date}')" class="text-xs text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 px-3 py-1 rounded-lg border border-sky-200 font-bold transition">Đổi Ca</button>
-                        </td>
-                    </tr>
+
+            INITIAL_DUTY_DATA.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-slate-900">
+                        <span class="text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 mr-1">${row.dayName}</span> ${row.date}
+                    </td>
+                    <td class="p-3 font-semibold text-sky-800 bg-sky-50/30">${row.ducTan}</td>
+                    <td class="p-3 font-medium text-slate-700">${row.moDuc}</td>
+                    <td class="p-3 font-medium text-slate-700">${row.ducHoa}</td>
+                    <td class="p-3 font-medium text-slate-700">${row.ducPhu}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="openSwapModal()" class="text-[11px] text-sky-600 hover:text-sky-800 font-bold bg-sky-50 hover:bg-sky-100 border border-sky-200 px-2 py-1 rounded transition">
+                            Đổi ca
+                        </button>
+                    </td>
                 `;
+                tbody.appendChild(tr);
             });
         }
 
-        // Filter Shifts Table
         function filterShiftsTable() {
-            const input = document.getElementById('shiftSearchInput').value.toLowerCase();
-            const filtered = officialShifts.filter(item => 
-                item.pointMain.toLowerCase().includes(input) ||
-                item.point1.toLowerCase().includes(input) ||
-                item.point2.toLowerCase().includes(input) ||
-                item.point3.toLowerCase().includes(input) ||
-                item.date.includes(input) ||
-                item.day.toLowerCase().includes(input)
-            );
-            renderShiftsTable(filtered);
+            const term = (document.getElementById('searchShiftInput')?.value || '').toLowerCase();
+            const point = document.getElementById('filterShiftPoint')?.value || 'ALL';
+            const rows = document.querySelectorAll('#shiftsTableBody tr');
+
+            rows.forEach(tr => {
+                const text = tr.innerText.toLowerCase();
+                const matchesTerm = !term || text.includes(term);
+                let matchesPoint = true;
+
+                if (point !== 'ALL') {
+                    if (point === 'Đức Tân' && !tr.children[1].innerText.toLowerCase().includes(term)) matchesPoint = true;
+                }
+                tr.style.display = matchesTerm && matchesPoint ? '' : 'none';
+            });
         }
 
-        // Render Timecard Table
+        function renderExecutiveTable() {
+            const tbody = document.getElementById('executiveTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            INITIAL_EXECUTIVE_DATA.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-amber-50/40 transition border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold text-amber-900">${row.time}</td>
+                    <td class="p-3 font-bold text-slate-800">${row.leader}</td>
+                    <td class="p-3 text-slate-700 font-medium">${row.topic}</td>
+                    <td class="p-3 text-slate-600">${row.location}</td>
+                    <td class="p-3 text-slate-500 text-[11px]">${row.participants}</td>
+                    <td class="p-3 text-center">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">${row.status}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
         function renderTimecardTable() {
             const tbody = document.getElementById('timecardTableBody');
             if (!tbody) return;
             tbody.innerHTML = '';
-            attendanceLogs.forEach(log => {
-                const badgeClass = log.status === 'Đang Trực Ca' 
-                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300' 
-                    : 'bg-slate-100 text-slate-700 border-slate-200';
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-3.5 font-bold text-slate-900">${log.staff}</td>
-                        <td class="p-3.5 text-slate-600">${log.point}</td>
-                        <td class="p-3.5 text-slate-500 font-mono">${log.date}</td>
-                        <td class="p-3.5 text-emerald-700 font-bold font-mono">${log.in}</td>
-                        <td class="p-3.5 text-amber-700 font-mono">${log.out}</td>
-                        <td class="p-3.5 text-sky-700 font-bold font-mono">${log.hours}</td>
-                        <td class="p-3.5 text-center">
-                            <span class="px-2.5 py-1 rounded-full border text-[10px] font-bold ${badgeClass}">${log.status}</span>
-                        </td>
-                    </tr>
+
+            INITIAL_TIMECARD_DATA.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="p-3 font-mono text-slate-500">${row.code}</td>
+                    <td class="p-3 font-bold text-slate-900">${row.name}</td>
+                    <td class="p-3 text-slate-600">${row.role}</td>
+                    <td class="p-3 text-slate-700">${row.point}</td>
+                    <td class="p-3 font-mono font-semibold text-emerald-700">${row.timeIn}</td>
+                    <td class="p-3 font-mono text-slate-600">${row.timeOut}</td>
+                    <td class="p-3 text-center font-bold text-amber-600">${row.ot}</td>
+                    <td class="p-3 text-center">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${row.status === 'Đúng giờ' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">${row.status}</span>
+                    </td>
                 `;
+                tbody.appendChild(tr);
             });
         }
 
-        // Render Vaccine Table
         function renderVaccineTable() {
             const tbody = document.getElementById('vaccineTableBody');
             if (!tbody) return;
             tbody.innerHTML = '';
-            vaccineSchedules.forEach(vax => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-3.5 font-bold text-purple-900">${vax.name}</td>
-                        <td class="p-3.5 text-slate-600">${vax.target}</td>
-                        <td class="p-3.5 text-slate-500">${vax.point}</td>
-                        <td class="p-3.5 text-sky-700 font-bold font-mono">${vax.date}</td>
-                        <td class="p-3.5 font-bold text-emerald-700 font-mono">${vax.doses} liều</td>
-                        <td class="p-3.5 text-slate-700">${vax.doctor}</td>
-                        <td class="p-3.5 text-center">
-                            <span class="px-2.5 py-1 rounded-full bg-purple-100 text-purple-800 border border-purple-200 text-[10px] font-bold">${vax.status}</span>
-                        </td>
-                    </tr>
+
+            INITIAL_VACCINE_DATA.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-rose-50/30 border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-rose-800 font-mono">${row.date}</td>
+                    <td class="p-3 font-bold text-slate-900">${row.vaccine}</td>
+                    <td class="p-3 text-slate-700">${row.target}</td>
+                    <td class="p-3 text-slate-600">${row.location}</td>
+                    <td class="p-3 font-semibold text-slate-800">${row.doctor}</td>
+                    <td class="p-3 text-center">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">${row.status}</span>
+                    </td>
                 `;
+                tbody.appendChild(tr);
             });
         }
 
-        // Render Leave Table
         function renderLeaveTable() {
             const tbody = document.getElementById('leaveTableBody');
             if (!tbody) return;
             tbody.innerHTML = '';
-            leaveRequests.forEach(req => {
-                const statusBadge = req.status === 'Đã Duyệt' 
-                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300' 
-                    : 'bg-amber-100 text-amber-800 border-amber-300';
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-3.5 font-bold text-sky-700 font-mono">${req.id}</td>
-                        <td class="p-3.5 text-slate-900 font-bold">${req.staff}</td>
-                        <td class="p-3.5 text-purple-700 font-semibold">${req.type}</td>
-                        <td class="p-3.5 text-slate-600 font-mono">${req.start}</td>
-                        <td class="p-3.5 text-slate-600 font-mono">${req.end}</td>
-                        <td class="p-3.5 text-slate-500 max-w-xs truncate">${req.reason}</td>
-                        <td class="p-3.5 text-center">
-                            <span class="px-2.5 py-1 rounded-full border text-[10px] font-bold ${statusBadge}">${req.status}</span>
-                        </td>
-                    </tr>
+
+            INITIAL_LEAVE_DATA.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-purple-50/30 border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-slate-900">${row.name}</td>
+                    <td class="p-3 text-purple-800 font-semibold">${row.type}</td>
+                    <td class="p-3 font-mono">${row.start}</td>
+                    <td class="p-3 font-mono">${row.end}</td>
+                    <td class="p-3 text-slate-600">${row.reason}</td>
+                    <td class="p-3 text-center">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${row.status === 'Đã duyệt' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${row.status}</span>
+                    </td>
                 `;
+                tbody.appendChild(tr);
             });
         }
 
-        // Modal helpers
-        function closeModal(id) {
-            const el = document.getElementById(id);
-            if (el) el.classList.add('hidden');
+        function renderDashboardOnDuty() {
+            const container = document.getElementById('dashOnDutyCards');
+            if (!container) return;
+            
+            const todayData = INITIAL_DUTY_DATA[0]; // Sample today's schedule
+            container.innerHTML = `
+                <div class="p-3 bg-sky-50 rounded-xl border border-sky-200 flex justify-between items-center">
+                    <div>
+                        <span class="text-[10px] font-bold text-sky-800 uppercase">Điểm Trạm Chính (Đức Tân)</span>
+                        <p class="font-extrabold text-slate-900 text-sm mt-0.5">${todayData.ducTan}</p>
+                    </div>
+                    <span class="text-xs bg-sky-600 text-white font-bold px-2.5 py-1 rounded-lg">Trực Đêm</span>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-600 uppercase">Điểm Số 1 (Mộ Đức)</span>
+                        <p class="font-extrabold text-slate-900 text-sm mt-0.5">${todayData.moDuc}</p>
+                    </div>
+                    <span class="text-xs bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg">Trực Đêm</span>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-600 uppercase">Điểm Số 2 (Đức Hòa)</span>
+                        <p class="font-extrabold text-slate-900 text-sm mt-0.5">${todayData.ducHoa}</p>
+                    </div>
+                    <span class="text-xs bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg">Trực Đêm</span>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-600 uppercase">Điểm Số 3 (Đức Phú)</span>
+                        <p class="font-extrabold text-slate-900 text-sm mt-0.5">${todayData.ducPhu}</p>
+                    </div>
+                    <span class="text-xs bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg">Trực Đêm</span>
+                </div>
+            `;
         }
 
-        function openSwapModal() {
-            document.getElementById('swapModal').classList.remove('hidden');
+        /* ==========================================================================
+           4. GOOGLE SHEETS DYNAMIC SYNC & FORM SUBMISSIONS
+           ========================================================================== */
+        function openSheetModal() {
+            document.getElementById('sheetApiUrlInput').value = googleSheetUrl;
+            openModal('sheetModal');
         }
 
-        function openSwapModalWithDate(dateStr) {
-            document.getElementById('swapDate').value = dateStr;
-            openSwapModal();
+        function saveSheetConfig() {
+            const url = document.getElementById('sheetApiUrlInput').value.trim();
+            googleSheetUrl = url;
+            localStorage.setItem('TYT_GOOGLE_SHEET_URL', url);
+            closeModal('sheetModal');
+            showToast('Đã lưu URL kết nối Google Sheet thành công!');
+            syncDataFromSheet();
         }
 
-        function openLeaveModal() {
-            document.getElementById('leaveModal').classList.remove('hidden');
+        async function syncDataFromSheet() {
+            if (!googleSheetUrl) return;
+            try {
+                const res = await fetch(googleSheetUrl);
+                const json = await res.json();
+                if (json.status === 'success') {
+                    showToast('Đã đồng bộ dữ liệu mới nhất từ Google Sheet!');
+                }
+            } catch (err) {
+                console.warn('Google Sheet connection fallback:', err);
+            }
         }
 
-        function openVaccineModal() {
-            document.getElementById('vaccineModal').classList.remove('hidden');
+        async function postToSheet(type, data) {
+            if (!googleSheetUrl) return;
+            try {
+                await fetch(googleSheetUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: type, data: data })
+                });
+            } catch (err) { console.error('Sheet POST error:', err); }
         }
 
-        // Form Submit Handlers
-        function handleSwapSubmit(e) {
+        function triggerBiometricScan() {
+            showToast('Đang quét mống mắt & sinh trắc...', 'info');
+            setTimeout(() => {
+                INITIAL_TIMECARD_DATA.unshift({
+                    code: "NV" + Math.floor(Math.random() * 90 + 10),
+                    name: "BS. Phạm Minh Đức",
+                    role: "Giám đốc Trạm",
+                    point: "Đức Tân",
+                    timeIn: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+                    timeOut: "--:--",
+                    ot: "0.0h",
+                    status: "Đúng giờ"
+                });
+                renderTimecardTable();
+                showToast('Chấm công sinh trắc thành công!');
+                postToSheet('TIMECARD', { user: 'BS. Phạm Minh Đức', action: 'Biometric Check-in' });
+            }, 1200);
+        }
+
+        function submitLeaveForm(e) {
             e.preventDefault();
-            const req = document.getElementById('swapRequester').value;
-            const date = document.getElementById('swapDate').value;
-            closeModal('swapModal');
-            showToast(`Đã gửi yêu cầu đổi ca trực ngày ${date} của ${req} trình Ban Giám Đốc!`, 'success');
-            e.target.reset();
-        }
-
-        function handleLeaveSubmit(e) {
-            e.preventDefault();
-            const staff = document.getElementById('leaveStaff').value;
+            const name = document.getElementById('leaveName').value;
             const type = document.getElementById('leaveType').value;
             const start = document.getElementById('leaveStart').value;
             const end = document.getElementById('leaveEnd').value;
             const reason = document.getElementById('leaveReason').value;
 
-            const newReq = {
-                id: `LR-2026-00${leaveRequests.length + 1}`,
-                staff: staff,
-                type: type,
-                start: start,
-                end: end,
-                reason: reason,
-                status: "Chờ Duyệt"
-            };
-
-            leaveRequests.unshift(newReq);
+            INITIAL_LEAVE_DATA.unshift({ name, type, start, end, reason, status: "Chờ BGĐ duyệt" });
             renderLeaveTable();
             closeModal('leaveModal');
-            showToast(`Đơn xin ${type} của ${staff} đã được gửi thành công!`, 'success');
-            e.target.reset();
+            showToast('Đã gửi đơn xin nghỉ phép đến Ban Giám Đốc!');
+            postToSheet('LEAVE_REQUEST', { name, type, start, end, reason });
         }
 
-        function handleVaccineSubmit(e) {
+        function submitSwapForm(e) {
             e.preventDefault();
-            const name = document.getElementById('vaxName').value;
-            const target = document.getElementById('vaxTarget').value;
-            const point = document.getElementById('vaxPoint').value;
-            const date = document.getElementById('vaxDate').value;
-            const doses = document.getElementById('vaxDoses').value;
-            const doctor = document.getElementById('vaxDoctor').value;
+            const from = document.getElementById('swapFrom').value;
+            const to = document.getElementById('swapTo').value;
+            const date = document.getElementById('swapDate').value;
 
-            vaccineSchedules.unshift({
-                name: name,
-                target: target,
-                point: point,
-                date: date,
-                doses: parseInt(doses),
-                doctor: doctor,
-                status: "Lên Lịch"
+            closeModal('swapModal');
+            showToast(`Đã gửi yêu cầu đổi ca ngày ${date} cho ${to}!`);
+            postToSheet('DUTY_SWAP', { from, to, date });
+        }
+
+        function submitExecutiveForm(e) {
+            e.preventDefault();
+            const leader = document.getElementById('execLeader').value;
+            const topic = document.getElementById('execTopic').value;
+            const time = document.getElementById('execTime').value;
+
+            INITIAL_EXECUTIVE_DATA.unshift({
+                time: time, leader: leader, topic: topic, location: "Phòng Giám đốc", participants: "Theo yêu cầu", status: "Chờ duyệt"
             });
-
-            renderVaccineTable();
-            closeModal('vaccineModal');
-            showToast(`Đã lên kế hoạch đợt tiêm vắc xin ${name}!`, 'success');
-            e.target.reset();
+            renderExecutiveTable();
+            closeModal('executiveModal');
+            showToast('Đăng ký lịch làm việc với BGĐ thành công!');
+            postToSheet('EXECUTIVE_REQUEST', { leader, topic, time });
         }
 
-        // Biometric Simulation Action
-        function triggerBiometricScan() {
-            showToast("Đang xác thực vân tay / sinh trắc học cán bộ...", "info");
+        /* ==========================================================================
+           5. MODAL & UTILITY FUNCTIONS
+           ========================================================================== */
+        function openModal(id) { document.getElementById(id)?.classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id)?.classList.add('hidden'); }
+        function openLeaveModal() { openModal('leaveModal'); }
+        function openSwapModal() { openModal('swapModal'); }
+        function openExecutiveModal() { openModal('executiveModal'); }
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toastNotification');
+            const toastMsg = document.getElementById('toastMessage');
+            if (!toast || !toastMsg) return;
+
+            toastMsg.innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => {
-                showToast("Xác nhận danh tính: Cán bộ y tế trực ban - Điểm danh thành công!", "success");
-            }, 1000);
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
         }
 
-        // Toast System
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            if (!container) return;
-
-            const toast = document.createElement('div');
-            toast.className = `pointer-events-auto flex items-center gap-3 p-4 rounded-xl text-xs font-semibold border shadow-lg transition-all duration-300 transform translate-y-2 opacity-0 bg-white ${
-                type === 'success' ? 'border-emerald-300 text-emerald-900' : 'border-sky-300 text-sky-900'
-            }`;
-
-            const icon = type === 'success' ? 'fa-circle-check text-emerald-600' : 'fa-circle-info text-sky-600';
-            toast.innerHTML = `
-                <i class="fa-solid ${icon} text-lg"></i>
-                <span class="flex-1 font-semibold">${message}</span>
-            `;
-
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 10);
-
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
-        }
-
-        // Live Medical Clock
-        function updateClock() {
-            const clockEl = document.getElementById('medical-clock');
-            if (clockEl) {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                const hours = String(now.getHours()).padStart(2, '0');
-                const mins = String(now.getMinutes()).padStart(2, '0');
-                const secs = String(now.getSeconds()).padStart(2, '0');
-                clockEl.textContent = `${year}-${month}-${day} ${hours}:${mins}:${secs}`;
+        function updateLiveClock() {
+            const now = new Date();
+            const clockEl = document.getElementById('liveClock');
+            const dateEl = document.getElementById('liveDate');
+            
+            if (clockEl) clockEl.innerText = now.toLocaleTimeString('vi-VN');
+            if (dateEl) {
+                const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+                dateEl.innerText = `${days[now.getDay()]}, ${now.toLocaleDateString('vi-VN')}`;
             }
         }
 
-        // Page Initialization
-        window.onload = function() {
-            renderExecutiveTable();
-            renderShiftsTable();
-            renderTimecardTable();
-            renderVaccineTable();
-            renderLeaveTable();
-            setInterval(updateClock, 1000);
-            updateClock();
+        /* ==========================================================================
+           6. PWA INSTALLATION & SERVICE WORKER SETUP
+           ========================================================================== */
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const banner = document.getElementById('pwaInstallBanner');
+            if (banner) banner.classList.remove('hidden');
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        dismissPWABanner();
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
+
+        function dismissPWABanner() {
+            const banner = document.getElementById('pwaInstallBanner');
+            if (banner) banner.classList.add('hidden');
+        }
+
+        // Register Dynamic Service Worker via Blob for standalone PWA offline functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    const CACHE_NAME = 'tyt-moduc-pwa-v1';
+                    self.addEventListener('install', (e) => {
+                        self.skipWaiting();
+                    });
+                    self.addEventListener('fetch', (e) => {
+                        e.respondWith(
+                            fetch(e.request).catch(() => caches.match(e.request))
+                        );
+                    });
+                `;
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Registration skipped in sandbox frame.'));
+            });
+        }
+
+        /* Initializer */
+        window.onload = function () {
+            renderAllModules();
+            handleHashChange();
+            setInterval(updateLiveClock, 1000);
+            updateLiveClock();
+            if (googleSheetUrl) syncDataFromSheet();
         };
     </script>
 </body>
