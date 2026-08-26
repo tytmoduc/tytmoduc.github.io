@@ -1,0 +1,27 @@
+{
+"short_name": "TYT Mộ Đức",
+"name": "Trạm Y Tế Xã Mộ Đức - Cổng Thông Tin & Quản Lý PWA",
+"description": "Hệ thống quản lý PWA tích hợp Lịch trực, Bảng chấm công, Lịch khám bệnh, Lịch làm việc Ban Giám đốc và Nghỉ phép tại Trạm Y Tế Xã Mộ Đức",
+"icons": [
+{
+"src": "https://cdn-icons-png.flaticon.com/512/3063/3063176.png",
+"sizes": "192x192",
+"type": "image/png",
+"purpose": "any maskable"
+},
+{
+"src": "https://cdn-icons-png.flaticon.com/512/3063/3063176.png",
+"sizes": "512x512",
+"type": "image/png",
+"purpose": "any maskable"
+}
+],
+"start_url": "./",
+"background_color": "#ffffff",
+"theme_color": "#0284c7",
+"display": "standalone",
+"orientation": "portrait",
+"scope": "./",
+"categories": ["medical", "health", "productivity"],
+"lang": "vi"
+}
