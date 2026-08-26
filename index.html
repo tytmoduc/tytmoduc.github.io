@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Trạm Y Tế Xã Mộ Đức - Trang thông tin nội bộ</title>
+    <title>Trạm Y Tế Xã Mộ Đức - Cổng Thông Tin & Quản Lý PWA</title>
     
     <!-- Link PWA Manifest File -->
     <link rel="manifest" href="manifest.json">
@@ -34,11 +34,6 @@
                             600: '#0369a1',
                             700: '#075985',
                             800: '#0c4a6e',
-                        },
-                        tealmed: {
-                            50: '#f0fdf4',
-                            500: '#10b981',
-                            600: '#059669',
                         }
                     }
                 }
@@ -47,20 +42,15 @@
     </script>
     
     <style>
-        /* Custom scrollbar & visual polish */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
         .active-tab { background-color: #0284c7 !important; color: #ffffff !important; font-weight: 600; }
-        @keyframes pulse-subtle { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-        .animate-pulse-subtle { animation: pulse-subtle 2s infinite ease-in-out; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-sky-100 selection:text-sky-800">
 
-    <!-- PWA Install Prompt Banner -->
+    <!-- PWA Install Prompt Banner for Mobile/Desktop -->
     <div id="pwaInstallBanner" class="hidden bg-gradient-to-r from-sky-700 via-sky-600 to-teal-600 text-white px-4 py-2.5 shadow-md flex items-center justify-between transition-all duration-300 z-50">
         <div class="flex items-center space-x-3">
             <div class="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
@@ -68,7 +58,7 @@
             </div>
             <div>
                 <p class="text-sm font-semibold">Cài đặt Ứng dụng TYT Mộ Đức</p>
-                <p class="text-xs text-sky-100">Cài đặt PWA trên điện thoại để truy cập nhanh & làm việc offline</p>
+                <p class="text-xs text-sky-100">Thêm ứng dụng vào Màn hình chính để sử dụng mượt mà như App native</p>
             </div>
         </div>
         <div class="flex items-center space-x-2">
@@ -156,21 +146,18 @@
     <!-- Main Dynamic Content Body -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-        <!-- =================================================================== -->
-        <!-- TAB 1: EXECUTIVE DASHBOARD (TRANG CHỦ TỔNG QUAN)                    -->
-        <!-- =================================================================== -->
+        <!-- TAB 1: EXECUTIVE DASHBOARD (TRANG CHỦ TỔNG QUAN) -->
         <section id="tab-dashboard" class="space-y-6">
-            <!-- Welcome Header -->
             <div class="bg-gradient-to-r from-sky-800 via-sky-700 to-teal-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
                 <div class="relative z-10">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
                             <span class="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full border border-white/30 backdrop-blur-md">
-                                Command Center • PWA Mobile App
+                                Cổng Thông Tin PWA Mobile
                             </span>
                             <h2 class="text-2xl sm:text-3xl font-bold mt-2">Tổng Quan Hoạt Động Y Tế Xã Mộ Đức</h2>
                             <p class="text-sky-100 text-sm mt-1 max-w-2xl">
-                                Hệ thống tự động tổng hợp số liệu trực ban, chấm công, khám chữa bệnh và lịch công tác toàn trạm.
+                                Đồng bộ thời gian thực từ Google Sheets • Phân công lịch trực 04 điểm trạm, chấm công & lịch làm việc BGĐ.
                             </p>
                         </div>
                         <div class="bg-white/10 backdrop-blur-md border border-white/20 p-3.5 rounded-xl text-center min-w-[200px]">
@@ -180,7 +167,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="absolute -bottom-10 -right-10 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
             </div>
 
             <!-- Key Executive KPIs -->
@@ -218,7 +204,7 @@
                         <i class="fa-solid fa-envelope-open-text text-purple-600"></i>
                     </div>
                     <p id="kpiPendingLeaves" class="text-2xl font-black text-purple-600">1 Đơn</p>
-                    <p class="text-[11px] text-slate-500 mt-1">Chờ Ban Giám đốc duyệt</p>
+                    <p class="text-[11px] text-slate-500 mt-1">Chờ BGĐ duyệt</p>
                 </div>
 
                 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-rose-300 transition cursor-pointer" onclick="navigateTo('lich-tiem-chung')">
@@ -240,11 +226,9 @@
                 </div>
             </div>
 
-            <!-- Dashboard Main Grid: Notices & Executive Summary -->
+            <!-- Announcements & On Duty -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Left Column: Announcements -->
                 <div class="lg:col-span-2 space-y-6">
-                    <!-- Important Notices of the Week -->
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                         <div class="flex items-center justify-between mb-4 border-b pb-3 border-slate-100">
                             <div class="flex items-center space-x-2">
@@ -272,36 +256,22 @@
                                 <h4 class="font-bold text-slate-800 text-sm mt-1">Đợt Tiêm Chủng Mở Rộng Tháng 8/2026</h4>
                                 <p class="text-xs text-slate-600 mt-1">Thực hiện tiêm vắc xin 5 trong 1 và Sởi - Rubella tại Điểm Trạm Chính Đức Tân và Điểm số 2 Đức Hòa vào ngày 28/08/2026.</p>
                             </div>
-
-                            <div class="p-3.5 bg-amber-50 border-l-4 border-amber-500 rounded-r-xl">
-                                <div class="flex justify-between items-start">
-                                    <span class="text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">HÀNH CHÍNH</span>
-                                    <span class="text-[11px] text-slate-500">24/08/2026</span>
-                                </div>
-                                <h4 class="font-bold text-slate-800 text-sm mt-1">Đăng ký lịch nghỉ phép & nghỉ bù Tháng 9/2026</h4>
-                                <p class="text-xs text-slate-600 mt-1">Cán bộ nhân viên gửi đơn trực tuyến trước ngày 28/08/2026 để Ban Giám đốc duyệt phân ca trực Lễ 2/9.</p>
-                            </div>
                         </div>
                     </div>
 
-                    <!-- Quick On-Duty Staff Table Today -->
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                         <div class="flex items-center justify-between mb-4 border-b pb-3 border-slate-100">
                             <h3 class="font-bold text-slate-900 text-base flex items-center space-x-2">
                                 <i class="fa-solid fa-user-clock text-sky-600"></i>
-                                <span>Phân Công Trực Lãnh Đạo & Điểm Trạm Hôm Nay</span>
+                                <span>Phân Công Trực Hôm Nay Tại 04 Điểm Trạm</span>
                             </h3>
-                            <button onclick="navigateTo('lich-truc')" class="text-xs text-sky-600 hover:text-sky-800 font-semibold">Xem tất cả lịch trực &rarr;</button>
+                            <button onclick="navigateTo('lich-truc')" class="text-xs text-sky-600 hover:text-sky-800 font-semibold">Xem tất cả &rarr;</button>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="dashOnDutyCards">
-                            <!-- Dynamic Content Rendered via JS -->
-                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="dashOnDutyCards"></div>
                     </div>
                 </div>
 
-                <!-- Right Column: Directorate Info & Quick Actions -->
                 <div class="space-y-6">
-                    <!-- Directorate Info -->
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                         <h3 class="font-bold text-slate-900 text-base mb-3 pb-2 border-b border-slate-100 flex items-center space-x-2">
                             <i class="fa-solid fa-users-gear text-sky-600"></i>
@@ -309,112 +279,39 @@
                         </h3>
                         <div class="space-y-3 text-xs">
                             <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 bg-sky-100 text-sky-700 rounded-full flex items-center justify-center font-bold">
-                                        Đức
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-slate-900 text-sm">BS. Phạm Minh Đức</p>
-                                        <p class="text-sky-700 font-medium">Giám đốc Trạm Y tế</p>
-                                        <p class="text-slate-500 text-[11px]">Phụ trách chung, Chỉ đạo điều hành & UBND xã</p>
-                                    </div>
-                                </div>
+                                <p class="font-bold text-slate-900 text-sm">BS. Phạm Minh Đức</p>
+                                <p class="text-sky-700 font-medium">Giám đốc Trạm Y tế</p>
+                                <p class="text-slate-500 text-[11px]">Phụ trách chung, Điều hành & UBND xã</p>
                             </div>
-
                             <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center font-bold">
-                                        Thuyên
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-slate-900 text-sm">BS. CKI. Nguyễn Văn Thuyên</p>
-                                        <p class="text-teal-700 font-medium">Phó Giám đốc Chuyên môn</p>
-                                        <p class="text-slate-500 text-[11px]">Phụ trách Khám chữa bệnh & 04 Điểm trạm</p>
-                                    </div>
-                                </div>
+                                <p class="font-bold text-slate-900 text-sm">BS. CKI. Nguyễn Văn Thuyên</p>
+                                <p class="text-teal-700 font-medium">Phó Giám đốc Chuyên môn</p>
+                                <p class="text-slate-500 text-[11px]">Phụ trách Khám chữa bệnh & 04 Điểm trạm</p>
                             </div>
-
                             <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold">
-                                        Phu
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-slate-900 text-sm">BS. Lê Văn Phu</p>
-                                        <p class="text-indigo-700 font-medium">Phó Giám đốc Dự phòng</p>
-                                        <p class="text-slate-500 text-[11px]">Phụ trách Y tế dự phòng & Tiêm chủng</p>
-                                    </div>
-                                </div>
+                                <p class="font-bold text-slate-900 text-sm">BS. Lê Văn Phu</p>
+                                <p class="text-indigo-700 font-medium">Phó Giám đốc Dự phòng</p>
+                                <p class="text-slate-500 text-[11px]">Phụ trách Y tế dự phòng & Tiêm chủng</p>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Rapid Actions -->
-                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-5 rounded-2xl text-white shadow-md">
-                        <h3 class="font-bold text-base mb-3 flex items-center space-x-2">
-                            <i class="fa-solid fa-bolt text-amber-400"></i>
-                            <span>Thao Tác Nhanh Nhân Viên</span>
-                        </h3>
-                        <div class="space-y-2 text-xs">
-                            <button onclick="openLeaveModal()" class="w-full bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-xl text-left flex items-center justify-between transition border border-white/10">
-                                <span><i class="fa-solid fa-paper-plane mr-2 text-sky-400"></i> Tạo đơn xin nghỉ phép / nghỉ bù</span>
-                                <i class="fa-solid fa-chevron-right text-slate-400"></i>
-                            </button>
-                            <button onclick="openSwapModal()" class="w-full bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-xl text-left flex items-center justify-between transition border border-white/10">
-                                <span><i class="fa-solid fa-arrow-rotate-left mr-2 text-emerald-400"></i> Đăng ký xin đổi ca trực</span>
-                                <i class="fa-solid fa-chevron-right text-slate-400"></i>
-                            </button>
-                            <button onclick="openExecutiveModal()" class="w-full bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-xl text-left flex items-center justify-between transition border border-white/10">
-                                <span><i class="fa-solid fa-calendar-plus mr-2 text-amber-400"></i> Đăng ký lịch làm việc với BGĐ</span>
-                                <i class="fa-solid fa-chevron-right text-slate-400"></i>
-                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- =================================================================== -->
-        <!-- TAB 2: LỊCH TRỰC 04 ĐIỂM TRẠM                                       -->
-        <!-- =================================================================== -->
+        <!-- TAB 2: LỊCH TRỰC 04 ĐIỂM TRẠM -->
         <section id="tab-lich-truc" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
                     <div>
                         <h2 class="text-xl font-extrabold text-slate-900">Lịch Trực Trạm Y Tế Xã Mộ Đức</h2>
-                        <p class="text-xs text-slate-500 mt-1">Lịch phân công trực 24/24 tại 04 điểm trạm (Thời gian: 07h00 hôm nay đến 07h00 hôm sau)</p>
+                        <p class="text-xs text-slate-500 mt-1">Phân công trực 24/24 từ 16/08/2026 đến 31/08/2026</p>
                     </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button onclick="openSwapModal()" class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-sm flex items-center space-x-1.5">
-                            <i class="fa-solid fa-arrow-rotate-left"></i>
-                            <span>Đăng ký đổi ca</span>
-                        </button>
-                    </div>
+                    <button onclick="openSwapModal()" class="bg-sky-600 text-white text-xs font-semibold px-4 py-2 rounded-xl">
+                        <i class="fa-solid fa-arrow-rotate-left mr-1"></i> Đăng ký đổi ca
+                    </button>
                 </div>
 
-                <!-- Filter toolbar -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Tìm nhân sự / Chức danh</label>
-                        <input type="text" id="searchShiftInput" oninput="filterShiftsTable()" placeholder="Nhập tên BS, YS, ĐD..." class="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Lọc theo Điểm Trạm</label>
-                        <select id="filterShiftPoint" onchange="filterShiftsTable()" class="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
-                            <option value="ALL">Tất cả 04 điểm trạm</option>
-                            <option value="Đức Tân">Điểm chính (Đức Tân)</option>
-                            <option value="Mộ Đức">Điểm y tế số 1 (Mộ Đức)</option>
-                            <option value="Đức Hòa">Điểm y tế số 2 (Đức Hòa)</option>
-                            <option value="Đức Phú">Điểm y tế số 3 (Đức Phú)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Thời gian áp dụng</label>
-                        <div class="text-xs font-bold text-slate-700 py-2">Từ 16/08/2026 đến 31/08/2026</div>
-                    </div>
-                </div>
-
-                <!-- Duty Schedule Table -->
                 <div class="overflow-x-auto rounded-xl border border-slate-200">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-800 text-slate-200 uppercase text-[11px] font-bold">
@@ -427,30 +324,24 @@
                                 <th class="p-3 text-center">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody id="shiftsTableBody" class="divide-y divide-slate-200 bg-white">
-                            <!-- Rendered dynamically from official document -->
-                        </tbody>
+                        <tbody id="shiftsTableBody" class="divide-y divide-slate-200 bg-white"></tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- =================================================================== -->
-        <!-- TAB 3: BẢNG CHẤM CÔNG                                              -->
-        <!-- =================================================================== -->
+        <!-- TAB 3: BẢNG CHẤM CÔNG -->
         <section id="tab-bang-cham-cong" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
                     <div>
                         <h2 class="text-xl font-extrabold text-slate-900">Bảng Chấm Công Bio-Sync Nhân Viên</h2>
-                        <p class="text-xs text-slate-500 mt-1">Theo dõi giờ vào/ra, làm ca trực, ngày công và giờ tăng ca (OT)</p>
+                        <p class="text-xs text-slate-500 mt-1">Giờ vào/ra, làm ca, giờ OT của 16 cán bộ y tế</p>
                     </div>
-                    <button onclick="triggerBiometricScan()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center space-x-2">
-                        <i class="fa-solid fa-fingerprint text-base"></i>
-                        <span>Giả Lập Điểm Danh Sinh Trắc</span>
+                    <button onclick="triggerBiometricScan()" class="bg-emerald-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl">
+                        <i class="fa-solid fa-fingerprint mr-1"></i> Giả Lập Điểm Danh Sinh Trắc
                     </button>
                 </div>
-
                 <div class="overflow-x-auto rounded-xl border border-slate-200">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
@@ -461,168 +352,107 @@
                                 <th class="p-3">Điểm Trạm</th>
                                 <th class="p-3">Giờ Vào</th>
                                 <th class="p-3">Giờ Ra</th>
-                                <th class="p-3 text-center">Số Giờ OT</th>
+                                <th class="p-3 text-center">Giờ OT</th>
                                 <th class="p-3 text-center">Trạng Thái</th>
                             </tr>
                         </thead>
-                        <tbody id="timecardTableBody" class="divide-y divide-slate-100">
-                            <!-- Rendered dynamically -->
-                        </tbody>
+                        <tbody id="timecardTableBody" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- =================================================================== -->
-        <!-- TAB 4: LỊCH LÀM VIỆC BAN GIÁM ĐỐC                                   -->
-        <!-- =================================================================== -->
+        <!-- TAB 4: LỊCH LÀM VIỆC BAN GIÁM ĐỐC -->
         <section id="tab-lich-lam-viec-bgd" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
                     <div>
                         <h2 class="text-xl font-extrabold text-slate-900">Lịch Công Tác Ban Giám Đốc</h2>
-                        <p class="text-xs text-slate-500 mt-1">Lịch họp, kiểm tra giám sát 04 điểm trạm, làm việc UBND và Tiếp Công Dân</p>
+                        <p class="text-xs text-slate-500 mt-1">Họp UBND, kiểm tra điểm trạm & tiếp công dân</p>
                     </div>
-                    <button onclick="openExecutiveModal()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center space-x-2">
-                        <i class="fa-solid fa-calendar-plus"></i>
-                        <span>Đăng ký làm việc / Tiếp dân</span>
+                    <button onclick="openExecutiveModal()" class="bg-amber-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl">
+                        <i class="fa-solid fa-calendar-plus mr-1"></i> Đăng ký làm việc / Tiếp dân
                     </button>
                 </div>
-
                 <div class="overflow-x-auto rounded-xl border border-slate-200">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-amber-50 text-amber-900 font-bold border-b border-amber-200">
                             <tr>
                                 <th class="p-3">Thời Gian</th>
                                 <th class="p-3">Lãnh Đạo Phụ Trách</th>
-                                <th class="p-3">Nội Dung Công Tác / Tiếp Dân</th>
+                                <th class="p-3">Nội Dung Công Tác</th>
                                 <th class="p-3">Địa Điểm</th>
-                                <th class="p-3">Thành Phần Tham Dự</th>
                                 <th class="p-3 text-center">Trạng Thái</th>
                             </tr>
                         </thead>
-                        <tbody id="executiveTableBody" class="divide-y divide-slate-100">
-                            <!-- Rendered dynamically -->
-                        </tbody>
+                        <tbody id="executiveTableBody" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- =================================================================== -->
-        <!-- TAB 5: LỊCH KHÁM BỆNH BHYT                                         -->
-        <!-- =================================================================== -->
+        <!-- TAB 5: LỊCH KHÁM BỆNH BHYT -->
         <section id="tab-lich-kham-benh" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
-                    <div>
-                        <h2 class="text-xl font-extrabold text-slate-900">Lịch Khám Bệnh BHYT & Chuyên Khoa</h2>
-                        <p class="text-xs text-slate-500 mt-1">Phân công phòng khám, Y bác sĩ trực khám tại 04 điểm trạm y tế</p>
-                    </div>
-                </div>
-
+                <h2 class="text-xl font-extrabold text-slate-900 mb-4">Lịch Khám Bệnh BHYT & Chuyên Khoa</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="border border-slate-200 rounded-xl p-4 bg-sky-50/50">
-                        <span class="text-xs font-bold text-sky-800 bg-sky-100 px-2 py-0.5 rounded">ĐIỂM CHÍNH - ĐỨC TÂN</span>
+                        <span class="text-xs font-bold text-sky-800 bg-sky-100 px-2 py-0.5 rounded">ĐỨC TÂN</span>
                         <h4 class="font-bold text-slate-900 text-sm mt-2">Phòng Khám Đa Khoa & Cấp Cứu</h4>
-                        <p class="text-xs text-slate-600 mt-1"><i class="fa-solid fa-user-doctor mr-1"></i> BS. Phạm Minh Đức / BS. Thuyên</p>
-                        <p class="text-xs text-slate-500 mt-0.5"><i class="fa-solid fa-clock mr-1"></i> Thứ 2 - Thứ 6 (07h00 - 17h00)</p>
-                        <span class="inline-block mt-3 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Đang mở cửa khám</span>
+                        <p class="text-xs text-slate-600 mt-1">BS. Phạm Minh Đức / BS. Thuyên</p>
                     </div>
-
                     <div class="border border-slate-200 rounded-xl p-4 bg-teal-50/50">
-                        <span class="text-xs font-bold text-teal-800 bg-teal-100 px-2 py-0.5 rounded">ĐIỂM SỐ 1 - MỘ ĐỨC</span>
+                        <span class="text-xs font-bold text-teal-800 bg-teal-100 px-2 py-0.5 rounded">MỘ ĐỨC</span>
                         <h4 class="font-bold text-slate-900 text-sm mt-2">Phòng Khám Nội & BHYT</h4>
-                        <p class="text-xs text-slate-600 mt-1"><i class="fa-solid fa-user-doctor mr-1"></i> BS. Đức / YS. Tuệ</p>
-                        <p class="text-xs text-slate-500 mt-0.5"><i class="fa-solid fa-clock mr-1"></i> Thứ 2 - Thứ 6 (07h00 - 17h00)</p>
-                        <span class="inline-block mt-3 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Đang mở cửa khám</span>
+                        <p class="text-xs text-slate-600 mt-1">BS. Đức / YS. Tuệ</p>
                     </div>
-
                     <div class="border border-slate-200 rounded-xl p-4 bg-indigo-50/50">
-                        <span class="text-xs font-bold text-indigo-800 bg-indigo-100 px-2 py-0.5 rounded">ĐIỂM SỐ 2 - ĐỨC HÒA</span>
-                        <h4 class="font-bold text-slate-900 text-sm mt-2">Phòng Khám YHCT & Phục Hồi</h4>
-                        <p class="text-xs text-slate-600 mt-1"><i class="fa-solid fa-user-doctor mr-1"></i> BS. Lê Văn Phu / YS. Phương</p>
-                        <p class="text-xs text-slate-500 mt-0.5"><i class="fa-solid fa-clock mr-1"></i> Thứ 2 - Thứ 6 (07h00 - 17h00)</p>
-                        <span class="inline-block mt-3 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Đang mở cửa khám</span>
+                        <span class="text-xs font-bold text-indigo-800 bg-indigo-100 px-2 py-0.5 rounded">ĐỨC HÒA</span>
+                        <h4 class="font-bold text-slate-900 text-sm mt-2">Phòng Khám YHCT & PHCN</h4>
+                        <p class="text-xs text-slate-600 mt-1">BS. Lê Văn Phu / YS. Phương</p>
                     </div>
-
                     <div class="border border-slate-200 rounded-xl p-4 bg-purple-50/50">
-                        <span class="text-xs font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded">ĐIỂM SỐ 3 - ĐỨC PHÚ</span>
-                        <h4 class="font-bold text-slate-900 text-sm mt-2">Phòng Khám Mẹ & Bé / Sản Khoa</h4>
-                        <p class="text-xs text-slate-600 mt-1"><i class="fa-solid fa-user-doctor mr-1"></i> NHS. Lan / NHS. Thu</p>
-                        <p class="text-xs text-slate-500 mt-0.5"><i class="fa-solid fa-clock mr-1"></i> Thứ 2 - Thứ 6 (07h00 - 17h00)</p>
-                        <span class="inline-block mt-3 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Đang mở cửa khám</span>
+                        <span class="text-xs font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded">ĐỨC PHÚ</span>
+                        <h4 class="font-bold text-slate-900 text-sm mt-2">Phòng Khám Sản Khoa & Nhi</h4>
+                        <p class="text-xs text-slate-600 mt-1">NHS. Lan / NHS. Thu</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- =================================================================== -->
-        <!-- TAB 6: LỊCH TIÊM CHÚNG                                            -->
-        <!-- =================================================================== -->
+        <!-- TAB 6: TIÊM CHÚNG -->
         <section id="tab-lich-tiem-chung" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
-                    <div>
-                        <h2 class="text-xl font-extrabold text-slate-900">Chương Trình Tiêm Chủng Mở Rộng</h2>
-                        <p class="text-xs text-slate-500 mt-1">Lịch tiêm vắc xin định kỳ cho trẻ em và phụ nữ mang thai trên địa bàn xã Mộ Đức</p>
-                    </div>
-                </div>
-
+                <h2 class="text-xl font-extrabold text-slate-900 mb-4">Lịch Tiêm Chủng Mở Rộng</h2>
                 <div class="overflow-x-auto rounded-xl border border-slate-200">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-rose-50 text-rose-900 font-bold border-b border-rose-200">
                             <tr>
                                 <th class="p-3">Ngày Tiêm</th>
                                 <th class="p-3">Tên Vắc Xin</th>
-                                <th class="p-3">Đối Tượng Tiêm</th>
-                                <th class="p-3">Địa Điểm Thực Hiện</th>
-                                <th class="p-3">Bác Sĩ Phụ Trách</th>
-                                <th class="p-3 text-center">Trạng Thái</th>
+                                <th class="p-3">Đối Tượng</th>
+                                <th class="p-3">Địa Điểm</th>
+                                <th class="p-3">Phụ Trách</th>
                             </tr>
                         </thead>
-                        <tbody id="vaccineTableBody" class="divide-y divide-slate-100">
-                            <!-- Rendered dynamically -->
-                        </tbody>
+                        <tbody id="vaccineTableBody" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- =================================================================== -->
-        <!-- TAB 7: QUẢN LÝ NGHỈ PHÉP & NGHỈ BÙ                                 -->
-        <!-- =================================================================== -->
+        <!-- TAB 7: QUẢN LÝ NGHỈ PHÉP -->
         <section id="tab-nghi-phep" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
                     <div>
                         <h2 class="text-xl font-extrabold text-slate-900">Quản Lý Nghỉ Phép & Nghỉ Bù</h2>
-                        <p class="text-xs text-slate-500 mt-1">Theo dõi quỹ ngày nghỉ phép năm, nghỉ bù ca trực đêm/lễ của cán bộ y tế</p>
+                        <p class="text-xs text-slate-500 mt-1">Theo dõi quỹ ngày nghỉ phép năm, nghỉ bù ca trực đêm/lễ</p>
                     </div>
-                    <button onclick="openLeaveModal()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-md flex items-center space-x-2">
-                        <i class="fa-solid fa-paper-plane"></i>
-                        <span>Tạo Đơn Xin Nghỉ</span>
+                    <button onclick="openLeaveModal()" class="bg-purple-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl">
+                        <i class="fa-solid fa-paper-plane mr-1"></i> Tạo Đơn Xin Nghỉ
                     </button>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="p-4 bg-purple-50 border border-purple-200 rounded-xl">
-                        <p class="text-xs text-purple-700 font-semibold">Quỹ Phép Năm 2026</p>
-                        <p class="text-2xl font-black text-purple-900 mt-1">12 Ngày</p>
-                        <p class="text-[11px] text-purple-600 mt-1">Đã nghỉ: 4 ngày • Còn lại: 8 ngày</p>
-                    </div>
-                    <div class="p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
-                        <p class="text-xs text-indigo-700 font-semibold">Quỹ Nghỉ Bù Trực Đêm / Lễ</p>
-                        <p class="text-2xl font-black text-indigo-900 mt-1">5 Ngày</p>
-                        <p class="text-[11px] text-indigo-600 mt-1">Đã nghỉ: 2 ngày • Còn lại: 3 ngày</p>
-                    </div>
-                    <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                        <p class="text-xs text-emerald-700 font-semibold">Trạng Thái Phê Duyệt</p>
-                        <p class="text-2xl font-black text-emerald-900 mt-1">Tự Động AI Sync</p>
-                        <p class="text-[11px] text-emerald-600 mt-1">Đồng bộ trực tiếp Google Sheet BGĐ</p>
-                    </div>
-                </div>
-
                 <div class="overflow-x-auto rounded-xl border border-slate-200">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
@@ -632,46 +462,36 @@
                                 <th class="p-3">Từ Ngày</th>
                                 <th class="p-3">Đến Ngày</th>
                                 <th class="p-3">Lý Do Nghỉ</th>
-                                <th class="p-3 text-center">Trạng Thái Duyệt</th>
+                                <th class="p-3 text-center">Trạng Thái</th>
                             </tr>
                         </thead>
-                        <tbody id="leaveTableBody" class="divide-y divide-slate-100">
-                            <!-- Rendered dynamically -->
-                        </tbody>
+                        <tbody id="leaveTableBody" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- =================================================================== -->
-        <!-- TAB 8: GIỚI THIỆU TRẠM Y TẾ                                        -->
-        <!-- =================================================================== -->
+        <!-- TAB 8: GIỚI THIỆU TRẠM -->
         <section id="tab-gioi-thieu" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <h2 class="text-xl font-extrabold text-slate-900 mb-2">Giới Thiệu Trạm Y Tế Xã Mộ Đức</h2>
                 <p class="text-xs text-slate-600 leading-relaxed">
-                    Trạm Y tế xã Mộ Đức trực thuộc <strong>UBND Xã Mộ Đức</strong>, chịu sự chỉ đạo chuyên môn trực tiếp của Y tế cấp trên. Trạm có nhiệm vụ chăm sóc sức khỏe ban đầu, phòng chống dịch bệnh, tiêm chủng mở rộng và khám chữa bệnh BHYT cho nhân dân trên địa bàn xã Mộ Đức.
+                    Trạm Y tế xã Mộ Đức trực thuộc <strong>UBND Xã Mộ Đức</strong>. Trạm phục vụ chăm sóc sức khỏe ban đầu, phòng chống dịch bệnh, tiêm chủng mở rộng và khám chữa bệnh BHYT cho nhân dân địa phương.
                 </p>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
                         <h4 class="font-bold text-slate-900 text-sm mb-2"><i class="fa-solid fa-map-location-dot text-sky-600 mr-2"></i> Hệ Thống 04 Điểm Y Tế</h4>
-                        <ul class="text-xs text-slate-600 space-y-2">
-                            <li><strong>1. Điểm Trạm Chính (Đức Tân):</strong> Trung tâm tiếp nhận khám đa khoa, cấp cứu & điều hành.</li>
-                            <li><strong>2. Điểm Y Tế Số 1 (Mộ Đức):</strong> Phụ trách khám BHYT khu vực trung tâm Mộ Đức.</li>
-                            <li><strong>3. Điểm Y Tế Số 2 (Đức Hòa):</strong> Phụ trách Y học cổ truyền, PHCN & tiêm chủng.</li>
-                            <li><strong>4. Điểm Y Tế Số 3 (Đức Phú):</strong> Phụ trách chăm sóc Mẹ & Bé, Sản khoa & sơ cứu.</li>
+                        <ul class="text-xs text-slate-600 space-y-1">
+                            <li>• Điểm Trạm Chính (Đức Tân)</li>
+                            <li>• Điểm Y Tế Số 1 (Mộ Đức)</li>
+                            <li>• Điểm Y Tế Số 2 (Đức Hòa)</li>
+                            <li>• Điểm Y Tế Số 3 (Đức Phú)</li>
                         </ul>
                     </div>
-
                     <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                        <h4 class="font-bold text-slate-900 text-sm mb-2"><i class="fa-solid fa-address-book text-sky-600 mr-2"></i> Thông Tin Liên Hệ Khẩn Cấp</h4>
-                        <ul class="text-xs text-slate-600 space-y-2">
-                            <li><strong>Cơ quan chủ quản:</strong> Ủy Ban Nhân Dân Xã Mộ Đức</li>
-                            <li><strong>Hotline Cấp cứu 24/7:</strong> (0255) 3.888.115</li>
-                            <li><strong>Website PWA:</strong> tytmoduc.github.io</li>
-                            <li><strong>Email tiếp nhận:</strong> tyt.moduc@quangngai.gov.vn</li>
-                        </ul>
+                        <h4 class="font-bold text-slate-900 text-sm mb-2"><i class="fa-solid fa-phone-volume text-sky-600 mr-2"></i> Liên Hệ Khẩn Cấp</h4>
+                        <p class="text-xs text-slate-600">Hotline Cấp cứu 24/7: <strong>(0255) 3.888.115</strong></p>
+                        <p class="text-xs text-slate-600 mt-1">Cơ quan chủ quản: UBND Xã Mộ Đức</p>
                     </div>
                 </div>
             </div>
@@ -679,155 +499,108 @@
 
     </main>
 
-    <!-- MODAL 1: GOOGLE SHEETS CONFIGURATION MODAL -->
+    <!-- MODAL 1: GOOGLE SHEETS CONFIG -->
     <div id="sheetModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between border-b pb-3 mb-4">
-                <h3 class="font-bold text-slate-900 text-base flex items-center space-x-2">
-                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                    <span>Cấu Hình Tự Động Đồng Bộ Google Sheet</span>
-                </h3>
-                <button onclick="closeModal('sheetModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-
-            <div class="space-y-4 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Google Apps Script Web App URL</label>
-                    <input type="text" id="sheetApiUrlInput" placeholder="https://script.google.com/macros/s/AKfycbx.../exec" class="w-full text-xs px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono">
-                    <p class="text-[11px] text-slate-500 mt-1">Dán URL Deployment Web App Google Apps Script của bạn vào đây.</p>
-                </div>
-
-                <div class="bg-slate-900 text-slate-100 p-3.5 rounded-xl font-mono text-[11px] overflow-x-auto">
-                    <p class="text-emerald-400 font-bold mb-1">// Mã Kịch Bản Google Apps Script (Copy dán vào Google Sheet của bạn):</p>
-                    <pre><code>function doGet(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("Data") || ss.getSheets()[0];
-  var data = sheet.getDataRange().getValues();
-  return ContentService.createTextOutput(JSON.stringify({status: "success", data: data}))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("Data") || ss.getSheets()[0];
-  var payload = JSON.parse(e.postData.contents);
-  sheet.appendRow([new Date(), payload.type, JSON.stringify(payload.data)]);
-  return ContentService.createTextOutput(JSON.stringify({status: "success"}))
-    .setMimeType(ContentService.MimeType.JSON);
-}</code></pre>
-                </div>
-            </div>
-
-            <div class="flex justify-end space-x-2 mt-6 pt-4 border-t">
-                <button onclick="closeModal('sheetModal')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-semibold">Hủy</button>
-                <button onclick="saveSheetConfig()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold">Lưu URL & Đồng Bộ</button>
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100">
+            <h3 class="font-bold text-slate-900 text-base mb-3">Cấu Hình Dynamic Google Sheet URL</h3>
+            <input type="text" id="sheetApiUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full text-xs p-3 border border-slate-300 rounded-lg outline-none font-mono mb-4">
+            <div class="flex justify-end space-x-2">
+                <button onclick="closeModal('sheetModal')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold">Hủy</button>
+                <button onclick="saveSheetConfig()" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold">Lưu & Đồng Bộ</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 2: LEAVE APPLICATION FORM -->
+    <!-- MODAL 2: LEAVE FORM -->
     <div id="leaveModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
-            <div class="flex items-center justify-between border-b pb-3 mb-4">
-                <h3 class="font-bold text-slate-900 text-base">Tạo Đơn Xin Nghỉ Phép / Nghỉ Bù</h3>
-                <button onclick="closeModal('leaveModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <h3 class="font-bold text-slate-900 text-base mb-4">Tạo Đơn Xin Nghỉ Phép / Nghỉ Bù</h3>
             <form onsubmit="submitLeaveForm(event)" class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Họ và Tên Nhân Viên</label>
-                    <input type="text" id="leaveName" required placeholder="Nhập tên cán bộ..." class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
-                </div>
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Loại Ngày Nghỉ</label>
-                    <select id="leaveType" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
-                        <option value="Phép năm">Nghỉ phép năm</option>
-                        <option value="Nghỉ bù">Nghỉ bù ca trực đêm/lễ</option>
-                        <option value="Nghỉ việc riêng">Nghỉ việc riêng / Bệnh</option>
-                    </select>
-                </div>
+                <input type="text" id="leaveName" required placeholder="Họ và Tên cán bộ..." class="w-full p-2.5 border rounded-lg">
+                <select id="leaveType" class="w-full p-2.5 border rounded-lg">
+                    <option value="Phép năm">Nghỉ phép năm</option>
+                    <option value="Nghỉ bù">Nghỉ bù ca trực</option>
+                </select>
                 <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Từ Ngày</label>
-                        <input type="date" id="leaveStart" required class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Đến Ngày</label>
-                        <input type="date" id="leaveEnd" required class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
-                    </div>
+                    <input type="date" id="leaveStart" required class="p-2.5 border rounded-lg">
+                    <input type="date" id="leaveEnd" required class="p-2.5 border rounded-lg">
                 </div>
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Lý Do Nghỉ</label>
-                    <textarea id="leaveReason" rows="2" placeholder="Ghi rõ lý do..." class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none"></textarea>
-                </div>
-                <div class="flex justify-end space-x-2 pt-3 border-t">
-                    <button type="button" onclick="closeModal('leaveModal')" class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg">Hủy</button>
-                    <button type="submit" class="px-4 py-1.5 bg-purple-600 text-white font-semibold rounded-lg">Gửi Đơn</button>
+                <textarea id="leaveReason" placeholder="Lý do nghỉ..." class="w-full p-2.5 border rounded-lg" rows="2"></textarea>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('leaveModal')" class="px-3 py-2 bg-slate-100 rounded-lg">Hủy</button>
+                    <button type="submit" class="px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg">Gửi Đơn</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL 3: SWAP DUTY FORM -->
+    <!-- MODAL 3: SWAP FORM -->
     <div id="swapModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
-            <div class="flex items-center justify-between border-b pb-3 mb-4">
-                <h3 class="font-bold text-slate-900 text-base">Đăng Ký Đổi Ca Trực</h3>
-                <button onclick="closeModal('swapModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <h3 class="font-bold text-slate-900 text-base mb-4">Đăng Ký Đổi Ca Trực</h3>
             <form onsubmit="submitSwapForm(event)" class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Người Đổi (Bạn)</label>
-                    <input type="text" id="swapFrom" required placeholder="Tên cán bộ xin đổi..." class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
-                </div>
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Người Nhận Ca</label>
-                    <input type="text" id="swapTo" required placeholder="Tên cán bộ nhận trực thay..." class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
-                </div>
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Ngày Trực Đổi</label>
-                    <input type="date" id="swapDate" required class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
-                </div>
-                <div class="flex justify-end space-x-2 pt-3 border-t">
-                    <button type="button" onclick="closeModal('swapModal')" class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg">Hủy</button>
-                    <button type="submit" class="px-4 py-1.5 bg-sky-600 text-white font-semibold rounded-lg">Gửi Yêu Cầu</button>
+                <input type="text" id="swapFrom" required placeholder="Tên cán bộ xin đổi..." class="w-full p-2.5 border rounded-lg">
+                <input type="text" id="swapTo" required placeholder="Tên cán bộ nhận trực thay..." class="w-full p-2.5 border rounded-lg">
+                <input type="date" id="swapDate" required class="w-full p-2.5 border rounded-lg">
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('swapModal')" class="px-3 py-2 bg-slate-100 rounded-lg">Hủy</button>
+                    <button type="submit" class="px-4 py-2 bg-sky-600 text-white font-semibold rounded-lg">Gửi Yêu Cầu</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL 4: EXECUTIVE MEETING FORM -->
+    <!-- MODAL 4: EXECUTIVE FORM -->
     <div id="executiveModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
-            <div class="flex items-center justify-between border-b pb-3 mb-4">
-                <h3 class="font-bold text-slate-900 text-base">Đăng Ký Lịch Làm Việc với BGĐ</h3>
-                <button onclick="closeModal('executiveModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <h3 class="font-bold text-slate-900 text-base mb-4">Đăng Ký Lịch Làm Việc với BGĐ</h3>
             <form onsubmit="submitExecutiveForm(event)" class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Lãnh Đạo Cần Làm Việc</label>
-                    <select id="execLeader" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
-                        <option value="BS. Phạm Minh Đức">Giám đốc - BS. Phạm Minh Đức</option>
-                        <option value="BS. CKI. Nguyễn Văn Thuyên">Phó Giám đốc - BS. CKI. Nguyễn Văn Thuyên</option>
-                        <option value="BS. Lê Văn Phu">Phó Giám đốc - BS. Lê Văn Phu</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Nội Dung / Đơn Vị Đăng Ký</label>
-                    <input type="text" id="execTopic" required placeholder="Ghi rõ nội dung xin gặp..." class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
-                </div>
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Thời Gian Dự Kiến</label>
-                    <input type="datetime-local" id="execTime" required class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none">
-                </div>
-                <div class="flex justify-end space-x-2 pt-3 border-t">
-                    <button type="button" onclick="closeModal('executiveModal')" class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg">Hủy</button>
-                    <button type="submit" class="px-4 py-1.5 bg-amber-600 text-white font-semibold rounded-lg">Đăng Ký</button>
+                <select id="execLeader" class="w-full p-2.5 border rounded-lg">
+                    <option value="BS. Phạm Minh Đức">Giám đốc - BS. Phạm Minh Đức</option>
+                    <option value="BS. CKI. Nguyễn Văn Thuyên">Phó Giám đốc - BS. CKI. Nguyễn Văn Thuyên</option>
+                    <option value="BS. Lê Văn Phu">Phó Giám đốc - BS. Lê Văn Phu</option>
+                </select>
+                <input type="text" id="execTopic" required placeholder="Ghi rõ nội dung xin gặp..." class="w-full p-2.5 border rounded-lg">
+                <input type="datetime-local" id="execTime" required class="w-full p-2.5 border rounded-lg">
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('executiveModal')" class="px-3 py-2 bg-slate-100 rounded-lg">Hủy</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-600 text-white font-semibold rounded-lg">Đăng Ký</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Toast Notification Overlay -->
+    <!-- PWA Installation Helper Modal for iOS/Manual -->
+    <div id="pwaInstructionModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b pb-3 mb-4">
+                <h3 class="font-bold text-slate-900 text-base">Hướng Dẫn Cài Đặt PWA Màn Hình Chính</h3>
+                <button onclick="closeModal('pwaInstructionModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-3 text-xs text-slate-600">
+                <div class="p-3 bg-sky-50 rounded-xl border border-sky-100">
+                    <p class="font-bold text-sky-900 mb-1"><i class="fa-brands fa-apple text-sm mr-1"></i> Đối với iPhone / iPad (Safari):</p>
+                    <ol class="list-decimal list-inside space-y-1">
+                        <li>Bấm nút <strong>Chia sẻ (Share)</strong> ở góc dưới trình duyệt Safari.</li>
+                        <li>Cuộn xuống chọn <strong>Thêm vào Màn hình chính (Add to Home Screen)</strong>.</li>
+                        <li>Bấm <strong>Thêm (Add)</strong> ở góc trên bên phải.</li>
+                    </ol>
+                </div>
+                <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                    <p class="font-bold text-emerald-900 mb-1"><i class="fa-brands fa-android text-sm mr-1"></i> Đối với Android (Chrome):</p>
+                    <ol class="list-decimal list-inside space-y-1">
+                        <li>Bấm dấu <strong>3 chấm</strong> góc trên bên phải Chrome.</li>
+                        <li>Chọn <strong>Cài đặt ứng dụng</strong> hoặc <strong>Thêm vào màn hình chính</strong>.</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="flex justify-end mt-4 pt-3 border-t">
+                <button onclick="closeModal('pwaInstructionModal')" class="px-4 py-2 bg-sky-600 text-white font-semibold rounded-xl text-xs">Đã Hiểu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
     <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
         <div id="toastContent" class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 text-xs font-semibold">
             <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
@@ -836,24 +609,10 @@ function doPost(e) {
     </div>
 
     <script>
-        /* ==========================================================================
-           1. CONSTANTS, ROUTING & DATA STORES
-           ========================================================================== */
-        const ROUTES = [
-            'dashboard', 
-            'lich-truc', 
-            'bang-cham-cong', 
-            'lich-lam-viec-bgd', 
-            'lich-kham-benh', 
-            'lich-tiem-chung', 
-            'nghi-phep', 
-            'gioi-thieu'
-        ];
-
+        const ROUTES = ['dashboard', 'lich-truc', 'bang-cham-cong', 'lich-lam-viec-bgd', 'lich-kham-benh', 'lich-tiem-chung', 'nghi-phep', 'gioi-thieu'];
         let deferredPrompt = null;
         let googleSheetUrl = localStorage.getItem('TYT_GOOGLE_SHEET_URL') || '';
 
-        // OFFICIAL DUTY SCHEDULE DATA (16/08/2026 - 31/08/2026)
         const INITIAL_DUTY_DATA = [
             { dayName: "CN", date: "16/08/2026", ducTan: "Bs Thuyên", moDuc: "ĐD Lài", ducHoa: "Ys Phương", ducPhu: "NHS Lan" },
             { dayName: "Hai", date: "17/08/2026", ducTan: "Ys Tuệ", moDuc: "ĐD Nguyệt", ducHoa: "BS Phu", ducPhu: "Ys Vũ" },
@@ -873,41 +632,30 @@ function doPost(e) {
             { dayName: "Hai", date: "31/08/2026", ducTan: "Ys Thủy", moDuc: "ĐD Lài", ducHoa: "Ys Phương", ducPhu: "ĐD Ly Va" }
         ];
 
-        // INITIAL EXECUTIVE SCHEDULE
         const INITIAL_EXECUTIVE_DATA = [
-            { time: "26/08/2026 (08h00)", leader: "BS. Phạm Minh Đức", topic: "Họp Giao Ban Công Tác Y Tế Tháng 8 với UBND Xã", location: "UBND Xã Mộ Đức", participants: "UBND Xã, Ban Giám Đốc", status: "Chờ diễn ra" },
-            { time: "27/08/2026 (09h00)", leader: "BS. CKI. Nguyễn Văn Thuyên", topic: "Kiểm tra công tác Cấp cứu & Kho Thuốc tại Điểm Số 2", location: "Điểm Y Tế Số 2 (Đức Hòa)", participants: "ĐD Trúc, YS Phương", status: "Đã xếp lịch" },
-            { time: "28/08/2026 (14h00)", leader: "BS. Lê Văn Phu", topic: "Giám sát Đợt Tiêm Chủng Mở Rộng Trẻ Em", location: "Điểm Trạm Chính (Đức Tân)", participants: "Tổ Tiêm Chủng", status: "Đã xếp lịch" }
+            { time: "26/08/2026 (08h00)", leader: "BS. Phạm Minh Đức", topic: "Họp Giao Ban Công Tác Y Tế Tháng 8 với UBND Xã", location: "UBND Xã Mộ Đức", status: "Chờ diễn ra" },
+            { time: "27/08/2026 (09h00)", leader: "BS. CKI. Nguyễn Văn Thuyên", topic: "Kiểm tra công tác Cấp cứu & Kho Thuốc tại Điểm Số 2", location: "Điểm Y Tế Số 2 (Đức Hòa)", status: "Đã xếp lịch" },
+            { time: "28/08/2026 (14h00)", leader: "BS. Lê Văn Phu", topic: "Giám sát Đợt Tiêm Chủng Mở Rộng Trẻ Em", location: "Điểm Trạm Chính (Đức Tân)", status: "Đã xếp lịch" }
         ];
 
-        // INITIAL TIMECARD DATA
         const INITIAL_TIMECARD_DATA = [
             { code: "NV01", name: "BS. Phạm Minh Đức", role: "Giám đốc", point: "Đức Tân", timeIn: "06:55", timeOut: "17:10", ot: "2.0h", status: "Đúng giờ" },
             { code: "NV02", name: "BS. CKI. Nguyễn Văn Thuyên", role: "Phó Giám đốc", point: "Đức Tân", timeIn: "07:00", timeOut: "17:05", ot: "1.5h", status: "Đúng giờ" },
-            { code: "NV03", name: "BS. Lê Văn Phu", role: "Phó Giám đốc", point: "Đức Hòa", timeIn: "06:58", timeOut: "17:00", ot: "1.0h", status: "Đúng giờ" },
-            { code: "NV04", name: "ĐD Lài", role: "Điều dưỡng", point: "Mộ Đức", timeIn: "07:02", timeOut: "17:00", ot: "0.0h", status: "Đúng giờ" },
-            { code: "NV05", name: "NHS Lan", role: "Nữ hộ sinh", point: "Đức Phú", timeIn: "07:15", timeOut: "17:00", ot: "0.0h", status: "Đi muộn" }
+            { code: "NV03", name: "BS. Lê Văn Phu", role: "Phó Giám đốc", point: "Đức Hòa", timeIn: "06:58", timeOut: "17:00", ot: "1.0h", status: "Đúng giờ" }
         ];
 
-        // INITIAL VACCINE DATA
         const INITIAL_VACCINE_DATA = [
-            { date: "28/08/2026", vaccine: "5 trong 1 (DPT-VGB-Hib)", target: "Trẻ 2-4 tháng tuổi", location: "Điểm Trạm Chính & Số 2", doctor: "BS. Lê Văn Phu", status: "Sắp diễn ra" },
-            { date: "30/08/2026", vaccine: "Sởi - Rubella (MR)", target: "Trẻ 18 tháng tuổi", location: "Điểm Y Tế Số 1 (Mộ Đức)", doctor: "BS. Nguyễn Văn Thuyên", status: "Chuẩn bị kho" }
+            { date: "28/08/2026", vaccine: "5 trong 1 (DPT-VGB-Hib)", target: "Trẻ 2-4 tháng tuổi", location: "Điểm Trạm Chính & Số 2", doctor: "BS. Lê Văn Phu" },
+            { date: "30/08/2026", vaccine: "Sởi - Rubella (MR)", target: "Trẻ 18 tháng tuổi", location: "Điểm Y Tế Số 1 (Mộ Đức)", doctor: "BS. Nguyễn Văn Thuyên" }
         ];
 
-        // INITIAL LEAVE DATA
         const INITIAL_LEAVE_DATA = [
             { name: "Ys Tuệ", type: "Nghỉ bù ca trực", start: "27/08/2026", end: "27/08/2026", reason: "Nghỉ bù sau ca trực đêm 24/08", status: "Đã duyệt" },
             { name: "ĐD Vinh", type: "Phép năm", start: "01/09/2026", end: "02/09/2026", reason: "Giải quyết việc gia đình", status: "Chờ BGĐ duyệt" }
         ];
 
-        /* ==========================================================================
-           2. NAVIGATION & PWA CORE ROUTING
-           ========================================================================== */
         function navigateTo(routeId, pushHash = true) {
             if (!ROUTES.includes(routeId)) routeId = 'dashboard';
-
-            // Hide all tabs
             ROUTES.forEach(r => {
                 const tabEl = document.getElementById(`tab-${r}`);
                 const navEl = document.getElementById(`nav-${r}`);
@@ -915,22 +663,15 @@ function doPost(e) {
                 if (navEl) navEl.classList.remove('active-tab');
             });
 
-            // Show target tab
             const activeTab = document.getElementById(`tab-${routeId}`);
             const activeNav = document.getElementById(`nav-${routeId}`);
             if (activeTab) activeTab.classList.remove('hidden');
             if (activeNav) activeNav.classList.add('active-tab');
-
-            // Scroll nav on mobile
             if (activeNav) activeNav.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 
-            // Update URL Hash safely for GitHub Pages & Preview sandboxes
             if (pushHash) {
-                try {
-                    window.location.hash = routeId === 'dashboard' ? '' : routeId;
-                } catch (e) { console.debug('Hash update bypassed'); }
+                try { window.location.hash = routeId === 'dashboard' ? '' : routeId; } catch (e) {}
             }
-
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -938,12 +679,8 @@ function doPost(e) {
             const hash = window.location.hash.replace('#', '');
             navigateTo(hash || 'dashboard', false);
         }
-
         window.addEventListener('hashchange', handleHashChange);
 
-        /* ==========================================================================
-           3. UI RENDERERS
-           ========================================================================== */
         function renderAllModules() {
             renderShiftsTable();
             renderExecutiveTable();
@@ -957,42 +694,20 @@ function doPost(e) {
             const tbody = document.getElementById('shiftsTableBody');
             if (!tbody) return;
             tbody.innerHTML = '';
-
             INITIAL_DUTY_DATA.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
                 tr.innerHTML = `
-                    <td class="p-3 font-bold text-slate-900">
-                        <span class="text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 mr-1">${row.dayName}</span> ${row.date}
-                    </td>
+                    <td class="p-3 font-bold text-slate-900"><span class="text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 mr-1">${row.dayName}</span> ${row.date}</td>
                     <td class="p-3 font-semibold text-sky-800 bg-sky-50/30">${row.ducTan}</td>
-                    <td class="p-3 font-medium text-slate-700">${row.moDuc}</td>
-                    <td class="p-3 font-medium text-slate-700">${row.ducHoa}</td>
-                    <td class="p-3 font-medium text-slate-700">${row.ducPhu}</td>
+                    <td class="p-3 text-slate-700">${row.moDuc}</td>
+                    <td class="p-3 text-slate-700">${row.ducHoa}</td>
+                    <td class="p-3 text-slate-700">${row.ducPhu}</td>
                     <td class="p-3 text-center">
-                        <button onclick="openSwapModal()" class="text-[11px] text-sky-600 hover:text-sky-800 font-bold bg-sky-50 hover:bg-sky-100 border border-sky-200 px-2 py-1 rounded transition">
-                            Đổi ca
-                        </button>
+                        <button onclick="openSwapModal()" class="text-[11px] text-sky-600 font-bold bg-sky-50 border border-sky-200 px-2 py-1 rounded">Đổi ca</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
-            });
-        }
-
-        function filterShiftsTable() {
-            const term = (document.getElementById('searchShiftInput')?.value || '').toLowerCase();
-            const point = document.getElementById('filterShiftPoint')?.value || 'ALL';
-            const rows = document.querySelectorAll('#shiftsTableBody tr');
-
-            rows.forEach(tr => {
-                const text = tr.innerText.toLowerCase();
-                const matchesTerm = !term || text.includes(term);
-                let matchesPoint = true;
-
-                if (point !== 'ALL') {
-                    if (point === 'Đức Tân' && !tr.children[1].innerText.toLowerCase().includes(term)) matchesPoint = true;
-                }
-                tr.style.display = matchesTerm && matchesPoint ? '' : 'none';
             });
         }
 
@@ -1000,19 +715,15 @@ function doPost(e) {
             const tbody = document.getElementById('executiveTableBody');
             if (!tbody) return;
             tbody.innerHTML = '';
-
             INITIAL_EXECUTIVE_DATA.forEach(row => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-amber-50/40 transition border-b border-slate-100";
+                tr.className = "hover:bg-amber-50/40 border-b border-slate-100";
                 tr.innerHTML = `
                     <td class="p-3 font-mono font-bold text-amber-900">${row.time}</td>
                     <td class="p-3 font-bold text-slate-800">${row.leader}</td>
-                    <td class="p-3 text-slate-700 font-medium">${row.topic}</td>
+                    <td class="p-3 text-slate-700">${row.topic}</td>
                     <td class="p-3 text-slate-600">${row.location}</td>
-                    <td class="p-3 text-slate-500 text-[11px]">${row.participants}</td>
-                    <td class="p-3 text-center">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">${row.status}</span>
-                    </td>
+                    <td class="p-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">${row.status}</span></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1022,7 +733,6 @@ function doPost(e) {
             const tbody = document.getElementById('timecardTableBody');
             if (!tbody) return;
             tbody.innerHTML = '';
-
             INITIAL_TIMECARD_DATA.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 border-b border-slate-100";
@@ -1031,12 +741,10 @@ function doPost(e) {
                     <td class="p-3 font-bold text-slate-900">${row.name}</td>
                     <td class="p-3 text-slate-600">${row.role}</td>
                     <td class="p-3 text-slate-700">${row.point}</td>
-                    <td class="p-3 font-mono font-semibold text-emerald-700">${row.timeIn}</td>
+                    <td class="p-3 font-mono text-emerald-700 font-semibold">${row.timeIn}</td>
                     <td class="p-3 font-mono text-slate-600">${row.timeOut}</td>
                     <td class="p-3 text-center font-bold text-amber-600">${row.ot}</td>
-                    <td class="p-3 text-center">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${row.status === 'Đúng giờ' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">${row.status}</span>
-                    </td>
+                    <td class="p-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">${row.status}</span></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1046,7 +754,6 @@ function doPost(e) {
             const tbody = document.getElementById('vaccineTableBody');
             if (!tbody) return;
             tbody.innerHTML = '';
-
             INITIAL_VACCINE_DATA.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-rose-50/30 border-b border-slate-100";
@@ -1056,9 +763,6 @@ function doPost(e) {
                     <td class="p-3 text-slate-700">${row.target}</td>
                     <td class="p-3 text-slate-600">${row.location}</td>
                     <td class="p-3 font-semibold text-slate-800">${row.doctor}</td>
-                    <td class="p-3 text-center">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">${row.status}</span>
-                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1068,7 +772,6 @@ function doPost(e) {
             const tbody = document.getElementById('leaveTableBody');
             if (!tbody) return;
             tbody.innerHTML = '';
-
             INITIAL_LEAVE_DATA.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-purple-50/30 border-b border-slate-100";
@@ -1078,9 +781,7 @@ function doPost(e) {
                     <td class="p-3 font-mono">${row.start}</td>
                     <td class="p-3 font-mono">${row.end}</td>
                     <td class="p-3 text-slate-600">${row.reason}</td>
-                    <td class="p-3 text-center">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${row.status === 'Đã duyệt' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${row.status}</span>
-                    </td>
+                    <td class="p-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${row.status === 'Đã duyệt' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${row.status}</span></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1089,8 +790,7 @@ function doPost(e) {
         function renderDashboardOnDuty() {
             const container = document.getElementById('dashOnDutyCards');
             if (!container) return;
-            
-            const todayData = INITIAL_DUTY_DATA[10]; // Today: 26/08/2026
+            const todayData = INITIAL_DUTY_DATA[10];
             container.innerHTML = `
                 <div class="p-3 bg-sky-50 rounded-xl border border-sky-200 flex justify-between items-center">
                     <div>
@@ -1123,9 +823,12 @@ function doPost(e) {
             `;
         }
 
-        /* ==========================================================================
-           4. GOOGLE SHEETS DYNAMIC SYNC & FORM SUBMISSIONS
-           ========================================================================== */
+        /* MODALS & FORMS */
+        function openModal(id) { document.getElementById(id)?.classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id)?.classList.add('hidden'); }
+        function openLeaveModal() { openModal('leaveModal'); }
+        function openSwapModal() { openModal('swapModal'); }
+        function openExecutiveModal() { openModal('executiveModal'); }
         function openSheetModal() {
             document.getElementById('sheetApiUrlInput').value = googleSheetUrl;
             openModal('sheetModal');
@@ -1136,41 +839,16 @@ function doPost(e) {
             googleSheetUrl = url;
             localStorage.setItem('TYT_GOOGLE_SHEET_URL', url);
             closeModal('sheetModal');
-            showToast('Đã lưu URL kết nối Google Sheet thành công!');
-            syncDataFromSheet();
-        }
-
-        async function syncDataFromSheet() {
-            if (!googleSheetUrl) return;
-            try {
-                const res = await fetch(googleSheetUrl);
-                const json = await res.json();
-                if (json.status === 'success') {
-                    showToast('Đã đồng bộ dữ liệu mới nhất từ Google Sheet!');
-                }
-            } catch (err) {
-                console.warn('Google Sheet connection fallback:', err);
-            }
-        }
-
-        async function postToSheet(type, data) {
-            if (!googleSheetUrl) return;
-            try {
-                await fetch(googleSheetUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: type, data: data })
-                });
-            } catch (err) { console.error('Sheet POST error:', err); }
+            showToast('Đã lưu URL Google Sheet thành công!');
         }
 
         function triggerBiometricScan() {
-            showToast('Đang quét mống mắt & sinh trắc...', 'info');
+            showToast('Đang quét sinh trắc mống mắt...', 'info');
             setTimeout(() => {
                 INITIAL_TIMECARD_DATA.unshift({
-                    code: "NV" + Math.floor(Math.random() * 90 + 10),
+                    code: "NV" + Math.floor(Math.random() * 80 + 10),
                     name: "BS. Phạm Minh Đức",
-                    role: "Giám đốc Trạm",
+                    role: "Giám đốc",
                     point: "Đức Tân",
                     timeIn: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
                     timeOut: "--:--",
@@ -1179,8 +857,7 @@ function doPost(e) {
                 });
                 renderTimecardTable();
                 showToast('Chấm công sinh trắc thành công!');
-                postToSheet('TIMECARD', { user: 'BS. Phạm Minh Đức', action: 'Biometric Check-in' });
-            }, 1200);
+            }, 1000);
         }
 
         function submitLeaveForm(e) {
@@ -1194,19 +871,13 @@ function doPost(e) {
             INITIAL_LEAVE_DATA.unshift({ name, type, start, end, reason, status: "Chờ BGĐ duyệt" });
             renderLeaveTable();
             closeModal('leaveModal');
-            showToast('Đã gửi đơn xin nghỉ phép đến Ban Giám Đốc!');
-            postToSheet('LEAVE_REQUEST', { name, type, start, end, reason });
+            showToast('Đã gửi đơn xin nghỉ phép!');
         }
 
         function submitSwapForm(e) {
             e.preventDefault();
-            const from = document.getElementById('swapFrom').value;
-            const to = document.getElementById('swapTo').value;
-            const date = document.getElementById('swapDate').value;
-
             closeModal('swapModal');
-            showToast(`Đã gửi yêu cầu đổi ca ngày ${date} cho ${to}!`);
-            postToSheet('DUTY_SWAP', { from, to, date });
+            showToast('Đã gửi yêu cầu đổi ca!');
         }
 
         function submitExecutiveForm(e) {
@@ -1215,41 +886,25 @@ function doPost(e) {
             const topic = document.getElementById('execTopic').value;
             const time = document.getElementById('execTime').value;
 
-            INITIAL_EXECUTIVE_DATA.unshift({
-                time: time, leader: leader, topic: topic, location: "Phòng Giám đốc", participants: "Theo yêu cầu", status: "Chờ duyệt"
-            });
+            INITIAL_EXECUTIVE_DATA.unshift({ time, leader, topic, location: "Phòng Giám đốc", status: "Chờ duyệt" });
             renderExecutiveTable();
             closeModal('executiveModal');
-            showToast('Đăng ký lịch làm việc với BGĐ thành công!');
-            postToSheet('EXECUTIVE_REQUEST', { leader, topic, time });
+            showToast('Đã đăng ký lịch làm việc!');
         }
 
-        /* ==========================================================================
-           5. MODAL & UTILITY FUNCTIONS
-           ========================================================================== */
-        function openModal(id) { document.getElementById(id)?.classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id)?.classList.add('hidden'); }
-        function openLeaveModal() { openModal('leaveModal'); }
-        function openSwapModal() { openModal('swapModal'); }
-        function openExecutiveModal() { openModal('executiveModal'); }
-
-        function showToast(msg, type = 'success') {
+        function showToast(msg) {
             const toast = document.getElementById('toastNotification');
             const toastMsg = document.getElementById('toastMessage');
             if (!toast || !toastMsg) return;
-
             toastMsg.innerText = msg;
             toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
+            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
         }
 
         function updateLiveClock() {
             const now = new Date();
             const clockEl = document.getElementById('liveClock');
             const dateEl = document.getElementById('liveDate');
-            
             if (clockEl) clockEl.innerText = now.toLocaleTimeString('vi-VN');
             if (dateEl) {
                 const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
@@ -1257,9 +912,7 @@ function doPost(e) {
             }
         }
 
-        /* ==========================================================================
-           6. PWA INSTALLATION & SERVICE WORKER SETUP
-           ========================================================================== */
+        /* PWA INSTALLATION EVENT HANDLERS */
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
@@ -1270,49 +923,33 @@ function doPost(e) {
         function installPWA() {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        dismissPWABanner();
-                    }
+                deferredPrompt.userChoice.then((choice) => {
+                    if (choice.outcome === 'accepted') dismissPWABanner();
                     deferredPrompt = null;
                 });
             } else {
-                showToast('Để cài PWA trên iPhone/Safari: Bấm Chia Sẻ -> Thêm vào Màn hình chính', 'info');
+                openModal('pwaInstructionModal');
             }
         }
 
         function dismissPWABanner() {
-            const banner = document.getElementById('pwaInstallBanner');
-            if (banner) banner.classList.add('hidden');
+            document.getElementById('pwaInstallBanner')?.classList.add('hidden');
         }
 
-        // Register Dynamic Service Worker via Blob for standalone PWA offline functionality
+        /* REGISTER SW FROM FILE sw.js */
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                const swCode = `
-                    const CACHE_NAME = 'tyt-moduc-pwa-v2';
-                    self.addEventListener('install', (e) => {
-                        self.skipWaiting();
-                    });
-                    self.addEventListener('fetch', (e) => {
-                        e.respondWith(
-                            fetch(e.request).catch(() => caches.match(e.request))
-                        );
-                    });
-                `;
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                const swUrl = URL.createObjectURL(blob);
-                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Registration skipped in sandbox frame.'));
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW registered successfully:', reg.scope))
+                    .catch(err => console.log('SW registration fallback:', err));
             });
         }
 
-        /* Initializer */
         window.onload = function () {
             renderAllModules();
             handleHashChange();
             setInterval(updateLiveClock, 1000);
             updateLiveClock();
-            if (googleSheetUrl) syncDataFromSheet();
         };
     </script>
 </body>
