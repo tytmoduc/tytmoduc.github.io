@@ -46,9 +46,35 @@
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .active-tab { background-color: #0284c7 !important; color: #ffffff !important; font-weight: 600; }
+        
+        /* Highlight Cột Trực Ngày Hôm Nay */
+        .today-col { background-color: #e0f2fe !important; border-left: 2px solid #0284c7 !important; border-right: 2px solid #0284c7 !important; }
+        .today-header { background-color: #0284c7 !important; color: #ffffff !important; }
+
+        /* Smooth Hide Scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Spinner Animation */
+        .loader {
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #0284c7;
+            border-radius: 50%;
+            width: 36px; height: 36px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-sky-100 selection:text-sky-800">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex-col items-center justify-center">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center space-y-3 border border-slate-100">
+            <div class="loader"></div>
+            <p class="text-sky-700 font-bold text-sm animate-pulse">Đang đồng bộ dữ liệu thời gian thực...</p>
+        </div>
+    </div>
 
     <!-- PWA Install Prompt Banner for Mobile/Desktop -->
     <div id="pwaInstallBanner" class="hidden bg-gradient-to-r from-sky-700 via-sky-600 to-teal-600 text-white px-4 py-2.5 shadow-md flex items-center justify-between transition-all duration-300 z-50">
@@ -81,16 +107,9 @@
                         <i class="fa-solid fa-user-doctor text-xl sm:text-2xl"></i>
                     </div>
                     <div>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-sky-600 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">UBND XÃ MỘ ĐỨC</span>
-                            <span id="syncStatusBadge" class="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Google Sheet Dynamic
-                            </span>
-                        </div>
                         <h1 class="text-base sm:text-xl font-extrabold text-slate-900 tracking-tight leading-tight">
                             TRẠM Y TẾ XÃ MỘ ĐỨC
                         </h1>
-                        <p class="text-[11px] text-slate-500 hidden sm:block">Trực thuộc UBND Xã Mộ Đức • 04 Điểm Trạm Chăm Sóc Sức Khỏe Nhân Dân</p>
                     </div>
                 </div>
 
@@ -99,10 +118,6 @@
                     <button onclick="installPWA()" class="inline-flex items-center space-x-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-300 text-xs font-medium px-3 py-2 rounded-lg transition shadow-sm">
                         <i class="fa-solid fa-mobile-screen-button text-sky-600"></i>
                         <span class="hidden md:inline">Cài App PWA</span>
-                    </button>
-                    <button onclick="openSheetModal()" class="inline-flex items-center space-x-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-medium px-3 py-2 rounded-lg transition shadow-sm">
-                        <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                        <span class="hidden md:inline">Cấu Hình Sheet</span>
                     </button>
                     <a href="tel:02553888115" class="inline-flex items-center space-x-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow-sm">
                         <i class="fa-solid fa-phone-volume animate-bounce"></i>
@@ -235,7 +250,7 @@
                                 <span class="bg-red-100 text-red-700 p-2 rounded-lg"><i class="fa-solid fa-bullhorn"></i></span>
                                 <h3 class="font-bold text-slate-900 text-base">Thông Báo Quan Trọng Tuần Này</h3>
                             </div>
-                            <span class="text-xs text-slate-500">Cập nhật: UBND Xã Mộ Đức</span>
+                            <span class="text-xs text-slate-500">Cập nhật mới nhất</span>
                         </div>
 
                         <div class="space-y-3">
@@ -299,34 +314,87 @@
             </div>
         </section>
 
-        <!-- TAB 2: LỊCH TRỰC 04 ĐIỂM TRẠM -->
+        <!-- TAB 2: LỊCH TRỰC 04 ĐIỂM TRẠM (DYNAMIC WEEK MATRIX) -->
         <section id="tab-lich-truc" class="hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+            <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                
+                <!-- Section Title & Actions -->
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-slate-100">
                     <div>
-                        <h2 class="text-xl font-extrabold text-slate-900">Lịch Trực Trạm Y Tế Xã Mộ Đức</h2>
-                        <p class="text-xs text-slate-500 mt-1">Phân công trực 24/24 từ 16/08/2026 đến 31/08/2026</p>
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-sky-100 text-sky-800 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">Trực 24/24</span>
+                            <span class="text-slate-400 text-xs">• Cập nhật trực tuyến từ Google Sheets</span>
+                        </div>
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">Lịch Trực Nhân Viên 04 Điểm Trạm</h2>
+                        <p class="text-xs text-slate-500">Tra cứu nhanh phân công ca trực, theo dõi ngày hôm nay và đổi ca linh hoạt.</p>
                     </div>
-                    <button onclick="openSwapModal()" class="bg-sky-600 text-white text-xs font-semibold px-4 py-2 rounded-xl">
-                        <i class="fa-solid fa-arrow-rotate-left mr-1"></i> Đăng ký đổi ca
+
+                    <div class="flex items-center space-x-2">
+                        <button onclick="openSwapModal()" class="inline-flex items-center space-x-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-sm transition">
+                            <i class="fa-solid fa-arrow-rotate-left"></i>
+                            <span>Đăng ký đổi ca</span>
+                        </button>
+                        <button onclick="loadFromGoogleSheets()" class="inline-flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3.5 py-2.5 rounded-xl transition" title="Làm mới dữ liệu">
+                            <i class="fa-solid fa-arrows-rotate text-sky-600"></i>
+                            <span class="hidden sm:inline">Làm mới</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Week Selector Navigation Bar -->
+                <div class="bg-sky-50/70 border border-sky-100 rounded-xl p-3 flex items-center justify-between gap-2 shadow-sm">
+                    <button onclick="changeWeek(-1)" class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white border border-sky-200 rounded-xl shadow-sm text-sky-700 hover:bg-sky-600 hover:text-white transition active:scale-95">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    
+                    <div class="flex-1 flex flex-col items-center justify-center bg-white py-2 px-4 border border-sky-200 rounded-xl shadow-sm">
+                        <span class="text-[10px] text-sky-600 font-bold uppercase tracking-wider mb-0.5">Tuần Trực Đang Xem</span>
+                        <div class="flex items-center gap-2 font-black text-slate-800 text-sm sm:text-base font-mono">
+                            <span id="display-start">--/--</span>
+                            <i class="fa-solid fa-arrow-right-long text-sky-400 text-xs"></i>
+                            <span id="display-end">--/--</span>
+                        </div>
+                    </div>
+
+                    <button onclick="changeWeek(1)" class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white border border-sky-200 rounded-xl shadow-sm text-sky-700 hover:bg-sky-600 hover:text-white transition active:scale-95">
+                        <i class="fa-solid fa-chevron-right"></i>
                     </button>
                 </div>
 
-                <div class="overflow-x-auto rounded-xl border border-slate-200">
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-800 text-slate-200 uppercase text-[11px] font-bold">
-                            <tr>
-                                <th class="p-3">Thứ / Ngày</th>
-                                <th class="p-3 bg-sky-900/50">Điểm Chính (Đức Tân)</th>
-                                <th class="p-3">Điểm Số 1 (Mộ Đức)</th>
-                                <th class="p-3">Điểm Số 2 (Đức Hòa)</th>
-                                <th class="p-3">Điểm Số 3 (Đức Phú)</th>
-                                <th class="p-3 text-center">Thao tác</th>
+                <!-- Dynamic Weekly Matrix Table -->
+                <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm no-scrollbar bg-white">
+                    <table class="w-full text-xs text-left border-collapse min-w-[820px]">
+                        <thead>
+                            <tr id="table-header" class="bg-slate-800 text-slate-200 font-bold uppercase text-[11px]">
+                                <!-- Rendered dynamically by JS -->
                             </tr>
                         </thead>
-                        <tbody id="shiftsTableBody" class="divide-y divide-slate-200 bg-white"></tbody>
+                        <tbody id="table-body" class="divide-y divide-slate-100 bg-white">
+                            <!-- Rendered dynamically by JS -->
+                        </tbody>
                     </table>
                 </div>
+
+                <!-- Recent Changes History Log -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-xs mb-2 uppercase tracking-wide flex items-center space-x-1.5">
+                        <i class="fa-solid fa-clock-rotate-left text-sky-600"></i>
+                        <span>Ghi chú & Lịch sử điều chỉnh ca trực gần nhất</span>
+                    </h3>
+                    <div id="history-list" class="space-y-1.5 text-xs text-slate-600 max-h-[120px] overflow-y-auto pr-2">
+                        <!-- History logs populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Footer Status Bar -->
+                <div class="text-[11px] text-slate-500 flex justify-between items-center pt-2 border-t border-slate-100">
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Cơ sở dữ liệu đồng bộ Google Sheets 24/7
+                    </span>
+                    <span id="last-sync-time" class="font-mono font-medium text-slate-700">Chưa đồng bộ</span>
+                </div>
+
             </div>
         </section>
 
@@ -338,7 +406,7 @@
                         <h2 class="text-xl font-extrabold text-slate-900">Bảng Chấm Công Bio-Sync Nhân Viên</h2>
                         <p class="text-xs text-slate-500 mt-1">Giờ vào/ra, làm ca, giờ OT của 16 cán bộ y tế</p>
                     </div>
-                    <button onclick="triggerBiometricScan()" class="bg-emerald-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl">
+                    <button onclick="triggerBiometricScan()" class="bg-emerald-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl hover:bg-emerald-700 transition">
                         <i class="fa-solid fa-fingerprint mr-1"></i> Giả Lập Điểm Danh Sinh Trắc
                     </button>
                 </div>
@@ -370,7 +438,7 @@
                         <h2 class="text-xl font-extrabold text-slate-900">Lịch Công Tác Ban Giám Đốc</h2>
                         <p class="text-xs text-slate-500 mt-1">Họp UBND, kiểm tra điểm trạm & tiếp công dân</p>
                     </div>
-                    <button onclick="openExecutiveModal()" class="bg-amber-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl">
+                    <button onclick="openExecutiveModal()" class="bg-amber-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl hover:bg-amber-700 transition">
                         <i class="fa-solid fa-calendar-plus mr-1"></i> Đăng ký làm việc / Tiếp dân
                     </button>
                 </div>
@@ -449,7 +517,7 @@
                         <h2 class="text-xl font-extrabold text-slate-900">Quản Lý Nghỉ Phép & Nghỉ Bù</h2>
                         <p class="text-xs text-slate-500 mt-1">Theo dõi quỹ ngày nghỉ phép năm, nghỉ bù ca trực đêm/lễ</p>
                     </div>
-                    <button onclick="openLeaveModal()" class="bg-purple-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl">
+                    <button onclick="openLeaveModal()" class="bg-purple-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl hover:bg-purple-700 transition">
                         <i class="fa-solid fa-paper-plane mr-1"></i> Tạo Đơn Xin Nghỉ
                     </button>
                 </div>
@@ -476,7 +544,7 @@
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <h2 class="text-xl font-extrabold text-slate-900 mb-2">Giới Thiệu Trạm Y Tế Xã Mộ Đức</h2>
                 <p class="text-xs text-slate-600 leading-relaxed">
-                    Trạm Y tế xã Mộ Đức trực thuộc <strong>UBND Xã Mộ Đức</strong>. Trạm phục vụ chăm sóc sức khỏe ban đầu, phòng chống dịch bệnh, tiêm chủng mở rộng và khám chữa bệnh BHYT cho nhân dân địa phương.
+                    Trạm Y tế xã Mộ Đức phục vụ chăm sóc sức khỏe ban đầu, phòng chống dịch bệnh, tiêm chủng mở rộng và khám chữa bệnh BHYT cho nhân dân địa phương.
                 </p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
@@ -491,7 +559,6 @@
                     <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
                         <h4 class="font-bold text-slate-900 text-sm mb-2"><i class="fa-solid fa-phone-volume text-sky-600 mr-2"></i> Liên Hệ Khẩn Cấp</h4>
                         <p class="text-xs text-slate-600">Hotline Cấp cứu 24/7: <strong>(0255) 3.888.115</strong></p>
-                        <p class="text-xs text-slate-600 mt-1">Cơ quan chủ quản: UBND Xã Mộ Đức</p>
                     </div>
                 </div>
             </div>
@@ -613,23 +680,28 @@
         let deferredPrompt = null;
         let googleSheetUrl = localStorage.getItem('TYT_GOOGLE_SHEET_URL') || '';
 
-        const INITIAL_DUTY_DATA = [
-            { dayName: "CN", date: "16/08/2026", ducTan: "Bs Thuyên", moDuc: "ĐD Lài", ducHoa: "Ys Phương", ducPhu: "NHS Lan" },
-            { dayName: "Hai", date: "17/08/2026", ducTan: "Ys Tuệ", moDuc: "ĐD Nguyệt", ducHoa: "BS Phu", ducPhu: "Ys Vũ" },
-            { dayName: "Ba", date: "18/08/2026", ducTan: "NHS Thuỷ", moDuc: "NHS Việt", ducHoa: "ĐD Thanh", ducPhu: "CN Thu" },
-            { dayName: "Tư", date: "19/08/2026", ducTan: "Ys Thủy", moDuc: "BS Đức", ducHoa: "NHS Thắm", ducPhu: "ĐD Ly Va" },
-            { dayName: "Năm", date: "20/08/2026", ducTan: "ĐD Vinh", moDuc: "NHS Tin", ducHoa: "ĐD Trúc", ducPhu: "NHS Bé" },
-            { dayName: "Sáu", date: "21/08/2026", ducTan: "BS Nguyện", moDuc: "ĐD Lài", ducHoa: "Ys Phương", ducPhu: "NHS Trâm" },
-            { dayName: "Bảy", date: "22/08/2026", ducTan: "NHS Thy", moDuc: "ĐD Nguyệt", ducHoa: "BS Phu", ducPhu: "NHS Lan" },
-            { dayName: "CN", date: "23/08/2026", ducTan: "Bs Thuyên", moDuc: "NHS Việt", ducHoa: "ĐD Thanh", ducPhu: "Ys Vũ" },
-            { dayName: "Hai", date: "24/08/2026", ducTan: "NHS Thuỳ", moDuc: "BS Đức", ducHoa: "NHS Thắm", ducPhu: "CN Thu" },
-            { dayName: "Ba", date: "25/08/2026", ducTan: "Ys Thủy", moDuc: "NHS Tin", ducHoa: "ĐD Trúc", ducPhu: "ĐD Ly Va" },
-            { dayName: "Tư", date: "26/08/2026", ducTan: "ĐD Vinh", moDuc: "ĐD Lài", ducHoa: "Ys Phương", ducPhu: "NHS Bé" },
-            { dayName: "Năm", date: "27/08/2026", ducTan: "BS Nguyện", moDuc: "ĐD Nguyệt", ducHoa: "BS Phu", ducPhu: "NHS Trâm" },
-            { dayName: "Sáu", date: "28/08/2026", ducTan: "NHS Thy", moDuc: "NHS Việt", ducHoa: "ĐD Thanh", ducPhu: "NHS Lan" },
-            { dayName: "Bảy", date: "29/08/2026", ducTan: "Bs Thuyên", moDuc: "BS Đức", ducHoa: "NHS Thắm", ducPhu: "Ys Vũ" },
-            { dayName: "CN", date: "30/08/2026", ducTan: "Ys Tuệ", moDuc: "NHS Tin", ducHoa: "ĐD Trúc", ducPhu: "CN Thu" },
-            { dayName: "Hai", date: "31/08/2026", ducTan: "Ys Thủy", moDuc: "ĐD Lài", ducHoa: "Ys Phương", ducPhu: "ĐD Ly Va" }
+        /* WEEKLY MATRIX CONSTANTS & DATA */
+        const DAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
+        const ROLES = [
+            'Điểm trạm chính (Đức Tân)', 
+            'Điểm y tế số 1 (Mộ Đức)', 
+            'Điểm y tế số 2 (Đức Hòa)', 
+            'Điểm y tế số 3 (Đức Phú)'
+        ];
+
+        let scheduleGrid = [
+            ['Điểm trạm chính (Đức Tân)', 'Ys Tuệ', 'NHS Thuỷ', 'Ys Thủy', 'ĐD Vinh', 'BS Nguyện', 'NHS Thy', 'Bs Thuyên'],
+            ['Điểm y tế số 1 (Mộ Đức)', 'ĐD Nguyệt', 'NHS Việt', 'BS Đức', 'NHS Tin', 'ĐD Lài', 'ĐD Nguyệt', 'BS Đức'],
+            ['Điểm y tế số 2 (Đức Hòa)', 'BS Phu', 'ĐD Thanh', 'NHS Thắm', 'ĐD Trúc', 'Ys Phương', 'BS Phu', 'NHS Thắm'],
+            ['Điểm y tế số 3 (Đức Phú)', 'Ys Vũ', 'CN Thu', 'ĐD Ly Va', 'NHS Bé', 'NHS Trâm', 'NHS Lan', 'Ys Vũ']
+        ];
+
+        let weekStart = '';
+        let weekDates = []; 
+        let historyLogs = [
+            "26/08/2026: ĐD Lài đăng ký đổi ca trực với ĐD Nguyệt tại Điểm 1.",
+            "25/08/2026: Ys Phương hoàn thành ca trực 24/24 tại Điểm 2.",
+            "24/08/2026: BS. Phạm Minh Đức duyệt lịch phân công ca đêm đợt 2."
         ];
 
         const INITIAL_EXECUTIVE_DATA = [
@@ -653,6 +725,51 @@
             { name: "Ys Tuệ", type: "Nghỉ bù ca trực", start: "27/08/2026", end: "27/08/2026", reason: "Nghỉ bù sau ca trực đêm 24/08", status: "Đã duyệt" },
             { name: "ĐD Vinh", type: "Phép năm", start: "01/09/2026", end: "02/09/2026", reason: "Giải quyết việc gia đình", status: "Chờ BGĐ duyệt" }
         ];
+
+        function getLocalISODate(d) {
+            const localD = new Date(d);
+            localD.setMinutes(localD.getMinutes() - localD.getTimezoneOffset());
+            return localD.toISOString().split('T')[0];
+        }
+
+        function initWeekCalendar() {
+            const today = new Date();
+            const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1; 
+            const monday = new Date(today.getTime() - (dayOfWeek * 24 * 60 * 60 * 1000));
+            updateWeekDates(getLocalISODate(monday));
+        }
+
+        function updateWeekDates(dateString) {
+            const start = new Date(dateString);
+            weekStart = dateString;
+            weekDates = [];
+
+            for(let i = 0; i < 7; i++) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                weekDates.push({
+                    dateObj: d,
+                    display: d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+                    iso: getLocalISODate(d)
+                });
+            }
+
+            const startText = document.getElementById('display-start');
+            const endText = document.getElementById('display-end');
+            if (startText) startText.innerText = weekDates[0].display;
+            if (endText) endText.innerText = weekDates[6].display;
+
+            renderShiftsWeeklyTable();
+        }
+
+        function changeWeek(offset) {
+            const currentStart = new Date(weekStart);
+            currentStart.setDate(currentStart.getDate() + (offset * 7));
+            updateWeekDates(getLocalISODate(currentStart));
+            if (googleSheetUrl) {
+                loadFromGoogleSheets(weekStart);
+            }
+        }
 
         function navigateTo(routeId, pushHash = true) {
             if (!ROUTES.includes(routeId)) routeId = 'dashboard';
@@ -682,7 +799,8 @@
         window.addEventListener('hashchange', handleHashChange);
 
         function renderAllModules() {
-            renderShiftsTable();
+            renderShiftsWeeklyTable();
+            renderHistoryLog();
             renderExecutiveTable();
             renderTimecardTable();
             renderVaccineTable();
@@ -690,25 +808,85 @@
             renderDashboardOnDuty();
         }
 
-        function renderShiftsTable() {
-            const tbody = document.getElementById('shiftsTableBody');
+        function renderShiftsWeeklyTable() {
+            const todayISO = getLocalISODate(new Date());
+
+            // 1. Render Table Header
+            const headerRow = document.getElementById('table-header');
+            if (!headerRow) return;
+
+            headerRow.innerHTML = `<th class="p-3 bg-slate-800 text-slate-100 font-bold w-36 sm:w-48 sticky left-0 z-20 border-b border-slate-700 shadow-[1px_0_0_0_#334155]">Vị trí Điểm Trạm</th>`;
+            
+            DAYS.forEach((day, index) => {
+                const dateData = weekDates[index];
+                const isToday = dateData && dateData.iso === todayISO;
+                const isWeekend = day === 'Thứ 7' || day === 'CN';
+                
+                const classes = isToday 
+                    ? "p-3 text-center min-w-[95px] border-b border-slate-700 today-header font-black"
+                    : `p-3 text-center font-bold min-w-[95px] border-b border-slate-700 ${isWeekend ? 'bg-rose-950/40 text-rose-300' : 'bg-slate-800 text-slate-200'}`;
+
+                const dateHtml = dateData ? `<div class="text-[10px] font-normal mt-0.5 ${isToday ? 'text-sky-100' : (isWeekend ? 'text-rose-300' : 'text-slate-400')} font-mono">${dateData.display}</div>` : '';
+                headerRow.innerHTML += `<th class="${classes}">${day} ${dateHtml}</th>`;
+            });
+
+            // 2. Render Table Body
+            const tbody = document.getElementById('table-body');
             if (!tbody) return;
             tbody.innerHTML = '';
-            INITIAL_DUTY_DATA.forEach(row => {
+
+            scheduleGrid.forEach((row) => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
-                tr.innerHTML = `
-                    <td class="p-3 font-bold text-slate-900"><span class="text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 mr-1">${row.dayName}</span> ${row.date}</td>
-                    <td class="p-3 font-semibold text-sky-800 bg-sky-50/30">${row.ducTan}</td>
-                    <td class="p-3 text-slate-700">${row.moDuc}</td>
-                    <td class="p-3 text-slate-700">${row.ducHoa}</td>
-                    <td class="p-3 text-slate-700">${row.ducPhu}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="openSwapModal()" class="text-[11px] text-sky-600 font-bold bg-sky-50 border border-sky-200 px-2 py-1 rounded">Đổi ca</button>
-                    </td>
-                `;
+                
+                // Sticky role column
+                const tdRole = document.createElement('td');
+                tdRole.className = "p-3 font-extrabold text-slate-900 bg-white sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0] text-xs";
+                tdRole.innerText = row[0];
+                tr.appendChild(tdRole);
+
+                // Staff columns
+                for(let colIndex = 1; colIndex <= DAYS.length; colIndex++) {
+                    const td = document.createElement('td');
+                    const dateData = weekDates[colIndex - 1];
+                    const isToday = dateData && dateData.iso === todayISO;
+                    const isWeekend = DAYS[colIndex - 1] === 'Thứ 7' || DAYS[colIndex - 1] === 'CN';
+                    
+                    const bgClass = (!isToday && isWeekend) ? 'bg-rose-50/30' : '';
+                    td.className = `p-2 text-center text-xs font-semibold ${isToday ? 'today-col font-extrabold' : bgClass}`;
+                    
+                    const name = row[colIndex] || '-';
+                    let nameHtml = name;
+                    if (name !== '-') {
+                        const badgeClass = isToday
+                            ? 'bg-sky-600 text-white shadow-sm'
+                            : ((!isToday && isWeekend) ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-slate-100 text-slate-800 border-slate-200');
+                            
+                        nameHtml = `<span class="inline-block px-2 py-1 rounded-lg border w-full whitespace-nowrap text-[11px] ${badgeClass}">${name}</span>`;
+                    } else {
+                        nameHtml = `<span class="inline-block px-2 py-1 text-slate-300">-</span>`;
+                    }
+                    
+                    td.innerHTML = nameHtml;
+                    tr.appendChild(td);
+                }
                 tbody.appendChild(tr);
             });
+        }
+
+        function renderHistoryLog() {
+            const container = document.getElementById('history-list');
+            if(!container) return;
+            if(!historyLogs || historyLogs.length === 0) {
+                container.innerHTML = '<p class="text-slate-400 italic">Không có điều chỉnh mới nào trong tuần này.</p>';
+                return;
+            }
+            container.innerHTML = historyLogs.slice(0, 8).map(log => 
+                `<div class="flex items-start gap-2 py-0.5">
+                    <i class="fa-solid fa-circle-check text-sky-600 mt-0.5 text-[10px]"></i>
+                    <span class="flex-1 text-slate-700">${log}</span>
+                </div>`
+            ).join('');
         }
 
         function renderExecutiveTable() {
@@ -790,47 +968,85 @@
         function renderDashboardOnDuty() {
             const container = document.getElementById('dashOnDutyCards');
             if (!container) return;
-            const todayData = INITIAL_DUTY_DATA[10];
+            
             container.innerHTML = `
                 <div class="p-3 bg-sky-50 rounded-xl border border-sky-200 flex justify-between items-center">
                     <div>
                         <span class="text-[10px] font-bold text-sky-800 uppercase">Điểm Trạm Chính (Đức Tân)</span>
-                        <p class="font-extrabold text-slate-900 text-sm mt-0.5">${todayData.ducTan}</p>
+                        <p class="font-extrabold text-slate-900 text-sm mt-0.5">${scheduleGrid[0][3] || 'BS. Thuyên'}</p>
                     </div>
                     <span class="text-xs bg-sky-600 text-white font-bold px-2.5 py-1 rounded-lg">Trực 24/24</span>
                 </div>
                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
                     <div>
                         <span class="text-[10px] font-bold text-slate-600 uppercase">Điểm Số 1 (Mộ Đức)</span>
-                        <p class="font-extrabold text-slate-900 text-sm mt-0.5">${todayData.moDuc}</p>
+                        <p class="font-extrabold text-slate-900 text-sm mt-0.5">${scheduleGrid[1][3] || 'BS. Đức'}</p>
                     </div>
                     <span class="text-xs bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg">Trực 24/24</span>
                 </div>
                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
                     <div>
                         <span class="text-[10px] font-bold text-slate-600 uppercase">Điểm Số 2 (Đức Hòa)</span>
-                        <p class="font-extrabold text-slate-900 text-sm mt-0.5">${todayData.ducHoa}</p>
+                        <p class="font-extrabold text-slate-900 text-sm mt-0.5">${scheduleGrid[2][3] || 'NHS. Thắm'}</p>
                     </div>
                     <span class="text-xs bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg">Trực 24/24</span>
                 </div>
                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
                     <div>
                         <span class="text-[10px] font-bold text-slate-600 uppercase">Điểm Số 3 (Đức Phú)</span>
-                        <p class="font-extrabold text-slate-900 text-sm mt-0.5">${todayData.ducPhu}</p>
+                        <p class="font-extrabold text-slate-900 text-sm mt-0.5">${scheduleGrid[3][3] || 'ĐD. Ly Va'}</p>
                     </div>
                     <span class="text-xs bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg">Trực 24/24</span>
                 </div>
             `;
         }
 
-        /* MODALS & FORMS */
+        async function loadFromGoogleSheets(targetWeek = weekStart) {
+            const url = googleSheetUrl || document.getElementById('sheetApiUrlInput')?.value.trim();
+            if(!url) {
+                renderAllModules();
+                const syncTimeEl = document.getElementById('last-sync-time');
+                if (syncTimeEl) syncTimeEl.innerText = "Dùng bộ nhớ cục bộ (Chưa dán URL Google Sheet)";
+                return;
+            }
+
+            const loader = document.getElementById('loadingOverlay');
+            if (loader) loader.classList.remove('hidden');
+
+            try {
+                const response = await fetch(url, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'load', weekStart: targetWeek })
+                });
+                const result = await response.json();
+                
+                if(result.status === 'success' && result.grid && result.grid.length > 0) {
+                    scheduleGrid = result.grid;
+                    if (result.logs) historyLogs = result.logs;
+                    showToast('Đồng bộ dữ liệu từ Google Sheets thành công!');
+                }
+                
+                const syncTimeEl = document.getElementById('last-sync-time');
+                if (syncTimeEl) syncTimeEl.innerText = "Đã cập nhật lúc " + new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                renderAllModules();
+            } catch (error) {
+                console.error("Lỗi Google Sheets API:", error);
+                showToast('Chế độ Offline: Hiển thị bộ nhớ đệm', 'info');
+                renderAllModules();
+            } finally {
+                if (loader) loader.classList.add('hidden');
+            }
+        }
+
         function openModal(id) { document.getElementById(id)?.classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id)?.classList.add('hidden'); }
         function openLeaveModal() { openModal('leaveModal'); }
         function openSwapModal() { openModal('swapModal'); }
         function openExecutiveModal() { openModal('executiveModal'); }
         function openSheetModal() {
-            document.getElementById('sheetApiUrlInput').value = googleSheetUrl;
+            const input = document.getElementById('sheetApiUrlInput');
+            if (input) input.value = googleSheetUrl;
             openModal('sheetModal');
         }
 
@@ -839,7 +1055,8 @@
             googleSheetUrl = url;
             localStorage.setItem('TYT_GOOGLE_SHEET_URL', url);
             closeModal('sheetModal');
-            showToast('Đã lưu URL Google Sheet thành công!');
+            showToast('Đã lưu URL Google Sheet!');
+            loadFromGoogleSheets();
         }
 
         function triggerBiometricScan() {
@@ -876,8 +1093,12 @@
 
         function submitSwapForm(e) {
             e.preventDefault();
+            const from = document.getElementById('swapFrom').value;
+            const to = document.getElementById('swapTo').value;
+            historyLogs.unshift(`${new Date().toLocaleDateString('vi-VN')}: Yêu cầu đổi ca giữa ${from} và ${to} đang chờ duyệt.`);
+            renderHistoryLog();
             closeModal('swapModal');
-            showToast('Đã gửi yêu cầu đổi ca!');
+            showToast('Đã gửi yêu cầu đổi ca trực!');
         }
 
         function submitExecutiveForm(e) {
@@ -912,7 +1133,6 @@
             }
         }
 
-        /* PWA INSTALLATION EVENT HANDLERS */
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
@@ -936,20 +1156,25 @@
             document.getElementById('pwaInstallBanner')?.classList.add('hidden');
         }
 
-        /* REGISTER SW FROM FILE sw.js */
+        /* Service Worker Registration */
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW registered successfully:', reg.scope))
-                    .catch(err => console.log('SW registration fallback:', err));
+                    .then(reg => console.log('SW registered:', reg.scope))
+                    .catch(err => console.log('SW fallback:', err));
             });
         }
 
+        /* Launch App */
         window.onload = function () {
+            initWeekCalendar();
             renderAllModules();
             handleHashChange();
             setInterval(updateLiveClock, 1000);
             updateLiveClock();
+            if (googleSheetUrl) {
+                loadFromGoogleSheets();
+            }
         };
     </script>
 </body>
