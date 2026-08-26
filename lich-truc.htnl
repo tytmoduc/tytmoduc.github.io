@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lịch Trực Nhân Viên - Trạm Y Tế Mộ Đức</title>
+    
+    <!-- Link PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0284c7">
+    
+    <!-- CSS & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        /* Highlight Cột Trực Ngày Hôm Nay */
+        .today-col { background-color: #e0f2fe !important; border-left: 2px solid #0284c7 !important; border-right: 2px solid #0284c7 !important; }
+        .today-header { background-color: #0284c7 !important; color: #ffffff !important; }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .loader {
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #0284c7;
+            border-radius: 50%;
+            width: 36px; height: 36px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-sky-100 selection:text-sky-800">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex-col items-center justify-center">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center space-y-3 border border-slate-100">
+            <div class="loader"></div>
+            <p class="text-sky-700 font-bold text-sm animate-pulse">Đang đồng bộ lịch trực thời gian thực...</p>
+        </div>
+    </div>
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <!-- Logo & Back to Home -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="window.location.href='index.html'">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-sky-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-sky-600/30">
+                        <i class="fa-solid fa-hospital text-xl sm:text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                            TRẠM Y TẾ XÃ MỘ ĐỨC
+                        </h1>
+                        <p class="text-xs text-sky-700 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-calendar-days text-[11px]"></i>
+                            <span>Phân Công Lịch Trực 04 Điểm Trạm</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right Quick Actions -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <a href="index.html" class="inline-flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg transition shadow-sm">
+                        <i class="fa-solid fa-house text-slate-500"></i>
+                        <span class="hidden sm:inline">Trang Chủ</span>
+                    </a>
+                    <a href="tel:02553888115" class="inline-flex items-center space-x-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow-sm">
+                        <i class="fa-solid fa-phone-volume animate-bounce"></i>
+                        <span class="hidden sm:inline">Cấp Cứu: (0255) 3.888.115</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+            
+            <!-- Title & Actions Bar -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-slate-100">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-sky-100 text-sky-800 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">Trực 24/24</span>
+                        <span class="text-slate-400 text-xs">• Cập nhật từ Lịch Trực Số 07/LT-TYT</span>
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">Tra Cứu Lịch Trực Cán Bộ Y Tế</h2>
+                    <p class="text-xs text-slate-500">Theo dõi phân công ca trực từ 07h00 sáng hôm nay đến 07h00 sáng hôm sau.</p>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="openSwapModal()" class="inline-flex items-center space-x-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-sm transition">
+                        <i class="fa-solid fa-arrow-rotate-left"></i>
+                        <span>Đăng ký đổi ca</span>
+                    </button>
+                    <button onclick="openSheetModal()" class="inline-flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3.5 py-2.5 rounded-xl transition" title="Kết nối Google Sheet">
+                        <i class="fa-solid fa-link text-emerald-600"></i>
+                        <span class="hidden sm:inline">Kết nối Sheet</span>
+                    </button>
+                    <button onclick="loadFromGoogleSheets()" class="inline-flex items-center space-x-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-bold px-3.5 py-2.5 rounded-xl transition" title="Làm mới dữ liệu">
+                        <i class="fa-solid fa-arrows-rotate text-sky-600"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Week Switcher Control -->
+            <div class="bg-sky-50/70 border border-sky-100 rounded-xl p-3 flex items-center justify-between gap-2 shadow-sm">
+                <button onclick="changeWeek(-1)" class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white border border-sky-200 rounded-xl shadow-sm text-sky-700 hover:bg-sky-600 hover:text-white transition active:scale-95">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                
+                <div class="flex-1 flex flex-col items-center justify-center bg-white py-2 px-4 border border-sky-200 rounded-xl shadow-sm">
+                    <span class="text-[10px] text-sky-600 font-bold uppercase tracking-wider mb-0.5">Tuần Trực Đang Xem</span>
+                    <div class="flex items-center gap-2 font-black text-slate-800 text-sm sm:text-base font-mono">
+                        <span id="display-start">--/--</span>
+                        <i class="fa-solid fa-arrow-right-long text-sky-400 text-xs"></i>
+                        <span id="display-end">--/--</span>
+                    </div>
+                </div>
+
+                <button onclick="changeWeek(1)" class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white border border-sky-200 rounded-xl shadow-sm text-sky-700 hover:bg-sky-600 hover:text-white transition active:scale-95">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm no-scrollbar bg-white">
+                <table class="w-full text-xs text-left border-collapse min-w-[820px]">
+                    <thead>
+                        <tr id="table-header" class="bg-slate-800 text-slate-200 font-bold uppercase text-[11px]">
+                            <!-- Rendered dynamically by JS -->
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-100 bg-white">
+                        <!-- Rendered dynamically by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm">
+                <h3 class="font-bold text-slate-800 text-xs mb-2 uppercase tracking-wide flex items-center space-x-1.5">
+                    <i class="fa-solid fa-clock-rotate-left text-sky-600"></i>
+                    <span>Ghi chú & Lịch sử điều chỉnh ca trực gần nhất</span>
+                </h3>
+                <div id="history-list" class="space-y-1.5 text-xs text-slate-600 max-h-[120px] overflow-y-auto pr-2">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="text-[11px] text-slate-500 flex justify-between items-center pt-2 border-t border-slate-100">
+                <span class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Cơ sở dữ liệu đồng bộ trực tuyến
+                </span>
+                <span id="last-sync-time" class="font-mono font-medium text-slate-700">Chưa đồng bộ</span>
+            </div>
+
+        </div>
+
+    </main>
+
+    <div id="swapModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b">
+                <h3 class="font-bold text-slate-900 text-base">Đăng Ký Đổi Ca Trực</h3>
+                <button onclick="closeModal('swapModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="submitSwapForm(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Cán bộ xin đổi ca:</label>
+                    <input type="text" id="swapFrom" required placeholder="Họ tên cán bộ..." class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:border-sky-500">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Cán bộ nhận trực thay:</label>
+                    <input type="text" id="swapTo" required placeholder="Họ tên cán bộ nhận trực..." class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:border-sky-500">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Ngày đổi ca:</label>
+                    <input type="date" id="swapDate" required class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:border-sky-500">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Lý do đổi ca:</label>
+                    <textarea id="swapReason" placeholder="Ghi rõ lý do..." class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:border-sky-500" rows="2"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2 border-t">
+                    <button type="button" onclick="closeModal('swapModal')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg">Hủy</button>
+                    <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg shadow-sm">Gửi Đơn Đổi Ca</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="sheetModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b">
+                <h3 class="font-bold text-slate-900 text-base">Cấu Hình Kết Nối Google Sheets</h3>
+                <button onclick="closeModal('sheetModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-slate-600 mb-3">Dán đường dẫn Web App URL từ Google Apps Script để đồng bộ bảng lịch trực thời gian thực:</p>
+            <input type="text" id="sheetApiUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full text-xs p-3 border border-slate-300 rounded-lg outline-none font-mono mb-4 focus:border-sky-500">
+            <div class="flex justify-end space-x-2">
+                <button onclick="closeModal('sheetModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">Hủy</button>
+                <button onclick="saveSheetConfig()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm">Lưu & Đồng Bộ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div id="toastContent" class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 text-xs font-semibold">
+            <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+            <span id="toastMessage">Thông báo!</span>
+        </div>
+    </div>
+
+    <script>
+        const DAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
+        const ROLES = [
+            'Điểm trạm chính (Đức Tân)', 
+            'Điểm y tế số 1 (Mộ Đức)', 
+            'Điểm y tế số 2 (Đức Hòa)', 
+            'Điểm y tế số 3 (Đức Phú)'
+        ];
+
+        // Default Official Schedule Data (Aug 16 - Aug 31, 2026)
+        const OFFICIAL_SCHEDULE_MAP = {
+            "2026-08-16": ["Bs Thuyên", "ĐD Lài", "Ys Phương", "NHS Lan"],
+            "2026-08-17": ["Ys Tuệ", "ĐD Nguyệt", "BS Phu", "Ys Vũ"],
+            "2026-08-18": ["NHS Thuỷ", "NHS Việt", "ĐD Thanh", "CN Thu"],
+            "2026-08-19": ["Ys Thủy", "BS Đức", "NHS Thắm", "ĐD Ly Va"],
+            "2026-08-20": ["ĐD Vinh", "NHS Tin", "ĐD Trúc", "NHS Bé"],
+            "2026-08-21": ["BS Nguyện", "ĐD Lài", "Ys Phương", "NHS Trâm"],
+            "2026-08-22": ["NHS Thy", "ĐD Nguyệt", "BS Phu", "NHS Lan"],
+            "2026-08-23": ["Bs Thuyên", "NHS Việt", "ĐD Thanh", "Ys Vũ"],
+            "2026-08-24": ["NHS Thuỳ", "BS Đức", "NHS Thắm", "CN Thu"],
+            "2026-08-25": ["Ys Thủy", "NHS Tin", "ĐD Trúc", "ĐD Ly Va"],
+            "2026-08-26": ["ĐD Vinh", "ĐD Lài", "Ys Phương", "NHS Bé"],
+            "2026-08-27": ["BS Nguyện", "ĐD Nguyệt", "BS Phu", "NHS Trâm"],
+            "2026-08-28": ["NHS Thy", "NHS Việt", "ĐD Thanh", "NHS Lan"],
+            "2026-08-29": ["Bs Thuyên", "BS Đức", "NHS Thắm", "Ys Vũ"],
+            "2026-08-30": ["Ys Tuệ", "NHS Tin", "ĐD Trúc", "CN Thu"],
+            "2026-08-31": ["Ys Thủy", "ĐD Lài", "Ys Phương", "ĐD Ly Va"]
+        };
+
+        let scheduleGrid = [
+            ['Điểm trạm chính (Đức Tân)', 'Ys Tuệ', 'NHS Thuỷ', 'Ys Thủy', 'ĐD Vinh', 'BS Nguyện', 'NHS Thy', 'Bs Thuyên'],
+            ['Điểm y tế số 1 (Mộ Đức)', 'ĐD Nguyệt', 'NHS Việt', 'BS Đức', 'NHS Tin', 'ĐD Lài', 'ĐD Nguyệt', 'BS Đức'],
+            ['Điểm y tế số 2 (Đức Hòa)', 'BS Phu', 'ĐD Thanh', 'NHS Thắm', 'ĐD Trúc', 'Ys Phương', 'BS Phu', 'NHS Thắm'],
+            ['Điểm y tế số 3 (Đức Phú)', 'Ys Vũ', 'CN Thu', 'ĐD Ly Va', 'NHS Bé', 'NHS Trâm', 'NHS Lan', 'Ys Vũ']
+        ];
+
+        let weekStart = '';
+        let weekDates = []; 
+        let historyLogs = [
+            "26/08/2026: ĐD Lài đăng ký đổi ca trực với ĐD Nguyệt tại Điểm 1.",
+            "25/08/2026: Ys Phương hoàn thành ca trực 24/24 tại Điểm 2.",
+            "24/08/2026: BS. Phạm Minh Đức duyệt lịch phân công ca đêm đợt 2."
+        ];
+
+        let googleSheetUrl = localStorage.getItem('TYT_GOOGLE_SHEET_URL') || '';
+
+        function getLocalISODate(d) {
+            const localD = new Date(d);
+            localD.setMinutes(localD.getMinutes() - localD.getTimezoneOffset());
+            return localD.toISOString().split('T')[0];
+        }
+
+        function initWeekCalendar() {
+            const today = new Date();
+            const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1; 
+            const monday = new Date(today.getTime() - (dayOfWeek * 24 * 60 * 60 * 1000));
+            updateWeekDates(getLocalISODate(monday));
+        }
+
+        function updateWeekDates(dateString) {
+            const start = new Date(dateString);
+            weekStart = dateString;
+            weekDates = [];
+
+            for(let i = 0; i < 7; i++) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                weekDates.push({
+                    dateObj: d,
+                    display: d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+                    iso: getLocalISODate(d)
+                });
+            }
+
+            const startText = document.getElementById('display-start');
+            const endText = document.getElementById('display-end');
+            if (startText) startText.innerText = weekDates[0].display;
+            if (endText) endText.innerText = weekDates[6].display;
+
+            populateGridForWeek();
+            renderShiftsWeeklyTable();
+        }
+
+        function populateGridForWeek() {
+            // Populate grid with official mapped schedule if available for date
+            scheduleGrid = ROLES.map((roleName, roleIndex) => {
+                const row = [roleName];
+                for (let i = 0; i < 7; i++) {
+                    const iso = weekDates[i].iso;
+                    if (OFFICIAL_SCHEDULE_MAP[iso]) {
+                        row.push(OFFICIAL_SCHEDULE_MAP[iso][roleIndex] || '-');
+                    } else {
+                        row.push('-');
+                    }
+                }
+                return row;
+            });
+        }
+
+        function changeWeek(offset) {
+            const currentStart = new Date(weekStart);
+            currentStart.setDate(currentStart.getDate() + (offset * 7));
+            updateWeekDates(getLocalISODate(currentStart));
+            if (googleSheetUrl) {
+                loadFromGoogleSheets(weekStart);
+            }
+        }
+
+        function renderShiftsWeeklyTable() {
+            const todayISO = getLocalISODate(new Date());
+
+            // 1. Header
+            const headerRow = document.getElementById('table-header');
+            if (!headerRow) return;
+
+            headerRow.innerHTML = `<th class="p-3 bg-slate-800 text-slate-100 font-bold w-36 sm:w-48 sticky left-0 z-20 border-b border-slate-700 shadow-[1px_0_0_0_#334155]">Vị trí Điểm Trạm</th>`;
+            
+            DAYS.forEach((day, index) => {
+                const dateData = weekDates[index];
+                const isToday = dateData && dateData.iso === todayISO;
+                const isWeekend = day === 'Thứ 7' || day === 'CN';
+                
+                const classes = isToday 
+                    ? "p-3 text-center min-w-[95px] border-b border-slate-700 today-header font-black"
+                    : `p-3 text-center font-bold min-w-[95px] border-b border-slate-700 ${isWeekend ? 'bg-rose-950/40 text-rose-300' : 'bg-slate-800 text-slate-200'}`;
+
+                const dateHtml = dateData ? `<div class="text-[10px] font-normal mt-0.5 ${isToday ? 'text-sky-100' : (isWeekend ? 'text-rose-300' : 'text-slate-400')} font-mono">${dateData.display}</div>` : '';
+                headerRow.innerHTML += `<th class="${classes}">${day} ${dateHtml}</th>`;
+            });
+
+            // 2. Body
+            const tbody = document.getElementById('table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            scheduleGrid.forEach((row) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+                
+                const tdRole = document.createElement('td');
+                tdRole.className = "p-3 font-extrabold text-slate-900 bg-white sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0] text-xs";
+                tdRole.innerText = row[0];
+                tr.appendChild(tdRole);
+
+                for(let colIndex = 1; colIndex <= DAYS.length; colIndex++) {
+                    const td = document.createElement('td');
+                    const dateData = weekDates[colIndex - 1];
+                    const isToday = dateData && dateData.iso === todayISO;
+                    const isWeekend = DAYS[colIndex - 1] === 'Thứ 7' || DAYS[colIndex - 1] === 'CN';
+                    
+                    const bgClass = (!isToday && isWeekend) ? 'bg-rose-50/30' : '';
+                    td.className = `p-2 text-center text-xs font-semibold ${isToday ? 'today-col font-extrabold' : bgClass}`;
+                    
+                    const name = row[colIndex] || '-';
+                    let nameHtml = name;
+                    if (name !== '-') {
+                        const badgeClass = isToday
+                            ? 'bg-sky-600 text-white shadow-sm font-bold'
+                            : ((!isToday && isWeekend) ? 'bg-rose-50 text-rose-800 border-rose-200 font-semibold' : 'bg-slate-100 text-slate-800 border-slate-200');
+                            
+                        nameHtml = `<span class="inline-block px-2 py-1 rounded-lg border w-full whitespace-nowrap text-[11px] ${badgeClass}">${name}</span>`;
+                    } else {
+                        nameHtml = `<span class="inline-block px-2 py-1 text-slate-300">-</span>`;
+                    }
+                    
+                    td.innerHTML = nameHtml;
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderHistoryLog() {
+            const container = document.getElementById('history-list');
+            if(!container) return;
+            if(!historyLogs || historyLogs.length === 0) {
+                container.innerHTML = '<p class="text-slate-400 italic">Không có ghi chú mới nào trong tuần này.</p>';
+                return;
+            }
+            container.innerHTML = historyLogs.slice(0, 8).map(log => 
+                `<div class="flex items-start gap-2 py-0.5">
+                    <i class="fa-solid fa-circle-check text-sky-600 mt-0.5 text-[10px]"></i>
+                    <span class="flex-1 text-slate-700">${log}</span>
+                </div>`
+            ).join('');
+        }
+
+        async function loadFromGoogleSheets(targetWeek = weekStart) {
+            const url = googleSheetUrl || document.getElementById('sheetApiUrlInput')?.value.trim();
+            if(!url) {
+                renderShiftsWeeklyTable();
+                renderHistoryLog();
+                const syncTimeEl = document.getElementById('last-sync-time');
+                if (syncTimeEl) syncTimeEl.innerText = "Sử dụng dữ liệu quy chuẩn (Chưa dán URL Google Sheet)";
+                return;
+            }
+
+            const loader = document.getElementById('loadingOverlay');
+            if (loader) loader.classList.remove('hidden');
+
+            try {
+                const response = await fetch(url, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'load', weekStart: targetWeek })
+                });
+                const result = await response.json();
+                
+                if(result.status === 'success' && result.grid && result.grid.length > 0) {
+                    scheduleGrid = result.grid;
+                    if (result.logs) historyLogs = result.logs;
+                    showToast('Đồng bộ dữ liệu từ Google Sheets thành công!');
+                }
+                
+                const syncTimeEl = document.getElementById('last-sync-time');
+                if (syncTimeEl) syncTimeEl.innerText = "Đã cập nhật lúc " + new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                renderShiftsWeeklyTable();
+                renderHistoryLog();
+            } catch (error) {
+                console.error("Lỗi kết nối API Google Sheets:", error);
+                showToast('Chế độ Offline: Hiển thị dữ liệu bộ nhớ đệm', 'info');
+                renderShiftsWeeklyTable();
+                renderHistoryLog();
+            } finally {
+                if (loader) loader.classList.add('hidden');
+            }
+        }
+
+        function openModal(id) { document.getElementById(id)?.classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id)?.classList.add('hidden'); }
+        function openSwapModal() { openModal('swapModal'); }
+        function openSheetModal() {
+            const input = document.getElementById('sheetApiUrlInput');
+            if (input) input.value = googleSheetUrl;
+            openModal('sheetModal');
+        }
+
+        function saveSheetConfig() {
+            const url = document.getElementById('sheetApiUrlInput').value.trim();
+            googleSheetUrl = url;
+            localStorage.setItem('TYT_GOOGLE_SHEET_URL', url);
+            closeModal('sheetModal');
+            showToast('Đã lưu URL kết nối Google Sheet!');
+            loadFromGoogleSheets();
+        }
+
+        function submitSwapForm(e) {
+            e.preventDefault();
+            const from = document.getElementById('swapFrom').value;
+            const to = document.getElementById('swapTo').value;
+            const date = document.getElementById('swapDate').value;
+
+            historyLogs.unshift(`${new Date().toLocaleDateString('vi-VN')}: Yêu cầu đổi ca ngày ${date} giữa ${from} và ${to} đang chờ duyệt.`);
+            renderHistoryLog();
+            closeModal('swapModal');
+            showToast('Đã gửi yêu cầu đổi ca trực!');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastNotification');
+            const toastMsg = document.getElementById('toastMessage');
+            if (!toast || !toastMsg) return;
+            toastMsg.innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+        }
+
+        window.onload = function () {
+            initWeekCalendar();
+            renderHistoryLog();
+            if (googleSheetUrl) {
+                loadFromGoogleSheets();
+            }
+        };
+    </script>
+</body>
+</html>
