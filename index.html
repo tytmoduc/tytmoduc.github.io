@@ -679,7 +679,7 @@
         const GOOGLE_SHEET_URLS = {
             lichTruc: "",       // Google Sheet API Lịch trực 04 điểm trạm
             chamCong: "",       // Google Sheet API Bảng chấm công Bio-Sync
-            hopTapHuan: "https://script.google.com/macros/s/AKfycbxy0XcqysRJJEzoov5Y0-1UArlW4LiokpddcDce-EuHKDJPgUVILkwzmkPIWlRL7Zy60g/exec",     // Google Sheet API Lịch đi họp & tập huấn
+            hopTapHuan: "",     // Google Sheet API Lịch đi họp & tập huấn
             lichBgd: "",        // Google Sheet API Lịch làm việc Ban Giám đốc
             khamBenh: "",       // Google Sheet API Lịch khám bệnh BHYT
             tiemChung: "",      // Google Sheet API Lịch tiêm chủng mở rộng
@@ -951,23 +951,47 @@
             if (loader) loader.classList.remove('hidden');
 
             try {
-                const response = await fetch(url, { 
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'load' })
-                });
+                // Sử dụng cache: 'no-store' để tránh trình duyệt lưu đệm dữ liệu cũ
+                const response = await fetch(url, { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const result = await response.json();
                 
-                if(result.status === 'success' && result.data && result.data.length > 0) {
+                if (result && result.status === 'success' && Array.isArray(result.data)) {
                     INITIAL_MEETING_TRAINING_DATA.length = 0;
                     result.data.forEach(item => {
-                        INITIAL_MEETING_TRAINING_DATA.push(item);
+                        if (Array.isArray(item)) {
+                            // Trường hợp dữ liệu thô dạng mảng
+                            if (item[0] || item[1]) {
+                                INITIAL_MEETING_TRAINING_DATA.push({
+                                    time: item[0] || '',
+                                    topic: item[1] || '',
+                                    staff: item[2] || '',
+                                    location: item[3] || '',
+                                    organizer: item[4] || '',
+                                    status: item[5] || 'Đã xếp lịch'
+                                });
+                            }
+                        } else if (typeof item === 'object') {
+                            // Trường hợp dữ liệu dạng Object
+                            if (item.time || item.topic) {
+                                INITIAL_MEETING_TRAINING_DATA.push({
+                                    time: item.time || '',
+                                    topic: item.topic || '',
+                                    staff: item.staff || '',
+                                    location: item.location || '',
+                                    organizer: item.organizer || '',
+                                    status: item.status || 'Đã xếp lịch'
+                                });
+                            }
+                        }
                     });
                     showToast('Đồng bộ Lịch đi họp & tập huấn từ Google Sheets thành công!');
                 }
                 renderAllModules();
             } catch (error) {
-                console.error("Lỗi Google Sheets API:", error);
+                console.error("Lỗi Google Sheets API Lịch họp:", error);
                 showToast('Chế độ Offline: Hiển thị bộ nhớ đệm', 'info');
                 renderAllModules();
             } finally {
