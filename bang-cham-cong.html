@@ -128,9 +128,53 @@
         <!-- Huy hiệu trạng thái đăng nhập điểm trạm -->
         <div id="auth-status-container"></div>
 
-        <button onclick="fillWorkingDays()" class="px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold rounded-xl hover:bg-emerald-100 transition text-xs flex items-center gap-1.5 shadow-sm" title="Điền lương thời gian (+) cho Thứ 2 đến Thứ 6">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Chấm nhanh (+)
-        </button>
+        <!-- MENU CHẤM NHANH (+) VỚI 3 TÙY CHỌN -->
+        <div class="relative inline-block text-left" id="quick-fill-dropdown-container">
+          <button onclick="toggleQuickFillMenu(event)" class="px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold rounded-xl hover:bg-emerald-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i>
+            <span>Chấm nhanh (+)</span>
+            <i class="fa-solid fa-chevron-down text-[10px] ml-0.5 text-emerald-600"></i>
+          </button>
+
+          <div id="quick-fill-dropdown" class="hidden absolute right-0 mt-1.5 w-60 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 transform transition-all text-xs">
+            <div class="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1 flex items-center justify-between">
+              <span>Tùy chọn điền công (+)</span>
+              <i class="fa-solid fa-bolt text-amber-500"></i>
+            </div>
+            
+            <button onclick="quickFill('today')" class="w-full text-left px-3 py-2 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-start gap-2.5 transition group">
+              <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 group-hover:bg-emerald-600 group-hover:text-white transition">
+                <i class="fa-regular fa-calendar-check"></i>
+              </div>
+              <div class="flex-1">
+                <div class="font-bold text-slate-800 group-hover:text-emerald-700">Ngày hiện tại (Hôm nay)</div>
+                <div class="text-[10.5px] text-slate-400 font-normal">Chấm (+) Sáng/Chiều cho ngày hôm nay</div>
+              </div>
+            </button>
+
+            <button onclick="quickFill('week')" class="w-full text-left px-3 py-2 text-slate-700 hover:bg-teal-50 hover:text-teal-800 flex items-start gap-2.5 transition group">
+              <div class="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 group-hover:bg-teal-600 group-hover:text-white transition">
+                <i class="fa-solid fa-calendar-week"></i>
+              </div>
+              <div class="flex-1">
+                <div class="font-bold text-slate-800 group-hover:text-teal-700">Tuần hiện tại</div>
+                <div class="text-[10.5px] text-slate-400 font-normal">Chấm Thứ 2 - Thứ 6 tuần này</div>
+              </div>
+            </button>
+
+            <div class="border-t border-slate-100 my-1"></div>
+
+            <button onclick="quickFill('month')" class="w-full text-left px-3 py-2 text-slate-700 hover:bg-blue-50 hover:text-blue-800 flex items-start gap-2.5 transition group">
+              <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 group-hover:bg-blue-600 group-hover:text-white transition">
+                <i class="fa-solid fa-calendar-days"></i>
+              </div>
+              <div class="flex-1">
+                <div class="font-bold text-slate-800 group-hover:text-blue-700">Toàn bộ tháng</div>
+                <div class="text-[10.5px] text-slate-400 font-normal" id="quick-fill-month-desc">Chấm T2 - T6 cả tháng đang xem</div>
+              </div>
+            </button>
+          </div>
+        </div>
 
         <button onclick="syncFromSchedule()" class="px-3 py-2 bg-teal-50 text-teal-700 border border-teal-200 font-bold rounded-xl hover:bg-teal-100 transition text-xs flex items-center gap-1.5 shadow-sm" title="Lấy dữ liệu trực từ Lịch Trực">
           <i class="fa-solid fa-calendar-check"></i> Lấy ca từ Lịch trực
@@ -149,7 +193,7 @@
         </button>
 
         <button onclick="saveAttendance()" class="px-3.5 py-2 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition text-xs flex items-center gap-1.5 shadow-sm shadow-teal-600/30">
-          <i class="fa-solid fa-cloud-arrow-up"></i> Lưu chấm công
+          <i class="fa-solid fa-cloud-arrow-up"></i> Lưu Google Sheet
         </button>
       </div>
     </div>
@@ -277,7 +321,7 @@
             <option value="Điểm y tế số 1">Điểm y tế số 1 (Mộ Đức)</option>
             <option value="Điểm y tế số 2">Điểm y tế số 2 (Đức Hòa)</option>
             <option value="Điểm y tế số 3">Điểm y tế số 3 (Đức Phú)</option>
-            <option value="Ban Giám Đốc">Tổ HC (Toàn quyền 4 điểm)</option>
+            <option value="Ban Giám Đốc">Ban Giám Đốc (Toàn quyền 4 điểm)</option>
           </select>
         </div>
 
@@ -483,11 +527,16 @@
       renderAuthStatus();
       generateGrid();
 
-      // Đóng quick menu khi bấm ra ngoài
+      // Đóng menu khi bấm ra ngoài
       document.addEventListener('click', (e) => {
         const menu = document.getElementById('quick-menu');
         if (!e.target.closest('td') && !e.target.closest('#quick-menu')) {
           closeQuickMenu();
+        }
+
+        const qfContainer = document.getElementById('quick-fill-dropdown-container');
+        if (qfContainer && !qfContainer.contains(e.target)) {
+          closeQuickFillMenu();
         }
       });
     };
@@ -645,13 +694,18 @@
       return 'text-slate-700 font-bold bg-slate-100';
     }
 
-    function generateGrid() {
+    function generateGrid(autoLoad = true) {
       currentMonth = parseInt(document.getElementById('select-month').value);
       currentYear = parseInt(document.getElementById('select-year').value);
       daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
 
       renderHeader();
       renderBody();
+
+      // Tự động kéo dữ liệu từ Google Sheet ngay khi tạo bảng hoặc chuyển tháng
+      if (autoLoad && GOOGLE_SHEET_CHAM_CONG_URL) {
+        loadAttendance(true);
+      }
     }
 
     function renderHeader() {
@@ -895,8 +949,27 @@
       }
     }
 
-    // TỰ ĐỘNG CHẤM NHANH (+) CHO CÁC NHÂN VIÊN THUỘC ĐIỂM TRẠM ĐƯỢC PHÉP
-    function fillWorkingDays() {
+    // ĐIỀU KHIỂN BẬT/TẮT MENU CHẤM NHANH
+    function toggleQuickFillMenu(e) {
+      e.stopPropagation();
+      const dropdown = document.getElementById('quick-fill-dropdown');
+      dropdown.classList.toggle('hidden');
+
+      const monthDesc = document.getElementById('quick-fill-month-desc');
+      if (monthDesc) {
+        monthDesc.innerText = `Chấm T2 - T6 cả Tháng ${currentMonth}/${currentYear}`;
+      }
+    }
+
+    function closeQuickFillMenu() {
+      const dropdown = document.getElementById('quick-fill-dropdown');
+      if (dropdown) dropdown.classList.add('hidden');
+    }
+
+    // HÀM XỬ LÝ CHẤM NHANH (+) THEO NGÀY HIỆN TẠI, TUẦN HIỆN TẠI, HOẶC CẢ THÁNG
+    function quickFill(scope) {
+      closeQuickFillMenu();
+
       if (!authorizedStation) {
         openAuthModal();
         showToast('Vui lòng mở khóa điểm trạm để thực hiện chấm nhanh!', 'warning');
@@ -907,30 +980,75 @@
         ? 'toàn bộ 29 cán bộ của 04 điểm trạm' 
         : `cán bộ thuộc ${authorizedStation}`;
 
-      showConfirmModal(
-        'Xác nhận chấm nhanh (+)',
-        `Hệ thống sẽ tự động điền dấu (+) (Lương thời gian) cho các ngày Thứ 2 đến Thứ 6 trong Tháng ${currentMonth} cho ${targetDesc}. Bạn có muốn tiếp tục?`,
-        () => {
-          let updatedCount = 0;
-          attendanceData.forEach(emp => {
-            if (canEditStaff(emp)) {
-              for (let d = 1; d <= daysInMonth; d++) {
-                const dateObj = new Date(currentYear, currentMonth - 1, d);
-                const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
-                if (!isWeekend) {
-                  let { am, pm } = parseDayCode(emp.days[d] || '');
-                  if (!am) am = '+';
-                  if (!pm) pm = '+';
-                  emp.days[d] = buildDayCode(am, pm);
-                  updatedCount++;
-                }
-              }
-            }
-          });
-          renderBody();
-          showToast(`Đã chấm nhanh thành công cho ${targetDesc}!`, 'success');
+      const today = new Date();
+      let targetDays = [];
+      let modalTitle = '';
+      let modalMsg = '';
+
+      if (scope === 'today') {
+        // Kiểm tra xem hôm nay có thuộc Tháng/Năm đang hiển thị trên bảng không
+        if (today.getMonth() + 1 !== currentMonth || today.getFullYear() !== currentYear) {
+          showToast(`Hôm nay (${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}) không thuộc Tháng ${currentMonth}/${currentYear} đang xem!`, 'warning');
+          return;
         }
-      );
+        const todayDate = today.getDate();
+        targetDays = [todayDate];
+        modalTitle = 'Xác nhận chấm nhanh Hôm nay';
+        modalMsg = `Hệ thống sẽ điền dấu (+) (Lương thời gian) cho ngày hôm nay (${todayDate}/${currentMonth}/${currentYear}) cho ${targetDesc}. Bạn có muốn tiếp tục?`;
+
+      } else if (scope === 'week') {
+        // Xác định Thứ 2 của tuần hiện tại
+        const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1; // 0: Thứ 2, 6: Chủ nhật
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - dayOfWeek);
+
+        // Lấy các ngày từ Thứ 2 đến Thứ 6 của tuần hiện tại nằm trong Tháng/Năm đang chọn
+        for (let i = 0; i < 5; i++) {
+          const dObj = new Date(monday);
+          dObj.setDate(monday.getDate() + i);
+          if (dObj.getMonth() + 1 === currentMonth && dObj.getFullYear() === currentYear) {
+            targetDays.push(dObj.getDate());
+          }
+        }
+
+        if (targetDays.length === 0) {
+          showToast(`Tuần hiện tại không có ngày làm việc nào thuộc Tháng ${currentMonth}/${currentYear}!`, 'warning');
+          return;
+        }
+
+        modalTitle = 'Xác nhận chấm nhanh Tuần này';
+        modalMsg = `Hệ thống sẽ điền dấu (+) cho các ngày Thứ 2 đến Thứ 6 tuần này (${targetDays.map(d => `ngày ${d}`).join(', ')} Tháng ${currentMonth}) cho ${targetDesc}. Bạn có muốn tiếp tục?`;
+
+      } else if (scope === 'month') {
+        // Toàn bộ các ngày làm việc (Thứ 2 đến Thứ 6) trong tháng
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dateObj = new Date(currentYear, currentMonth - 1, d);
+          const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
+          if (!isWeekend) {
+            targetDays.push(d);
+          }
+        }
+
+        modalTitle = 'Xác nhận chấm nhanh Cả tháng';
+        modalMsg = `Hệ thống sẽ tự động điền dấu (+) (Lương thời gian) cho các ngày Thứ 2 đến Thứ 6 trong toàn bộ Tháng ${currentMonth}/${currentYear} cho ${targetDesc}. Bạn có muốn tiếp tục?`;
+      }
+
+      showConfirmModal(modalTitle, modalMsg, () => {
+        let updatedCount = 0;
+        attendanceData.forEach(emp => {
+          if (canEditStaff(emp)) {
+            targetDays.forEach(d => {
+              let { am, pm } = parseDayCode(emp.days[d] || '');
+              if (!am) am = '+';
+              if (!pm) pm = '+';
+              emp.days[d] = buildDayCode(am, pm);
+              updatedCount++;
+            });
+          }
+        });
+        renderBody();
+        showToast(`Đã chấm nhanh thành công cho ${targetDesc}!`, 'success');
+      });
     }
 
     // ĐỒNG BỘ CA TỪ LỊCH TRỰC
@@ -1046,14 +1164,14 @@
       }
     }
 
-    async function loadAttendance() {
+    async function loadAttendance(isAuto = false) {
       const url = GOOGLE_SHEET_CHAM_CONG_URL;
       if (!url) {
-        showToast("Vui lòng cấu hình GOOGLE_SHEET_CHAM_CONG_URL trong mã nguồn.", 'warning');
+        if (!isAuto) showToast("Vui lòng cấu hình GOOGLE_SHEET_CHAM_CONG_URL trong mã nguồn.", 'warning');
         return;
       }
 
-      showLoading(`Đang tải Bảng Chấm Công Tháng ${currentMonth}/${currentYear}...`);
+      showLoading(`Đang ${isAuto ? 'tự động ' : ''}tải Bảng Chấm Công Tháng ${currentMonth}/${currentYear}...`);
       try {
         const fetchUrl = url + (url.includes('?') ? '&' : '?') + `action=loadAttendance&month=${currentMonth}&year=${currentYear}&t=${Date.now()}`;
         const response = await fetch(fetchUrl, { method: 'GET', cache: 'no-store' });
@@ -1066,15 +1184,23 @@
             if (target && rec.days) target.days = rec.days;
           });
           renderBody();
-          showToast(`Đã tải dữ liệu Tháng ${currentMonth}/${currentYear} thành công!`, 'success');
+          showToast(`Đã đồng bộ dữ liệu Tháng ${currentMonth}/${currentYear} từ Google Sheet!`, 'success');
         } else {
-          showToast(`Chưa có dữ liệu lưu trên Cloud cho Tháng ${currentMonth}/${currentYear}.`, 'info');
           initEmptyData();
           renderBody();
+          if (!isAuto) {
+            showToast(`Chưa có dữ liệu lưu trên Cloud cho Tháng ${currentMonth}/${currentYear}.`, 'info');
+          } else {
+            showToast(`Tháng ${currentMonth}/${currentYear} chưa có dữ liệu lưu (Đang để bảng trống).`, 'info');
+          }
         }
       } catch (err) {
         console.error(err);
-        showToast("Lỗi khi tải bảng chấm công từ Google Sheet.", 'error');
+        if (!isAuto) {
+          showToast("Lỗi khi tải bảng chấm công từ Google Sheet.", 'error');
+        } else {
+          showToast("Không thể kết nối tự động với Google Sheet. Vui lòng kiểm tra lại mạng.", 'warning');
+        }
       } finally {
         hideLoading();
       }
