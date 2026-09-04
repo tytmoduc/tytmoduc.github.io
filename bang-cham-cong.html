@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Bảng Chấm Công 01a-LĐTL - Trạm Y Tế Xã Mộ Đức</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Times+New+Roman&display=swap" rel="stylesheet">
+  
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+    
+    /* Ghim cột tiêu đề cố định khi cuộn ngang */
+    .sticky-col-1 { position: sticky; left: 0; z-index: 20; background-color: white; min-width: 40px; max-width: 40px; }
+    .sticky-col-2 { position: sticky; left: 40px; z-index: 20; background-color: white; min-width: 175px; max-width: 175px; }
+    .sticky-col-3 { position: sticky; left: 215px; z-index: 20; background-color: white; border-right: 2px solid #cbd5e1; min-width: 36px; max-width: 36px; }
+    
+    thead th { position: sticky; top: 0; z-index: 30; }
+    thead th.sticky-col-1, thead th.sticky-col-2, thead th.sticky-col-3 { z-index: 40; }
+
+    .weekend-col { background-color: #fef2f2 !important; color: #ef4444; }
+    .today-col { background-color: #ecfeff !important; border-left: 2px solid #0891b2 !important; border-right: 2px solid #0891b2 !important; }
+    
+    .no-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+    .no-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .no-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .no-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    #loading-overlay { display: none; }
+    .loader {
+      border: 4px solid #f1f5f9; border-top: 4px solid #0891b2;
+      border-radius: 50%; width: 42px; height: 42px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Mẫu in chuẩn Kho Bạc Nhà Nước / Thông tư 133 */
+    @media print {
+      body { background-color: white; margin: 0; padding: 0; }
+      body > *:not(#print-container) { display: none !important; }
+      #print-container { display: block !important; }
+      @page { size: A4 landscape; margin: 8mm; } 
+      #print-container table { page-break-inside: auto; border-collapse: collapse; width: 100%; }
+      #print-container tr { page-break-inside: avoid; page-break-after: auto; }
+      #print-container thead { display: table-header-group; }
+      #print-container th, #print-container td { border: 1px solid black !important; }
+    }
+    #print-container { display: none; font-family: 'Times New Roman', Times, serif; color: black; }
+  </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden">
+
+  <!-- OVERLAY LOADING -->
+  <div id="loading-overlay" class="fixed inset-0 bg-white/85 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+    <div class="loader mb-4"></div>
+    <p class="text-teal-700 font-bold text-base" id="loading-text">Đang đồng bộ dữ liệu chấm công...</p>
+  </div>
+
+  <!-- THÔNG BÁO DẠNG TOAST -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- THANH TIÊU ĐỀ CHÍNH -->
+  <div class="flex-none p-3 md:p-5 pb-2">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-3 flex flex-col md:flex-row justify-between items-center gap-3">
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-600 hover:text-teal-700 flex items-center justify-center transition" title="Về trang chủ">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center">
+              <i class="fa-solid fa-clipboard-user text-teal-600 mr-2.5"></i>Bảng Chấm Công 01a-LĐTL
+            </h1>
+            <span class="bg-teal-50 text-teal-700 text-xs px-2.5 py-0.5 rounded-full font-bold border border-teal-200">TT 133/2016/TT-BTC</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">Trạm Y Tế Xã Mộ Đức • Quản lý chấm công phân quyền theo 04 điểm trạm</p>
+        </div>
+      </div>
+
+      <!-- CÁC NÚT THAO TÁC VÀ TRẠNG THÁI MỞ KHÓA -->
+      <div class="flex flex-wrap gap-2 justify-end items-center">
+        <!-- Huy hiệu trạng thái đăng nhập điểm trạm -->
+        <div id="auth-status-container"></div>
+
+        <button onclick="fillWorkingDays()" class="px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold rounded-xl hover:bg-emerald-100 transition text-xs flex items-center gap-1.5 shadow-sm" title="Điền lương thời gian (+) cho Thứ 2 đến Thứ 6">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Chấm nhanh (+)
+        </button>
+
+        <button onclick="syncFromSchedule()" class="px-3 py-2 bg-teal-50 text-teal-700 border border-teal-200 font-bold rounded-xl hover:bg-teal-100 transition text-xs flex items-center gap-1.5 shadow-sm" title="Lấy dữ liệu trực từ Lịch Trực">
+          <i class="fa-solid fa-calendar-check"></i> Lấy ca từ Lịch trực
+        </button>
+
+        <button onclick="exportToExcel()" class="px-3 py-2 bg-green-50 text-green-700 border border-green-200 font-bold rounded-xl hover:bg-green-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-file-excel"></i> Xuất Excel
+        </button>
+
+        <button onclick="printTimesheet()" class="px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded-xl hover:bg-rose-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-file-pdf"></i> In PDF 01a
+        </button>
+
+        <button onclick="loadAttendance()" class="px-3 py-2 bg-slate-100 text-slate-700 border border-slate-200 font-bold rounded-xl hover:bg-slate-200 transition text-xs flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-cloud-arrow-down"></i> Tải về
+        </button>
+
+        <button onclick="saveAttendance()" class="px-3.5 py-2 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition text-xs flex items-center gap-1.5 shadow-sm shadow-teal-600/30">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Lưu Google Sheet
+        </button>
+      </div>
+    </div>
+
+    <!-- BỘ CHỌN THÁNG, NĂM, LỌC TÊN VÀ BỘ LỌC ĐIỂM TRẠM -->
+    <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-2.5 mb-2">
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm">
+          <label class="font-bold text-slate-700 text-xs ml-1">Tháng:</label>
+          <input type="number" id="select-month" min="1" max="12" class="w-14 p-1 border border-slate-300 rounded-lg text-center font-bold text-xs outline-none focus:border-teal-500" onchange="generateGrid()">
+          <label class="font-bold text-slate-700 text-xs">Năm:</label>
+          <input type="number" id="select-year" min="2024" max="2035" class="w-20 p-1 border border-slate-300 rounded-lg text-center font-bold text-xs outline-none focus:border-teal-500" onchange="generateGrid()">
+          <button onclick="generateGrid()" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-700 transition" title="Làm mới bảng">
+            <i class="fa-solid fa-rotate"></i>
+          </button>
+        </div>
+
+        <!-- Bộ lọc xem theo điểm trạm -->
+        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
+          <button onclick="filterByStation('all')" id="btn-station-all" class="px-2.5 py-1 rounded-lg text-xs font-bold transition bg-teal-600 text-white shadow-sm">
+            Tất cả (29)
+          </button>
+          <button onclick="filterByStation('Điểm trạm chính')" id="btn-station-chinh" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
+            Đức Tân (10)
+          </button>
+          <button onclick="filterByStation('Điểm y tế số 1')" id="btn-station-1" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
+            Mộ Đức (6)
+          </button>
+          <button onclick="filterByStation('Điểm y tế số 2')" id="btn-station-2" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
+            Đức Hòa (6)
+          </button>
+          <button onclick="filterByStation('Điểm y tế số 3')" id="btn-station-3" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
+            Đức Phú (7)
+          </button>
+        </div>
+      </div>
+
+      <!-- Ô tìm kiếm cán bộ -->
+      <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm flex-1 lg:max-w-xs">
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+        <input type="text" id="search-emp" placeholder="Tìm họ và tên cán bộ..." class="w-full bg-transparent border-none outline-none text-xs text-slate-700 focus:ring-0" onkeyup="renderBody()">
+      </div>
+
+      <!-- Chú thích ký hiệu chấm công -->
+      <div class="flex flex-wrap gap-x-2 gap-y-1 text-[10.5px] font-semibold bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm text-slate-600">
+        <div class="flex items-center"><span class="bg-blue-100 text-blue-800 font-extrabold px-1.5 py-0.2 rounded mr-1">+</span> Lương TG</div>
+        <div class="flex items-center"><span class="bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded mr-1">P</span> Phép</div>
+        <div class="flex items-center"><span class="bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded mr-1">H</span> Học/Họp</div>
+        <div class="flex items-center"><span class="bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded mr-1">NB</span> Nghỉ bù</div>
+        <div class="flex items-center"><span class="bg-purple-100 text-purple-800 font-extrabold px-1.5 py-0.2 rounded mr-1">Ô</span> Ốm</div>
+        <div class="flex items-center"><span class="bg-purple-100 text-purple-800 font-extrabold px-1.5 py-0.2 rounded mr-1">TS</span> Thai sản</div>
+        <div class="flex items-center"><span class="bg-amber-100 text-amber-800 font-extrabold px-1.5 py-0.2 rounded mr-1">KL</span> Không lương</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BẢNG CHẤM CÔNG CHÍNH -->
+  <div class="flex-1 overflow-hidden p-3 md:p-5 pt-0 flex flex-col">
+    <div class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-auto no-scrollbar relative" id="table-container">
+      <table class="w-max min-w-full text-xs text-center border-collapse whitespace-nowrap">
+        <thead id="grid-header">
+          <!-- Render tự động bằng JavaScript -->
+        </thead>
+        <tbody id="grid-body">
+          <!-- Render tự động bằng JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MENU CHẤM CÔNG NHANH (QUICK MENU POPUP) -->
+  <div id="quick-menu" class="fixed hidden bg-white shadow-2xl rounded-2xl border border-slate-200 p-2.5 z-50 transform -translate-x-1/2 translate-y-2 w-[290px]">
+    <div class="text-[11px] text-slate-700 font-bold mb-2 uppercase text-center border-b border-slate-100 pb-1.5 flex justify-between items-center" id="quick-menu-title">
+      <span>Chấm công</span>
+      <span class="text-slate-400 hover:text-slate-600 cursor-pointer font-bold text-xs" onclick="closeQuickMenu()">✕</span>
+    </div>
+    
+    <div class="grid grid-cols-4 gap-1.5 mb-2">
+      <!-- Lương & Làm việc -->
+      <button onclick="applyCode('+')" class="py-1.5 rounded-lg bg-blue-50 text-blue-700 font-bold hover:bg-blue-200 text-xs border border-blue-200" title="Lương thời gian">+</button>
+      <button onclick="applyCode('SP')" class="py-1.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold hover:bg-indigo-200 text-xs border border-indigo-200" title="Lương sản phẩm">SP</button>
+      <button onclick="applyCode('P')" class="py-1.5 rounded-lg bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-200 text-xs border border-emerald-200" title="Nghỉ phép">P</button>
+      <button onclick="applyCode('H')" class="py-1.5 rounded-lg bg-teal-50 text-teal-700 font-bold hover:bg-teal-200 text-xs border border-teal-200" title="Hội nghị, học tập">H</button>
+      
+      <!-- Nghỉ bù & Chế độ -->
+      <button onclick="applyCode('NB')" class="py-1.5 rounded-lg bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-200 text-xs border border-emerald-200" title="Nghỉ bù">NB</button>
+      <button onclick="applyCode('Ô')" class="py-1.5 rounded-lg bg-purple-50 text-purple-700 font-bold hover:bg-purple-200 text-xs border border-purple-200" title="Ốm, điều dưỡng">Ô</button>
+      <button onclick="applyCode('Cô')" class="py-1.5 rounded-lg bg-purple-50 text-purple-700 font-bold hover:bg-purple-200 text-xs border border-purple-200" title="Con ốm">Cô</button>
+      <button onclick="applyCode('TS')" class="py-1.5 rounded-lg bg-purple-50 text-purple-700 font-bold hover:bg-purple-200 text-xs border border-purple-200" title="Thai sản">TS</button>
+
+      <!-- Tai nạn, ngừng việc, không lương -->
+      <button onclick="applyCode('T')" class="py-1.5 rounded-lg bg-purple-50 text-purple-700 font-bold hover:bg-purple-200 text-xs border border-purple-200" title="Tai nạn">T</button>
+      <button onclick="applyCode('KL')" class="py-1.5 rounded-lg bg-amber-50 text-amber-700 font-bold hover:bg-amber-200 text-xs border border-amber-200" title="Nghỉ không lương">KL</button>
+      <button onclick="applyCode('N')" class="py-1.5 rounded-lg bg-orange-50 text-orange-700 font-bold hover:bg-orange-200 text-xs border border-orange-200" title="Ngừng việc">N</button>
+      <button onclick="applyCode('LĐ')" class="py-1.5 rounded-lg bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 text-xs border border-slate-200" title="Lao động nghĩa vụ">LĐ</button>
+    </div>
+
+    <div class="border-t border-slate-100 pt-1.5">
+      <button onclick="applyCode('')" class="w-full py-1.5 rounded-lg bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 text-xs font-bold transition">
+        <i class="fa-solid fa-eraser mr-1"></i> Xóa ký hiệu ô này
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL XÁC THỰC MẬT KHẨU ĐIỂM TRẠM -->
+  <div id="auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 overflow-hidden transform transition-all">
+      <div class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <h3 class="font-extrabold text-slate-800 text-sm">Xác Thực Quyền Chấm Công</h3>
+        </div>
+        <button onclick="closeAuthModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Chọn Điểm Trạm Hoặc Quyền:</label>
+          <select id="auth-station-select" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
+            <option value="Điểm trạm chính">Điểm trạm chính (Đức Tân)</option>
+            <option value="Điểm y tế số 1">Điểm y tế số 1 (Mộ Đức)</option>
+            <option value="Điểm y tế số 2">Điểm y tế số 2 (Đức Hòa)</option>
+            <option value="Điểm y tế số 3">Điểm y tế số 3 (Đức Phú)</option>
+            <option value="Ban Giám Đốc">Ban Giám Đốc (Toàn quyền 4 điểm)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Nhập Mật Khẩu Điểm Trạm:</label>
+          <div class="relative">
+            <input type="password" id="auth-password-input" placeholder="Nhập mật khẩu..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500 pr-10" onkeyup="if(event.key === 'Enter') handleAuthSubmit()">
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs">
+              <i id="pwd-eye-icon" class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+          <p id="auth-error-msg" class="text-rose-600 text-[11px] font-bold mt-1.5 hidden"></p>
+        </div>
+
+        <!-- Bảng mật khẩu mặc định để tham khảo nhanh -->
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 space-y-1">
+          <div class="font-bold flex items-center gap-1"><i class="fa-solid fa-key text-amber-600"></i> Mật khẩu mặc định hệ thống:</div>
+          <div class="grid grid-cols-2 gap-1 text-[10.5px] pt-1 text-slate-700">
+            <div>• Đức Tân: <code class="font-mono font-bold text-amber-900">ductan123</code></div>
+            <div>• Mộ Đức: <code class="font-mono font-bold text-amber-900">moduc123</code></div>
+            <div>• Đức Hòa: <code class="font-mono font-bold text-amber-900">duchoa123</code></div>
+            <div>• Đức Phú: <code class="font-mono font-bold text-amber-900">ducphu123</code></div>
+            <div class="col-span-2 pt-0.5">• Ban Giám Đốc: <code class="font-mono font-bold text-amber-900">bgd123</code></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2 justify-end">
+        <button onclick="closeAuthModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+          Hủy
+        </button>
+        <button onclick="handleAuthSubmit()" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-teal-600/30">
+          Mở Khóa Chấm Công
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL XÁC NHẬN CHUNG (THAY THẾ CONFIRM()) -->
+  <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 p-5">
+      <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg mb-3">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 class="font-bold text-slate-800 text-sm mb-1.5" id="confirm-modal-title">Xác nhận</h3>
+      <p class="text-xs text-slate-600 mb-4" id="confirm-modal-msg"></p>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeConfirmModal(false)" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+          Hủy bỏ
+        </button>
+        <button onclick="closeConfirmModal(true)" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition">
+          Đồng ý
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BẢNG IN PDF THEO MẪU 01A-LĐTL KHO BẠC / THÔNG TƯ 133 -->
+  <div id="print-container" class="w-full text-black" style="font-size: 7.5pt;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+      <div style="text-align: left; line-height: 1.3;">
+        <div style="font-weight: bold; font-size: 9pt;">TRẠM Y TẾ XÃ MỘ ĐỨC</div>
+        <div style="font-size: 8.5pt;">Bộ phận: Tổ Y tế - Dân số</div>
+      </div>
+      <div style="text-align: center; line-height: 1.3;">
+        <div style="font-weight: bold; font-size: 9pt;">Mẫu số 01a-LĐTL</div>
+        <div style="font-style: italic; font-size: 8pt;">(Ban hành theo Thông tư số 133/2016/TT-BTC)</div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 12px;">
+      <div style="font-weight: bold; font-size: 13pt;">BẢNG CHẤM CÔNG</div>
+      <div style="font-style: italic; font-size: 9.5pt;" id="print-month-title">Tháng ... Năm ...</div>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 6.5pt;">
+      <thead id="print-table-header"></thead>
+      <tbody id="print-table-body"></tbody>
+    </table>
+
+    <div style="display: flex; justify-content: space-between; margin-top: 18px;">
+      <div style="text-align: center; width: 33%;">
+        <div style="font-weight: bold; font-size: 9.5pt;">Người chấm công</div>
+        <div style="font-style: italic; font-size: 8.5pt; margin-bottom: 55px;">(Ký, ghi rõ họ tên)</div>
+      </div>
+      <div style="text-align: center; width: 33%;">
+        <div style="font-weight: bold; font-size: 9.5pt;">Phụ trách bộ phận</div>
+        <div style="font-style: italic; font-size: 8.5pt; margin-bottom: 55px;">(Ký, ghi rõ họ tên)</div>
+      </div>
+      <div style="text-align: center; width: 33%;">
+        <div style="font-style: italic; font-size: 8.5pt; margin-bottom: 3px;" id="print-footer-date">Ngày ... tháng ... năm ...</div>
+        <div style="font-weight: bold; font-size: 9.5pt;">Giám đốc Trạm</div>
+        <div style="font-style: italic; font-size: 8.5pt; margin-bottom: 55px;">(Ký, đóng dấu)</div>
+        <div style="font-weight: bold; font-size: 9.5pt;">Phạm Minh Đức</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 10px; font-size: 7.5pt; line-height: 1.4;">
+      <span style="font-weight: bold; text-decoration: underline;">Ký hiệu quy ước:</span>
+      - Lương thời gian: <b>+</b> | - Lương sản phẩm: <b>SP</b> | - Nghỉ phép: <b>P</b> | - Hội nghị, học tập: <b>H</b> | - Nghỉ bù: <b>NB</b> | - Ốm: <b>Ô</b> | - Thai sản: <b>TS</b> | - Nghỉ không lương: <b>KL</b> | - Ngừng việc: <b>N</b>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. CẤU HÌNH BẢNG MẬT KHẨU PHÂN QUYỀN ĐIỂM TRẠM
+    // Bạn có thể tùy chỉnh mật khẩu của từng điểm trạm bên dưới:
+    // =========================================================================
+    const STATION_PASSWORDS = {
+      "Điểm trạm chính": "ductan123",
+      "Điểm y tế số 1": "moduc333",
+      "Điểm y tế số 2": "duchoa456",
+      "Điểm y tế số 3": "ducphu777",
+      "Ban Giám Đốc": "bgd123"
+    };
+
+    // CẤU HÌNH GOOGLE APPS SCRIPT URL CHO BẢNG CHẤM CÔNG
+    const GOOGLE_SHEET_CHAM_CONG_URL = "";
+    const GOOGLE_SHEET_LICH_TRUC_URL = "";
+
+    // =========================================================================
+    // 2. DANH SÁCH 29 CÁN BỘ Y TẾ - CHỈ LƯU HỌ VÀ TÊN ĐẦY ĐỦ
+    // =========================================================================
+    const STAFF_LIST_FULL = [
+      // 1. Điểm trạm chính (Đức Tân) - 10 cán bộ
+      { name: "Trần Thị Lệ Thy", point: "Điểm trạm chính", shortName: "NHS Thy" },
+      { name: "Trịnh Thị Minh Tuệ", point: "Điểm trạm chính", shortName: "Ys Tuệ" },
+      { name: "Huỳnh Thị Thuỳ Yên", point: "Điểm trạm chính", shortName: "DS Yên" },
+      { name: "Võ Thị Thanh Thùy", point: "Điểm trạm chính", shortName: "NHS Thuỳ" },
+      { name: "Bùi Đạt Hiếu", point: "Điểm trạm chính", shortName: "DS Hiếu" },
+      { name: "Nguyễn Thị Như Nguyện", point: "Điểm trạm chính", shortName: "BS Nguyện" },
+      { name: "Võ Thị Thanh Thuyên", point: "Điểm trạm chính", shortName: "Bs Thuyên" },
+      { name: "Lê Thị Thủy", point: "Điểm trạm chính", shortName: "Ys Thủy" },
+      { name: "Trần Thị Việt Châu", point: "Điểm trạm chính", shortName: "CN Châu" },
+      { name: "Võ Quang Vinh", point: "Điểm trạm chính", shortName: "ĐD Vinh" },
+
+      // 2. Điểm y tế số 1 (Mộ Đức) - 6 cán bộ
+      { name: "Phạm Minh Đức", point: "Điểm y tế số 1", shortName: "BS Đức" },
+      { name: "Đoàn Thị Diễm", point: "Điểm y tế số 1", shortName: "DS Diễm" },
+      { name: "Võ Thị Thanh Việt", point: "Điểm y tế số 1", shortName: "NHS Việt" },
+      { name: "Huỳnh Thị Anh Tin", point: "Điểm y tế số 1", shortName: "NHS Tin" },
+      { name: "Nguyễn Thị Thu Nguyệt", point: "Điểm y tế số 1", shortName: "ĐD Nguyệt" },
+      { name: "Trần Thị Lài", point: "Điểm y tế số 1", shortName: "ĐD Lài" },
+
+      // 3. Điểm y tế số 2 (Đức Hòa) - 6 cán bộ
+      { name: "Trần Thị Kim Thanh", point: "Điểm y tế số 2", shortName: "ĐD Thanh" },
+      { name: "Nguyễn Thị Phương Thảo", point: "Điểm y tế số 2", shortName: "DS Thảo" },
+      { name: "Cao Thị Ánh Trúc", point: "Điểm y tế số 2", shortName: "ĐD Trúc" },
+      { name: "Huỳnh Văn Phương", point: "Điểm y tế số 2", shortName: "Ys Phương" },
+      { name: "Nguyễn Thị Kiều Thắm", point: "Điểm y tế số 2", shortName: "NHS Thắm" },
+      { name: "Nguyễn Phu", point: "Điểm y tế số 2", shortName: "BS Phu" },
+
+      // 4. Điểm y tế số 3 (Đức Phú) - 7 cán bộ
+      { name: "Phạm Trần Thị Hoà", point: "Điểm y tế số 3", shortName: "DS Hoà" },
+      { name: "Nguyễn Thị Ánh Thu", point: "Điểm y tế số 3", shortName: "CN Thu" },
+      { name: "Nguyễn Thị Bé", point: "Điểm y tế số 3", shortName: "NHS Bé" },
+      { name: "Nguyễn Anh Vũ", point: "Điểm y tế số 3", shortName: "Ys Vũ" },
+      { name: "Phạm Thị Mỹ Trâm", point: "Điểm y tế số 3", shortName: "NHS Trâm" },
+      { name: "Lê Thị Tố Lan", point: "Điểm y tế số 3", shortName: "NHS Lan" },
+      { name: "Nguyễn Thị Ly Va", point: "Điểm y tế số 3", shortName: "ĐD Ly Va" }
+    ];
+
+    let attendanceData = [];
+    let currentMonth = new Date().getMonth() + 1;
+    let currentYear = new Date().getFullYear();
+    let daysInMonth = 31;
+    let activeCell = null; // { empIndex, day, session }
+    let selectedStationFilter = 'all';
+
+    // Trạng thái điểm trạm hiện tại đang được mở khóa đăng nhập
+    let authorizedStation = sessionStorage.getItem('TYT_AUTH_STATION') || null;
+    let pendingAuthContext = null; // Lưu lại ô đang click khi cần đăng nhập
+
+    // Hộp thoại xác nhận chung
+    let confirmCallback = null;
+
+    window.onload = () => {
+      document.getElementById('select-month').value = currentMonth;
+      document.getElementById('select-year').value = currentYear;
+
+      initEmptyData();
+      renderAuthStatus();
+      generateGrid();
+
+      // Đóng quick menu khi bấm ra ngoài
+      document.addEventListener('click', (e) => {
+        const menu = document.getElementById('quick-menu');
+        if (!e.target.closest('td') && !e.target.closest('#quick-menu')) {
+          closeQuickMenu();
+        }
+      });
+    };
+
+    // =========================================================================
+    // 3. QUẢN LÝ PHÂN QUYỀN & MẬT KHẨU ĐIỂM TRẠM
+    // =========================================================================
+    function renderAuthStatus() {
+      const container = document.getElementById('auth-status-container');
+      if (!authorizedStation) {
+        container.innerHTML = `
+          <button onclick="openAuthModal()" class="px-3 py-2 bg-amber-50 text-amber-800 border border-amber-300 font-bold rounded-xl hover:bg-amber-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-lock text-amber-600"></i> Mở khóa chấm công
+          </button>
+        `;
+      } else {
+        const isBGD = authorizedStation === 'Ban Giám Đốc';
+        container.innerHTML = `
+          <div class="flex items-center gap-1.5 bg-teal-50 text-teal-800 border border-teal-300 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm">
+            <i class="fa-solid fa-lock-open text-teal-600"></i>
+            <span>Đang mở: <b class="${isBGD ? 'text-indigo-700' : 'text-teal-900'}">${authorizedStation}</b></span>
+            <button onclick="logoutStation()" class="ml-1 text-slate-400 hover:text-rose-600 p-0.5" title="Đăng xuất khỏi điểm trạm này">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    function openAuthModal(preSelectStation = null, pendingContext = null) {
+      pendingAuthContext = pendingContext;
+      const select = document.getElementById('auth-station-select');
+      if (preSelectStation) {
+        select.value = preSelectStation;
+      }
+      document.getElementById('auth-password-input').value = '';
+      document.getElementById('auth-error-msg').classList.add('hidden');
+      document.getElementById('auth-modal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('auth-password-input').focus(), 100);
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+      pendingAuthContext = null;
+    }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById('auth-password-input');
+      const icon = document.getElementById('pwd-eye-icon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-regular fa-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'fa-regular fa-eye';
+      }
+    }
+
+    function handleAuthSubmit() {
+      const station = document.getElementById('auth-station-select').value;
+      const pwd = document.getElementById('auth-password-input').value.trim();
+      const expectedPwd = STATION_PASSWORDS[station];
+
+      if (pwd === expectedPwd) {
+        authorizedStation = station;
+        sessionStorage.setItem('TYT_AUTH_STATION', station);
+        renderAuthStatus();
+        closeAuthModal();
+        showToast(`Đã mở khóa quyền chấm công: ${station}`, 'success');
+
+        // Nếu vừa bấm vào 1 ô, tự động mở tiếp menu ô đó
+        if (pendingAuthContext) {
+          const ctx = pendingAuthContext;
+          pendingAuthContext = null;
+          openMenu(ctx.event, ctx.empIndex, ctx.day, ctx.session);
+        }
+      } else {
+        const errorEl = document.getElementById('auth-error-msg');
+        errorEl.innerText = 'Mật khẩu không chính xác! Vui lòng thử lại.';
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    function logoutStation() {
+      authorizedStation = null;
+      sessionStorage.removeItem('TYT_AUTH_STATION');
+      renderAuthStatus();
+      showToast('Đã khóa quyền chấm công.', 'info');
+    }
+
+    // Kiểm tra nhân viên có thuộc điểm trạm đã mở khóa hay không
+    function canEditStaff(emp) {
+      if (!authorizedStation) return false;
+      if (authorizedStation === 'Ban Giám Đốc') return true;
+      return emp.point === authorizedStation;
+    }
+
+    // =========================================================================
+    // 4. BỘ LỌC ĐIỂM TRẠM & KHỞI TẠO DỮ LIỆU
+    // =========================================================================
+    function filterByStation(stationKey) {
+      selectedStationFilter = stationKey;
+      
+      const buttons = [
+        { id: 'btn-station-all', key: 'all' },
+        { id: 'btn-station-chinh', key: 'Điểm trạm chính' },
+        { id: 'btn-station-1', key: 'Điểm y tế số 1' },
+        { id: 'btn-station-2', key: 'Điểm y tế số 2' },
+        { id: 'btn-station-3', key: 'Điểm y tế số 3' }
+      ];
+
+      buttons.forEach(b => {
+        const el = document.getElementById(b.id);
+        if (b.key === stationKey) {
+          el.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition bg-teal-600 text-white shadow-sm whitespace-nowrap";
+        } else {
+          el.className = "px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap";
+        }
+      });
+
+      renderBody();
+    }
+
+    function initEmptyData() {
+      attendanceData = STAFF_LIST_FULL.map((item, index) => ({
+        id: index,
+        name: item.name,
+        point: item.point,
+        shortName: item.shortName,
+        days: {} // Lưu trạng thái dạng "S|C", VD: "+|+"
+      }));
+    }
+
+    function parseDayCode(str) {
+      if (!str) return { am: '', pm: '' };
+      const parts = str.split('|');
+      return { am: parts[0] || '', pm: parts[1] || '' };
+    }
+
+    function buildDayCode(am, pm) {
+      if (!am && !pm) return '';
+      return `${am || ''}|${pm || ''}`;
+    }
+
+    function fNum(n) { return n > 0 ? n : ''; }
+
+    function getColorClass(code) {
+      if (!code) return '';
+      if (code === '+') return 'text-blue-700 bg-blue-50/70';
+      if (code === '+T') return 'text-rose-700 bg-rose-50/70 font-black';
+      if (code === 'SP') return 'text-indigo-700 bg-indigo-50/70';
+      if (['P', 'H', 'NB', 'LĐ'].includes(code)) return 'text-emerald-700 bg-emerald-50/70 font-bold';
+      if (['N', 'KL'].includes(code)) return 'text-amber-700 bg-amber-50/70';
+      if (['Ô', 'Cô', 'TS', 'T'].includes(code)) return 'text-purple-700 bg-purple-50/70';
+      return 'text-slate-700 font-bold bg-slate-100';
+    }
+
+    function generateGrid() {
+      currentMonth = parseInt(document.getElementById('select-month').value);
+      currentYear = parseInt(document.getElementById('select-year').value);
+      daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+      renderHeader();
+      renderBody();
+    }
+
+    function renderHeader() {
+      const thead = document.getElementById('grid-header');
+      const today = new Date();
+      const isCurrentMonth = (today.getMonth() + 1 === currentMonth && today.getFullYear() === currentYear);
+      const todayDate = today.getDate();
+      
+      // Hàng 1
+      let row1 = `
+        <tr class="bg-slate-100 text-slate-700 font-bold">
+          <th rowspan="2" class="p-2 sticky-col-1 border-r border-slate-300 bg-slate-100 z-50">STT</th>
+          <th rowspan="2" class="p-2 sticky-col-2 border-r border-slate-300 text-left bg-slate-100 z-50">Họ và tên</th>
+          <th rowspan="2" class="p-2 sticky-col-3 border-r border-slate-300 bg-slate-100 z-50">Buổi</th>
+          <th colspan="${daysInMonth}" class="p-2 border-b border-r border-slate-300">Các ngày trong Tháng ${currentMonth}/${currentYear}</th>
+          <th colspan="3" class="p-2 border-b border-slate-300 bg-teal-50 text-teal-800">Quy ra công</th>
+        </tr>
+      `;
+
+      // Hàng 2: Các ngày trong tháng
+      let row2 = `<tr class="bg-slate-50 text-slate-600 font-bold text-[11px]">`;
+      for (let i = 1; i <= daysInMonth; i++) {
+        const d = new Date(currentYear, currentMonth - 1, i);
+        const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
+        const isToday = isCurrentMonth && (i === todayDate);
+        const extraCls = isToday ? 'today-col font-extrabold text-teal-700' : (isWeekend ? 'weekend-col' : '');
+        row2 += `<th class="p-1 border-b border-r border-slate-200 min-w-[32px] ${extraCls}">${i}</th>`;
+      }
+      row2 += `
+        <th class="p-1 border-b border-r border-slate-200 bg-teal-50 text-[10px] w-[56px] text-teal-800" title="Số công hưởng lương thời gian">Lương<br>TG (+)</th>
+        <th class="p-1 border-b border-r border-slate-200 bg-teal-50 text-[10px] w-[56px] text-teal-800" title="Nghỉ việc, ngừng việc hưởng 100% lương">Hưởng<br>100%</th>
+        <th class="p-1 border-b border-slate-200 bg-teal-50 text-[10px] w-[56px] text-teal-800" title="Số công hưởng BHXH">Hưởng<br>BHXH</th>
+      </tr>`;
+
+      // Hàng 3: Đánh số cột theo biểu mẫu 01a-LĐTL
+      let row3 = `<tr class="bg-slate-200 text-slate-500 font-normal text-[10px]">
+        <th class="p-1 sticky-col-1 border-b-2 border-r border-slate-300 bg-slate-200 z-50">A</th>
+        <th class="p-1 sticky-col-2 border-b-2 border-r border-slate-300 bg-slate-200 z-50">B</th>
+        <th class="p-1 sticky-col-3 border-b-2 border-r border-slate-300 bg-slate-200 z-50">C</th>
+      `;
+      for (let i = 1; i <= daysInMonth; i++) {
+        row3 += `<th class="p-0.5 border-b-2 border-r border-slate-200 text-[9px] min-w-[32px]">${i}</th>`;
+      }
+      row3 += `
+        <th class="p-1 border-b-2 border-r border-slate-200 bg-teal-100/70 text-teal-700 font-bold">33</th>
+        <th class="p-1 border-b-2 border-r border-slate-200 bg-teal-100/70 text-teal-700 font-bold">34</th>
+        <th class="p-1 border-b-2 border-slate-200 bg-teal-100/70 text-teal-700 font-bold">36</th>
+      </tr>`;
+
+      thead.innerHTML = row1 + row2 + row3;
+    }
+
+    function calculateTotals(daysObj) {
+      let col33 = 0, col34 = 0, col36 = 0;
+      
+      for (let val of Object.values(daysObj)) {
+        const { am, pm } = parseDayCode(val);
+        [am, pm].forEach(code => {
+          if (code === '+' || code === '+T') col33 += 0.5;
+          if (['P', 'H', 'NB', 'LĐ'].includes(code)) col34 += 0.5;
+          if (['Ô', 'Cô', 'TS', 'T'].includes(code)) col36 += 0.5;
+        });
+      }
+      return { col33, col34, col36 };
+    }
+
+    function renderBody() {
+      const tbody = document.getElementById('grid-body');
+      let html = '';
+      let grandTotals = { col33: 0, col34: 0, col36: 0 };
+
+      const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
+      
+      // Lọc theo từ khóa tìm kiếm và điểm trạm được chọn
+      const filteredData = attendanceData.filter(emp => {
+        const matchSearch = emp.name.toLowerCase().includes(searchTerm);
+        const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
+        return matchSearch && matchStation;
+      });
+
+      const today = new Date();
+      const isCurrentMonth = (today.getMonth() + 1 === currentMonth && today.getFullYear() === currentYear);
+      const todayDate = today.getDate();
+      
+      let displayIndex = 1;
+
+      filteredData.forEach((emp) => {
+        const totals = calculateTotals(emp.days);
+        const originalIndex = emp.id;
+        const isEditable = canEditStaff(emp);
+        
+        grandTotals.col33 += totals.col33; 
+        grandTotals.col34 += totals.col34; 
+        grandTotals.col36 += totals.col36;
+
+        // DÒNG CA SÁNG (S)
+        html += `
+          <tr class="hover:bg-slate-50/70 border-b border-slate-100 transition group">
+            <td rowspan="2" class="p-2 sticky-col-1 font-bold text-slate-500 bg-white border-b border-slate-200">${displayIndex}</td>
+            <td rowspan="2" class="p-2 sticky-col-2 text-left font-semibold text-slate-800 bg-white border-b border-slate-200 truncate" title="${emp.name} (${emp.point})">
+              ${emp.name}
+            </td>
+            <td class="p-1 sticky-col-3 text-center text-[10px] font-extrabold text-teal-700 bg-white border-b border-slate-100 border-r border-slate-300">S</td>
+        `;
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dateObj = new Date(currentYear, currentMonth - 1, d);
+          const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
+          const isToday = isCurrentMonth && (d === todayDate);
+          
+          const codeStr = emp.days[d] || '';
+          const { am } = parseDayCode(codeStr);
+          const displayAm = am === '+T' ? '+' : am;
+          const cellCls = isToday ? 'today-col' : (isWeekend ? 'weekend-col' : '');
+          
+          html += `
+            <td class="p-0 border-r border-slate-100 ${cellCls} cursor-pointer hover:bg-teal-50 transition ${!isEditable ? 'opacity-90' : ''}" onclick="openMenu(event, ${originalIndex}, ${d}, 'am')">
+              <div class="w-full h-6 flex items-center justify-center font-bold text-[11px] ${getColorClass(am)}">${displayAm || ''}</div>
+            </td>
+          `;
+        }
+
+        html += `
+            <td rowspan="2" class="p-1 border-r border-slate-200 bg-teal-50/40 font-bold text-blue-700 border-b border-slate-200 text-xs">${fNum(totals.col33)}</td>
+            <td rowspan="2" class="p-1 border-r border-slate-200 bg-teal-50/40 font-bold text-emerald-700 border-b border-slate-200 text-xs">${fNum(totals.col34)}</td>
+            <td rowspan="2" class="p-1 border-slate-200 bg-teal-50/40 font-bold text-purple-700 border-b border-slate-200 text-xs">${fNum(totals.col36)}</td>
+          </tr>
+        `;
+
+        // DÒNG CA CHIỀU (C)
+        html += `
+          <tr class="hover:bg-slate-50/70 border-b border-slate-200 transition group">
+            <td class="p-1 sticky-col-3 text-center text-[10px] font-extrabold text-amber-700 bg-white border-b border-slate-200 border-r border-slate-300">C</td>
+        `;
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dateObj = new Date(currentYear, currentMonth - 1, d);
+          const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
+          const isToday = isCurrentMonth && (d === todayDate);
+          
+          const codeStr = emp.days[d] || '';
+          const { pm } = parseDayCode(codeStr);
+          const displayPm = pm === '+T' ? '+' : pm;
+          const cellCls = isToday ? 'today-col' : (isWeekend ? 'weekend-col' : '');
+          
+          html += `
+            <td class="p-0 border-r border-slate-100 ${cellCls} cursor-pointer hover:bg-teal-50 transition ${!isEditable ? 'opacity-90' : ''}" onclick="openMenu(event, ${originalIndex}, ${d}, 'pm')">
+              <div class="w-full h-6 flex items-center justify-center font-bold text-[11px] ${getColorClass(pm)}">${displayPm || ''}</div>
+            </td>
+          `;
+        }
+
+        html += `</tr>`;
+        displayIndex++;
+      });
+
+      // DÒNG TỔNG CỘNG CUỐI BẢNG
+      html += `
+        <tr class="font-bold bg-slate-100 border-t-2 border-slate-300 text-xs text-slate-800">
+          <td class="p-2 sticky-col-1 bg-slate-100 border-r border-slate-300 z-40"></td>
+          <td class="p-2 sticky-col-2 text-center bg-slate-100 border-r border-slate-300 z-40 uppercase tracking-wide">TỔNG CỘNG</td>
+          <td class="p-2 sticky-col-3 bg-slate-100 border-r border-slate-300 z-40"></td>
+      `;
+      for (let d = 1; d <= daysInMonth; d++) {
+        html += `<td class="border-r border-slate-200"></td>`;
+      }
+      html += `
+          <td class="p-2 border-r border-slate-300 text-blue-700 font-extrabold">${fNum(grandTotals.col33)}</td>
+          <td class="p-2 border-r border-slate-300 text-emerald-700 font-extrabold">${fNum(grandTotals.col34)}</td>
+          <td class="p-2 text-purple-700 font-extrabold">${fNum(grandTotals.col36)}</td>
+        </tr>
+      `;
+
+      tbody.innerHTML = html;
+    }
+
+    // =========================================================================
+    // 5. THAO TÁC CHẤM CÔNG & KIỂM TRA MẬT KHẨU
+    // =========================================================================
+    function openMenu(e, empIndex, day, session) {
+      e.stopPropagation();
+      const emp = attendanceData[empIndex];
+
+      // Nếu chưa có quyền của điểm trạm này, tự động bật popup yêu cầu mật khẩu
+      if (!canEditStaff(emp)) {
+        openAuthModal(emp.point, { event: e, empIndex, day, session });
+        showToast(`Vui lòng nhập mật khẩu của ${emp.point} để chấm công.`, 'warning');
+        return;
+      }
+
+      const td = e.currentTarget;
+      const rect = td.getBoundingClientRect();
+      const menu = document.getElementById('quick-menu');
+      
+      document.getElementById('quick-menu-title').innerHTML = `
+        <span class="truncate max-w-[200px]">${emp.name}: ${session === 'am' ? 'Sáng' : 'Chiều'} ngày ${day}</span>
+        <span class="text-slate-400 hover:text-slate-600 cursor-pointer font-bold text-xs" onclick="closeQuickMenu()">✕</span>
+      `;
+      
+      let left = rect.left + rect.width / 2;
+      let top = rect.bottom + 6;
+
+      if (left + 145 > window.innerWidth) left = window.innerWidth - 150;
+      if (left < 150) left = 150;
+
+      menu.style.left = `${left}px`;
+      menu.style.top = `${top}px`; 
+      menu.classList.remove('hidden');
+
+      activeCell = { empIndex, day, session };
+      
+      document.querySelectorAll('td div').forEach(el => el.classList.remove('ring-2', 'ring-teal-500'));
+      td.querySelector('div').classList.add('ring-2', 'ring-teal-500');
+    }
+
+    function closeQuickMenu() {
+      const menu = document.getElementById('quick-menu');
+      menu.classList.add('hidden');
+      activeCell = null;
+      document.querySelectorAll('td div').forEach(el => el.classList.remove('ring-2', 'ring-teal-500'));
+    }
+
+    function applyCode(code) {
+      if (activeCell) {
+        let currentStr = attendanceData[activeCell.empIndex].days[activeCell.day] || '';
+        let { am, pm } = parseDayCode(currentStr);
+
+        if (activeCell.session === 'am') am = code;
+        else pm = code;
+
+        const newCodeStr = buildDayCode(am, pm);
+
+        if (newCodeStr === '') {
+          delete attendanceData[activeCell.empIndex].days[activeCell.day];
+        } else {
+          attendanceData[activeCell.empIndex].days[activeCell.day] = newCodeStr;
+        }
+        
+        closeQuickMenu();
+        renderBody();
+      }
+    }
+
+    // TỰ ĐỘNG CHẤM NHANH (+) CHO CÁC NHÂN VIÊN THUỘC ĐIỂM TRẠM ĐƯỢC PHÉP
+    function fillWorkingDays() {
+      if (!authorizedStation) {
+        openAuthModal();
+        showToast('Vui lòng mở khóa điểm trạm để thực hiện chấm nhanh!', 'warning');
+        return;
+      }
+
+      const targetDesc = (authorizedStation === 'Ban Giám Đốc') 
+        ? 'toàn bộ 29 cán bộ của 04 điểm trạm' 
+        : `cán bộ thuộc ${authorizedStation}`;
+
+      showConfirmModal(
+        'Xác nhận chấm nhanh (+)',
+        `Hệ thống sẽ tự động điền dấu (+) (Lương thời gian) cho các ngày Thứ 2 đến Thứ 6 trong Tháng ${currentMonth} cho ${targetDesc}. Bạn có muốn tiếp tục?`,
+        () => {
+          let updatedCount = 0;
+          attendanceData.forEach(emp => {
+            if (canEditStaff(emp)) {
+              for (let d = 1; d <= daysInMonth; d++) {
+                const dateObj = new Date(currentYear, currentMonth - 1, d);
+                const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
+                if (!isWeekend) {
+                  let { am, pm } = parseDayCode(emp.days[d] || '');
+                  if (!am) am = '+';
+                  if (!pm) pm = '+';
+                  emp.days[d] = buildDayCode(am, pm);
+                  updatedCount++;
+                }
+              }
+            }
+          });
+          renderBody();
+          showToast(`Đã chấm nhanh thành công cho ${targetDesc}!`, 'success');
+        }
+      );
+    }
+
+    // ĐỒNG BỘ CA TỪ LỊCH TRỰC
+    async function syncFromSchedule() {
+      const url = GOOGLE_SHEET_LICH_TRUC_URL;
+      if (!url) {
+        showToast("Chưa cấu hình URL Lịch Trực trong GOOGLE_SHEET_LICH_TRUC_URL.", 'warning');
+        return;
+      }
+
+      showLoading(`Đang tải Lịch Trực Tháng ${currentMonth}...`);
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'exportMonth' }) 
+        });
+        const result = await response.json();
+        
+        if (result.status === 'success' && result.data) {
+          let syncCount = 0;
+          result.data.forEach(week => {
+            const wStart = new Date(week.weekStart);
+            if (isNaN(wStart.getTime())) return;
+            
+            for (let i = 0; i < 7; i++) {
+              const curDate = new Date(wStart);
+              curDate.setDate(wStart.getDate() + i);
+              
+              if (curDate.getMonth() + 1 === currentMonth && curDate.getFullYear() === currentYear) {
+                const dayOfMonth = curDate.getDate();
+                for (let r = 0; r < week.grid.length; r++) {
+                  if (week.grid[r]) {
+                    const empShort = week.grid[r][i + 1]; 
+                    if (empShort && empShort !== '-') {
+                      const targetEmp = attendanceData.find(e => e.shortName === empShort || e.name.includes(empShort));
+                      if (targetEmp && canEditStaff(targetEmp)) {
+                        targetEmp.days[dayOfMonth] = buildDayCode('+T', '+T');
+                        syncCount++;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          });
+          
+          renderBody();
+          showToast(`Đã đồng bộ thành công ${syncCount} lượt trực vào Bảng chấm công!`, 'success');
+        } else {
+          showToast("Không lấy được dữ liệu lịch trực: " + (result.message || "Trống"), 'warning');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Lỗi khi kết nối đến lịch trực.", 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // =========================================================================
+    // 6. LƯU & TẢI DỮ LIỆU GOOGLE SHEETS
+    // =========================================================================
+    function showLoading(text) {
+      document.getElementById('loading-text').innerText = text;
+      document.getElementById('loading-overlay').style.display = 'flex';
+    }
+    function hideLoading() {
+      document.getElementById('loading-overlay').style.display = 'none';
+    }
+
+    async function saveAttendance() {
+      const url = GOOGLE_SHEET_CHAM_CONG_URL;
+      if (!url) {
+        showToast("Vui lòng dán Web App URL vào GOOGLE_SHEET_CHAM_CONG_URL trong mã nguồn.", 'warning');
+        return;
+      }
+
+      showLoading(`Đang lưu Bảng Chấm Công Tháng ${currentMonth}/${currentYear}...`);
+      const payload = {
+        action: 'saveAttendance',
+        data: {
+          month: currentMonth,
+          year: currentYear,
+          daysInMonth: daysInMonth,
+          records: attendanceData.map(e => ({
+            name: e.name,
+            point: e.point,
+            shortName: e.shortName,
+            days: e.days,
+            totals: calculateTotals(e.days)
+          }))
+        }
+      };
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        const res = await response.json();
+        if (res.status === 'success') {
+          showToast(`Đã lưu Bảng Chấm Công Tháng ${currentMonth}/${currentYear} lên Cloud!`, 'success');
+        } else {
+          showToast("Lỗi lưu dữ liệu: " + res.message, 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Lỗi kết nối khi gửi dữ liệu lên Google Sheet.", 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function loadAttendance() {
+      const url = GOOGLE_SHEET_CHAM_CONG_URL;
+      if (!url) {
+        showToast("Vui lòng cấu hình GOOGLE_SHEET_CHAM_CONG_URL trong mã nguồn.", 'warning');
+        return;
+      }
+
+      showLoading(`Đang tải Bảng Chấm Công Tháng ${currentMonth}/${currentYear}...`);
+      try {
+        const fetchUrl = url + (url.includes('?') ? '&' : '?') + `action=loadAttendance&month=${currentMonth}&year=${currentYear}&t=${Date.now()}`;
+        const response = await fetch(fetchUrl, { method: 'GET', cache: 'no-store' });
+        const res = await response.json();
+        
+        if (res.status === 'success' && res.records) {
+          initEmptyData();
+          res.records.forEach(rec => {
+            const target = attendanceData.find(e => e.name === rec.name);
+            if (target && rec.days) target.days = rec.days;
+          });
+          renderBody();
+          showToast(`Đã tải dữ liệu Tháng ${currentMonth}/${currentYear} thành công!`, 'success');
+        } else {
+          showToast(`Chưa có dữ liệu lưu trên Cloud cho Tháng ${currentMonth}/${currentYear}.`, 'info');
+          initEmptyData();
+          renderBody();
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Lỗi khi tải bảng chấm công từ Google Sheet.", 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // =========================================================================
+    // 7. XUẤT EXCEL & IN PDF (CHỈ HIỂN THỊ HỌ VÀ TÊN)
+    // =========================================================================
+    function exportToExcel() {
+      const wsData = [
+        ['TRẠM Y TẾ XÃ MỘ ĐỨC', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Mẫu số 01a-LĐTL'],
+        ['Bộ phận: Tổ Y tế - Dân số', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '(Ban hành theo TT số 133/2016/TT-BTC)'],
+        [],
+        [`BẢNG CHẤM CÔNG THÁNG ${currentMonth} NĂM ${currentYear}`],
+        []
+      ];
+
+      let h1 = ['STT', 'Họ và tên', 'Buổi'];
+      for (let i = 1; i <= daysInMonth; i++) h1.push(i === 1 ? 'Ngày trong tháng' : '');
+      h1.push('Quy ra công', '', '');
+      wsData.push(h1);
+
+      let h2 = ['', '', ''];
+      for (let i = 1; i <= daysInMonth; i++) h2.push(i.toString());
+      h2.push('Số công hưởng lương TG', 'Số công nghỉ việc hưởng 100%', 'Số công hưởng BHXH');
+      wsData.push(h2);
+
+      let h3 = ['A', 'B', 'C'];
+      for (let i = 1; i <= daysInMonth; i++) h3.push(i.toString());
+      h3.push('33', '34', '36');
+      wsData.push(h3);
+
+      const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
+      const filteredData = attendanceData.filter(emp => {
+        const matchSearch = emp.name.toLowerCase().includes(searchTerm);
+        const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
+        return matchSearch && matchStation;
+      });
+      
+      let displayIndex = 1;
+
+      filteredData.forEach((emp) => {
+        const totals = calculateTotals(emp.days);
+        
+        // Ca Sáng (Chỉ họ và tên)
+        const rowAm = [displayIndex, emp.name, 'S'];
+        for (let d = 1; d <= daysInMonth; d++) {
+          const { am } = parseDayCode(emp.days[d] || '');
+          rowAm.push(am === '+T' ? '+' : (am || ''));
+        }
+        rowAm.push(fNum(totals.col33), fNum(totals.col34), fNum(totals.col36));
+        wsData.push(rowAm);
+        
+        // Ca Chiều
+        const rowPm = ['', '', 'C'];
+        for (let d = 1; d <= daysInMonth; d++) {
+          const { pm } = parseDayCode(emp.days[d] || '');
+          rowPm.push(pm === '+T' ? '+' : (pm || ''));
+        }
+        rowPm.push('', '', '');
+        wsData.push(rowPm);
+
+        displayIndex++;
+      });
+
+      const merges = [
+        { s: {r:3, c:0}, e: {r:3, c:daysInMonth + 5} },
+        { s: {r:5, c:0}, e: {r:7, c:0} },
+        { s: {r:5, c:1}, e: {r:7, c:1} },
+        { s: {r:5, c:2}, e: {r:7, c:2} },
+        { s: {r:5, c:3}, e: {r:5, c:daysInMonth + 2} },
+        { s: {r:5, c:daysInMonth + 3}, e: {r:5, c:daysInMonth + 5} }
+      ];
+      
+      for (let i = 0; i < filteredData.length; i++) {
+        const startRow = 8 + i * 2;
+        merges.push({ s: {r:startRow, c:0}, e: {r:startRow+1, c:0} });
+        merges.push({ s: {r:startRow, c:1}, e: {r:startRow+1, c:1} });
+        merges.push({ s: {r:startRow, c:daysInMonth + 3}, e: {r:startRow+1, c:daysInMonth + 3} });
+        merges.push({ s: {r:startRow, c:daysInMonth + 4}, e: {r:startRow+1, c:daysInMonth + 4} });
+        merges.push({ s: {r:startRow, c:daysInMonth + 5}, e: {r:startRow+1, c:daysInMonth + 5} });
+      }
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      ws['!merges'] = merges;
+      
+      const wscols = [{wch: 5}, {wch: 26}, {wch: 5}]; 
+      for (let i = 0; i < daysInMonth; i++) wscols.push({wch: 4}); 
+      wscols.push({wch: 10},{wch: 10},{wch: 10});
+      ws['!cols'] = wscols;
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, `ChamCong_T${currentMonth}`);
+      XLSX.writeFile(wb, `BangChamCong_TYTMoDuc_T${currentMonth}_${currentYear}.xlsx`);
+    }
+
+    function printTimesheet() {
+      document.getElementById('print-month-title').innerText = `Tháng ${currentMonth} năm ${currentYear}`;
+      const today = new Date();
+      document.getElementById('print-footer-date').innerText = `Mộ Đức, ngày ${today.getDate().toString().padStart(2, '0')} tháng ${(today.getMonth() + 1).toString().padStart(2, '0')} năm ${today.getFullYear()}`;
+
+      const thead = document.getElementById('print-table-header');
+      let hHtml = `
+        <tr>
+          <th rowspan="2" style="width: 3%;">STT</th>
+          <th rowspan="2" style="width: 17%;">Họ và tên</th>
+          <th rowspan="2" style="width: 3%;">Buổi</th>
+          <th colspan="${daysInMonth}">Ngày trong tháng</th>
+          <th colspan="3">Quy ra công</th>
+        </tr>
+        <tr>
+      `;
+      for (let i = 1; i <= daysInMonth; i++) { hHtml += `<th style="font-size: 7pt; width: 2%;">${i}</th>`; }
+      hHtml += `
+          <th style="width: 3.5%; font-size: 7pt;">TG(+)</th>
+          <th style="width: 3.5%; font-size: 7pt;">100%</th>
+          <th style="width: 3.5%; font-size: 7pt;">BHXH</th>
+        </tr>
+        <tr style="background-color: #f1f5f9;">
+          <th>A</th><th>B</th><th>C</th>
+      `;
+      for (let i = 1; i <= daysInMonth; i++) { hHtml += `<th style="font-size: 6pt;">${i}</th>`; }
+      hHtml += `<th>33</th><th>34</th><th>36</th></tr>`;
+      thead.innerHTML = hHtml;
+
+      const tbody = document.getElementById('print-table-body');
+      let bHtml = '';
+      let grandTotals = { col33: 0, col34: 0, col36: 0 };
+      
+      const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
+      const filteredData = attendanceData.filter(emp => {
+        const matchSearch = emp.name.toLowerCase().includes(searchTerm);
+        const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
+        return matchSearch && matchStation;
+      });
+      let displayIndex = 1;
+
+      filteredData.forEach((emp) => {
+        const totals = calculateTotals(emp.days);
+        grandTotals.col33 += totals.col33;
+        grandTotals.col34 += totals.col34;
+        grandTotals.col36 += totals.col36;
+
+        // Dòng Sáng (Chỉ in họ và tên)
+        bHtml += `<tr>
+          <td rowspan="2">${displayIndex}</td>
+          <td rowspan="2" style="text-align: left; padding-left: 4px !important; font-weight: bold;">${emp.name}</td>
+          <td style="font-size: 6.5pt; font-weight: bold;">S</td>
+        `;
+        for (let d = 1; d <= daysInMonth; d++) {
+          const { am } = parseDayCode(emp.days[d] || '');
+          bHtml += `<td style="font-size: 6.5pt;">${am === '+T' ? '+' : (am || '')}</td>`;
+        }
+        bHtml += `
+          <td rowspan="2" style="font-weight: bold;">${fNum(totals.col33)}</td>
+          <td rowspan="2" style="font-weight: bold;">${fNum(totals.col34)}</td>
+          <td rowspan="2" style="font-weight: bold;">${fNum(totals.col36)}</td>
+        </tr>`;
+
+        // Dòng Chiều
+        bHtml += `<tr>
+          <td style="font-size: 6.5pt; font-weight: bold;">C</td>
+        `;
+        for (let d = 1; d <= daysInMonth; d++) {
+          const { pm } = parseDayCode(emp.days[d] || '');
+          bHtml += `<td style="font-size: 6.5pt;">${pm === '+T' ? '+' : (pm || '')}</td>`;
+        }
+        bHtml += `</tr>`;
+        
+        displayIndex++;
+      });
+      
+      bHtml += `<tr style="font-weight: bold; background-color: #f8fafc;">
+        <td colspan="3">CỘNG</td>`;
+      for (let d = 1; d <= daysInMonth; d++) bHtml += `<td></td>`;
+      bHtml += `
+        <td>${fNum(grandTotals.col33)}</td>
+        <td>${fNum(grandTotals.col34)}</td>
+        <td>${fNum(grandTotals.col36)}</td>
+      </tr>`;
+      tbody.innerHTML = bHtml;
+
+      setTimeout(() => { window.print(); }, 350);
+    }
+
+    // =========================================================================
+    // 8. TIỆN ÍCH TOAST & HỘP THOẠI XÁC NHẬN
+    // =========================================================================
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      const colors = {
+        success: 'bg-emerald-600 text-white shadow-emerald-600/30',
+        error: 'bg-rose-600 text-white shadow-rose-600/30',
+        warning: 'bg-amber-500 text-white shadow-amber-500/30',
+        info: 'bg-slate-800 text-white shadow-slate-800/30'
+      };
+
+      const icons = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-xmark',
+        warning: 'fa-triangle-exclamation',
+        info: 'fa-circle-info'
+      };
+
+      toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2.5 text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i> <span>${msg}</span>`;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function showConfirmModal(title, msg, onConfirm) {
+      document.getElementById('confirm-modal-title').innerText = title;
+      document.getElementById('confirm-modal-msg').innerText = msg;
+      document.getElementById('confirm-modal').classList.remove('hidden');
+      confirmCallback = onConfirm;
+    }
+
+    function closeConfirmModal(accepted) {
+      document.getElementById('confirm-modal').classList.add('hidden');
+      if (accepted && typeof confirmCallback === 'function') {
+        confirmCallback();
+      }
+      confirmCallback = null;
+    }
+  </script>
+</body>
+</html>
