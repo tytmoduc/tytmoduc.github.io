@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Times+New+Roman&display=swap" rel="stylesheet">
   
   <style>
-    body { font-family: 'Roboto', sans-serif; background-color: #f8fafc; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
     
     /* Ghim cột tiêu đề cố định khi cuộn ngang */
     .sticky-col-1 { position: sticky; left: 0; z-index: 20; background-color: white; min-width: 40px; max-width: 40px; }
@@ -142,13 +142,13 @@
               <i class="fa-solid fa-bolt text-amber-500"></i>
             </div>
             
-            <button onclick="quickFill('today')" class="w-full text-left px-3 py-2 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-start gap-2.5 transition group">
+            <button onclick="openQuickFillDateModal()" class="w-full text-left px-3 py-2 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-start gap-2.5 transition group">
               <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 group-hover:bg-emerald-600 group-hover:text-white transition">
-                <i class="fa-regular fa-calendar-check"></i>
+                <i class="fa-solid fa-calendar-day"></i>
               </div>
               <div class="flex-1">
-                <div class="font-bold text-slate-800 group-hover:text-emerald-700">Ngày hiện tại (Hôm nay)</div>
-                <div class="text-[10.5px] text-slate-400 font-normal">Chấm (+) Sáng/Chiều cho ngày hôm nay</div>
+                <div class="font-bold text-slate-800 group-hover:text-emerald-700">Chọn ngày để chấm nhanh</div>
+                <div class="text-[10.5px] text-slate-400 font-normal">Chọn ngày bất kỳ trong tháng để chấm (+)</div>
               </div>
             </button>
 
@@ -374,6 +374,63 @@
         </button>
         <button onclick="closeConfirmModal(true)" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition">
           Đồng ý
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CHỌN NGÀY ĐỂ CHẤM NHANH (+) -->
+  <div id="quick-fill-date-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 overflow-hidden transform transition-all">
+      <div class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-calendar-day"></i>
+          </div>
+          <h3 class="font-extrabold text-slate-800 text-sm">Chọn Ngày Để Chấm Nhanh (+)</h3>
+        </div>
+        <button onclick="closeQuickFillDateModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <p class="text-xs text-slate-600" id="quick-fill-date-desc">
+          Điền dấu (+) cho cán bộ tại điểm trạm đang mở khóa:
+        </p>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Chọn ngày trong tháng:</label>
+          <select id="quick-fill-day-select" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500">
+            <!-- Render tự động danh sách ngày -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Áp dụng cho buổi:</label>
+          <div class="grid grid-cols-3 gap-2 text-xs">
+            <label class="flex items-center gap-1.5 p-2 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer">
+              <input type="radio" name="quickFillSession" value="both" checked class="text-emerald-600 focus:ring-emerald-500">
+              <span class="font-bold text-slate-700">Cả ngày</span>
+            </label>
+            <label class="flex items-center gap-1.5 p-2 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer">
+              <input type="radio" name="quickFillSession" value="am" class="text-emerald-600 focus:ring-emerald-500">
+              <span class="font-semibold text-slate-700">Sáng</span>
+            </label>
+            <label class="flex items-center gap-1.5 p-2 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer">
+              <input type="radio" name="quickFillSession" value="pm" class="text-emerald-600 focus:ring-emerald-500">
+              <span class="font-semibold text-slate-700">Chiều</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2 justify-end">
+        <button onclick="closeQuickFillDateModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+          Hủy
+        </button>
+        <button onclick="applyQuickFillDate()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-emerald-600/30">
+          Chấm Công (+)
         </button>
       </div>
     </div>
@@ -966,7 +1023,92 @@
       if (dropdown) dropdown.classList.add('hidden');
     }
 
-    // HÀM XỬ LÝ CHẤM NHANH (+) THEO NGÀY HIỆN TẠI, TUẦN HIỆN TẠI, HOẶC CẢ THÁNG
+    // MỞ BẢNG CHỌN NGÀY ĐỂ CHẤM NHANH (+)
+    function openQuickFillDateModal() {
+      closeQuickFillMenu();
+
+      if (!authorizedStation) {
+        openAuthModal();
+        showToast('Vui lòng mở khóa điểm trạm để thực hiện chấm nhanh!', 'warning');
+        return;
+      }
+
+      const descEl = document.getElementById('quick-fill-date-desc');
+      const targetDesc = (authorizedStation === 'Ban Giám Đốc') 
+        ? 'toàn bộ 29 cán bộ của 04 điểm trạm' 
+        : `cán bộ thuộc ${authorizedStation}`;
+      descEl.innerText = `Điền dấu (+) cho ${targetDesc} trong Tháng ${currentMonth}/${currentYear}:`;
+
+      const select = document.getElementById('quick-fill-day-select');
+      select.innerHTML = '';
+
+      const today = new Date();
+      const isCurrentMonth = (today.getMonth() + 1 === currentMonth && today.getFullYear() === currentYear);
+      const defaultDay = isCurrentMonth ? today.getDate() : 1;
+      const dayNames = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dObj = new Date(currentYear, currentMonth - 1, d);
+        const dayOfWeekStr = dayNames[dObj.getDay()];
+        const opt = document.createElement('option');
+        opt.value = d;
+        const isTodayMark = (isCurrentMonth && d === today.getDate()) ? ' - Hôm nay' : '';
+        opt.text = `Ngày ${d < 10 ? '0' + d : d} (${dayOfWeekStr})${isTodayMark}`;
+        if (d === defaultDay) opt.selected = true;
+        select.appendChild(opt);
+      }
+
+      document.getElementById('quick-fill-date-modal').classList.remove('hidden');
+    }
+
+    function closeQuickFillDateModal() {
+      document.getElementById('quick-fill-date-modal').classList.add('hidden');
+    }
+
+    // ÁP DỤNG CHẤM CÔNG (+) CHO NGÀY ĐÃ CHỌN
+    function applyQuickFillDate() {
+      const selectedDay = parseInt(document.getElementById('quick-fill-day-select').value);
+      const sessionRadios = document.getElementsByName('quickFillSession');
+      let chosenSession = 'both';
+      for (const r of sessionRadios) {
+        if (r.checked) {
+          chosenSession = r.value;
+          break;
+        }
+      }
+
+      closeQuickFillDateModal();
+
+      const targetDesc = (authorizedStation === 'Ban Giám Đốc') 
+        ? 'toàn bộ 29 cán bộ của 04 điểm trạm' 
+        : `cán bộ thuộc ${authorizedStation}`;
+
+      let sessionText = 'Cả ngày (Sáng & Chiều)';
+      if (chosenSession === 'am') sessionText = 'buổi Sáng';
+      if (chosenSession === 'pm') sessionText = 'buổi Chiều';
+
+      let updatedCount = 0;
+      attendanceData.forEach(emp => {
+        if (canEditStaff(emp)) {
+          let { am, pm } = parseDayCode(emp.days[selectedDay] || '');
+          if (chosenSession === 'both') {
+            if (!am) am = '+';
+            if (!pm) pm = '+';
+          } else if (chosenSession === 'am') {
+            if (!am) am = '+';
+          } else if (chosenSession === 'pm') {
+            if (!pm) pm = '+';
+          }
+          emp.days[selectedDay] = buildDayCode(am, pm);
+          updatedCount++;
+        }
+      });
+
+      renderBody();
+      showToast(`Đã chấm (+) ngày ${selectedDay} (${sessionText}) cho ${targetDesc}!`, 'success');
+    }
+
+    // HÀM XỬ LÝ CHẤM NHANH (+) THEO TUẦN HIỆN TẠI HOẶC CẢ THÁNG
     function quickFill(scope) {
       closeQuickFillMenu();
 
@@ -985,18 +1127,7 @@
       let modalTitle = '';
       let modalMsg = '';
 
-      if (scope === 'today') {
-        // Kiểm tra xem hôm nay có thuộc Tháng/Năm đang hiển thị trên bảng không
-        if (today.getMonth() + 1 !== currentMonth || today.getFullYear() !== currentYear) {
-          showToast(`Hôm nay (${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}) không thuộc Tháng ${currentMonth}/${currentYear} đang xem!`, 'warning');
-          return;
-        }
-        const todayDate = today.getDate();
-        targetDays = [todayDate];
-        modalTitle = 'Xác nhận chấm nhanh Hôm nay';
-        modalMsg = `Hệ thống sẽ điền dấu (+) (Lương thời gian) cho ngày hôm nay (${todayDate}/${currentMonth}/${currentYear}) cho ${targetDesc}. Bạn có muốn tiếp tục?`;
-
-      } else if (scope === 'week') {
+      if (scope === 'week') {
         // Xác định Thứ 2 của tuần hiện tại
         const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1; // 0: Thứ 2, 6: Chủ nhật
         const monday = new Date(today);
