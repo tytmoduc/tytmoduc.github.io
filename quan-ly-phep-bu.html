@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quản Lý Ngày Phép, Nghỉ Bù - Trạm Y Tế Xã Mộ Đức</title>
+  
+  <!-- Tailwind CSS, SheetJS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Times+New+Roman&display=swap" rel="stylesheet">
+  
+  <style>
+    body { font-family: 'Roboto', sans-serif; background-color: #f8fafc; }
+    
+    /* Ghim cố định 2 cột đầu tiên khi cuộn ngang */
+    .sticky-col-1 { 
+      position: sticky; left: 0; z-index: 20; 
+      background-color: white; width: 34px; min-width: 32px; max-width: 36px; 
+      border-right: 1px solid #e2e8f0; 
+    }
+    .sticky-col-2 { 
+      position: sticky; left: 34px; z-index: 20; 
+      background-color: white; min-width: 145px; 
+      border-right: 2px solid #cbd5e1; 
+    }
+    
+    thead th { position: sticky; top: 0; z-index: 30; }
+    thead th.sticky-col-1, thead th.sticky-col-2 { z-index: 40; }
+
+    /* Định kiểu cho ô nhập liệu số liệu trên bảng */
+    .cell-input {
+      width: 100%; height: 100%; min-height: 28px; border: none; outline: none;
+      text-align: center; background: transparent; font-size: 12px; color: #1e293b;
+      font-weight: 700; padding: 1px; transition: background-color 0.15s;
+    }
+    .cell-input:focus { background-color: #e0e7ff; }
+    .cell-input[readonly] { background-color: transparent; cursor: default; }
+
+    /* Ẩn nút mũi tên tăng giảm số */
+    .cell-input::-webkit-outer-spin-button,
+    .cell-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .cell-input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    .no-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+    .no-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .no-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .no-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    #loading-overlay { display: none; }
+    .loader {
+      border: 4px solid #f1f5f9; border-top: 4px solid #4f46e5;
+      border-radius: 50%; width: 42px; height: 42px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Mẫu in chuẩn A4 ngang */
+    @media print {
+      body {
+        background-color: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body > *:not(#print-container) { display: none !important; }
+      
+      @page {
+        size: A4 landscape;
+        margin: 7mm 6mm 7mm 6mm;
+      }
+      
+      #print-container {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+      }
+
+      #print-container table {
+        page-break-inside: auto;
+        border-collapse: collapse !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+      }
+      
+      #print-container tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+      
+      #print-container thead {
+        display: table-header-group;
+      }
+      
+      #print-container th, #print-container td {
+        border: 0.5pt solid black !important;
+        padding: 3.5px 1.5px !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        overflow: hidden !important;
+        word-break: break-word !important;
+        font-size: 7pt !important;
+      }
+    }
+    #print-container { display: none; font-family: 'Times New Roman', Times, serif; color: black; }
+  </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden">
+
+  <!-- OVERLAY LOADING -->
+  <div id="loading-overlay" class="fixed inset-0 bg-white/85 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+    <div class="loader mb-4"></div>
+    <p class="text-indigo-700 font-bold text-base" id="loading-text">Đang đồng bộ dữ liệu phép, nghỉ bù...</p>
+  </div>
+
+  <!-- THÔNG BÁO TOAST -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- THANH TIÊU ĐỀ CHÍNH -->
+  <div class="flex-none p-3 md:p-5 pb-2">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-3 flex flex-col md:flex-row justify-between items-center gap-3 border-l-4 border-l-indigo-600">
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 flex items-center justify-center transition" title="Về trang chủ">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center">
+              <i class="fa-solid fa-umbrella-beach text-indigo-600 mr-2.5"></i>Quản Lý Ngày Phép, Nghỉ Bù
+            </h1>
+            <span class="bg-indigo-50 text-indigo-700 text-xs px-2.5 py-0.5 rounded-full font-bold border border-indigo-200">TYT Xã Mộ Đức</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">Theo dõi quỹ ngày nghỉ bù ca trực, T7/CN, trực ngày lễ và ngày phép năm cho 29 cán bộ</p>
+        </div>
+      </div>
+
+      <!-- CÁC NÚT THAO TÁC VÀ TRẠNG THÁI MỞ KHÓA -->
+      <div class="flex flex-wrap gap-2 justify-end items-center">
+        <div id="auth-status-container"></div>
+
+        <button onclick="syncFromTimesheet()" class="px-3 py-2 bg-purple-50 text-purple-700 border border-purple-200 font-bold rounded-xl hover:bg-purple-100 transition text-xs flex items-center gap-1.5 shadow-sm" title="Tự động bóc tách ca trực đêm (+T), Lễ (+ vàng), T7/CN, Phép (P), Bù (NB) từ Bảng Chấm Công">
+          <i class="fa-solid fa-rotate text-purple-600"></i> Đồng bộ Chấm Công
+        </button>
+
+        <button onclick="exportToExcel()" class="px-3 py-2 bg-green-50 text-green-700 border border-green-200 font-bold rounded-xl hover:bg-green-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-file-excel"></i> Xuất Excel
+        </button>
+
+        <button onclick="printSummary()" class="px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded-xl hover:bg-rose-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-file-pdf"></i> In Bảng Tổng Hợp
+        </button>
+
+        <button onclick="loadData()" class="px-3 py-2 bg-slate-100 text-slate-700 border border-slate-200 font-bold rounded-xl hover:bg-slate-200 transition text-xs flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-cloud-arrow-down"></i> Tải về
+        </button>
+
+        <button onclick="saveData()" class="px-3.5 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition text-xs flex items-center gap-1.5 shadow-sm shadow-indigo-600/30">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Lưu Google Sheet
+        </button>
+      </div>
+    </div>
+
+    <!-- BỘ CHỌN THÁNG, NĂM, TÌM KIẾM VÀ BỘ LỌC ĐIỂM TRẠM -->
+    <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-2.5 mb-2">
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm">
+          <label class="font-bold text-slate-700 text-xs ml-1">Tháng:</label>
+          <input type="number" id="select-month" min="1" max="12" class="w-14 p-1 border border-slate-300 rounded-lg text-center font-bold text-xs outline-none focus:border-indigo-500" onchange="generateGrid()">
+          <label class="font-bold text-slate-700 text-xs">Năm:</label>
+          <input type="number" id="select-year" min="2024" max="2035" class="w-20 p-1 border border-slate-300 rounded-lg text-center font-bold text-xs outline-none focus:border-indigo-500" onchange="generateGrid()">
+          <button onclick="generateGrid()" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-700 transition" title="Làm mới bảng">
+            <i class="fa-solid fa-rotate"></i>
+          </button>
+        </div>
+
+        <!-- Bộ lọc xem theo điểm trạm -->
+        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
+          <button onclick="filterByStation('all')" id="btn-station-all" class="px-2.5 py-1 rounded-lg text-xs font-bold transition bg-indigo-600 text-white shadow-sm">
+            Tất cả (29)
+          </button>
+          <button onclick="filterByStation('Điểm trạm chính')" id="btn-station-chinh" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
+            Đức Tân (10)
+          </button>
+          <button onclick="filterByStation('Điểm y tế số 1')" id="btn-station-1" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
+            Mộ Đức (6)
+          </button>
+          <button onclick="filterByStation('Điểm y tế số 2')" id="btn-station-2" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
+            Đức Hòa (6)
+          </button>
+          <button onclick="filterByStation('Điểm y tế số 3')" id="btn-station-3" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
+            Đức Phú (7)
+          </button>
+        </div>
+      </div>
+
+      <!-- Ô tìm kiếm cán bộ -->
+      <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm flex-1 lg:max-w-xs">
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+        <input type="text" id="search-emp" placeholder="Tìm họ và tên cán bộ..." class="w-full bg-transparent border-none outline-none text-xs text-slate-700 focus:ring-0" onkeyup="renderBody()">
+      </div>
+
+      <!-- Chú thích quy ước -->
+      <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-semibold bg-white p-2 rounded-xl border border-slate-200 shadow-sm text-slate-600">
+        <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-blue-500 mr-1.5"></span> Cột màu xanh: Tự tính toán ngày Bù</div>
+        <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-1.5"></span> Cột màu cam: Tự tính toán ngày Phép</div>
+        <div class="flex items-center text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-300">
+          <span class="bg-amber-200 text-amber-900 font-black px-1.5 py-0.2 rounded border border-amber-400 mr-1.5">+</span> Trực ngày Lễ (+ vàng): Tự động tính 2 ngày bù/ca
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BẢNG THEO DÕI CHÍNH -->
+  <div class="flex-1 overflow-hidden p-2.5 md:p-4 pt-0 flex flex-col">
+    <div class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-auto no-scrollbar relative" id="table-container">
+      <table class="w-full text-[11px] text-center border-collapse table-fixed min-w-[900px]">
+        <colgroup>
+          <col style="width: 3.2%;">  <!-- TT -->
+          <col style="width: 15.8%;"> <!-- Họ và tên -->
+          <col style="width: 6.5%;">  <!-- Bù tồn cũ -->
+          <col style="width: 6.2%;">  <!-- Trực đêm -->
+          <col style="width: 6.2%;">  <!-- T7/CN -->
+          <col style="width: 6.8%;">  <!-- Tổng bù -->
+          <col style="width: 6.2%;">  <!-- Bù đã nghỉ -->
+          <col style="width: 6.8%;">  <!-- Bù chuyển -->
+          <col style="width: 6.8%;">  <!-- TG công tác -->
+          <col style="width: 6.1%;">  <!-- Phép tồn cũ -->
+          <col style="width: 6.1%;">  <!-- Phép năm nay -->
+          <col style="width: 6.7%;">  <!-- Phép còn lại -->
+          <col style="width: 6.1%;">  <!-- Phép đã nghỉ -->
+          <col style="width: 6.8%;">  <!-- Phép chuyển -->
+        </colgroup>
+        <thead id="grid-header" class="bg-slate-100 text-slate-700">
+          <!-- Render tự động bằng JavaScript -->
+        </thead>
+        <tbody id="grid-body">
+          <!-- Render tự động bằng JavaScript -->
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-1.5 text-[10.5px] text-slate-500 flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center gap-3">
+        <span><i class="fa-solid fa-pen text-indigo-500 mr-1"></i> Nhấp trực tiếp vào ô để nhập số.</span>
+        <span><i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i> Phân quyền sửa theo điểm trạm.</span>
+      </div>
+      <div class="italic text-slate-600 font-medium">
+        * Số ngày bù tính từ 01/01/2026 • Ca trực ngày Lễ (+ vàng) tự động tính <b>02 ngày bù/ca</b>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL XÁC THỰC MẬT KHẨU ĐIỂM TRẠM -->
+  <div id="auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 overflow-hidden transform transition-all">
+      <div class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <h3 class="font-extrabold text-slate-800 text-sm">Xác Thực Quyền Phép & Nghỉ Bù</h3>
+        </div>
+        <button onclick="closeAuthModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Chọn Điểm Trạm Hoặc Quyền:</label>
+          <select id="auth-station-select" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="Điểm trạm chính">Điểm trạm chính (Đức Tân)</option>
+            <option value="Điểm y tế số 1">Điểm y tế số 1 (Mộ Đức)</option>
+            <option value="Điểm y tế số 2">Điểm y tế số 2 (Đức Hòa)</option>
+            <option value="Điểm y tế số 3">Điểm y tế số 3 (Đức Phú)</option>
+            <option value="Ban Giám Đốc">Ban Giám Đốc (Toàn quyền 4 điểm)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Nhập Mật Khẩu Điểm Trạm:</label>
+          <div class="relative">
+            <input type="password" id="auth-password-input" placeholder="Nhập mật khẩu..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 pr-10" onkeyup="if(event.key === 'Enter') handleAuthSubmit()">
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs">
+              <i id="pwd-eye-icon" class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+          <p id="auth-error-msg" class="text-rose-600 text-[11px] font-bold mt-1.5 hidden"></p>
+        </div>
+
+        <!-- Bảng mật khẩu mặc định -->
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 space-y-1">
+          <div class="font-bold flex items-center gap-1"><i class="fa-solid fa-key text-amber-600"></i> Mật khẩu mặc định hệ thống:</div>
+          <div class="grid grid-cols-2 gap-1 text-[10.5px] pt-1 text-slate-700">
+            <div>• Đức Tân: <code class="font-mono font-bold text-amber-900">ductan123</code></div>
+            <div>• Mộ Đức: <code class="font-mono font-bold text-amber-900">moduc123</code></div>
+            <div>• Đức Hòa: <code class="font-mono font-bold text-amber-900">duchoa123</code></div>
+            <div>• Đức Phú: <code class="font-mono font-bold text-amber-900">ducphu123</code></div>
+            <div class="col-span-2 pt-0.5">• Ban Giám Đốc: <code class="font-mono font-bold text-amber-900">bgd123</code></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2 justify-end">
+        <button onclick="closeAuthModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+          Hủy
+        </button>
+        <button onclick="handleAuthSubmit()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-indigo-600/30">
+          Mở Khóa Quản Lý
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL XÁC NHẬN CHUNG -->
+  <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 p-5">
+      <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg mb-3">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 class="font-bold text-slate-800 text-sm mb-1.5" id="confirm-modal-title">Xác nhận</h3>
+      <p class="text-xs text-slate-600 mb-4 whitespace-pre-line" id="confirm-modal-msg"></p>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeConfirmModal(false)" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+          Hủy bỏ
+        </button>
+        <button onclick="closeConfirmModal(true)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
+          Đồng ý
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KHUNG BẢN IN PDF CHUẨN A4 NGANG -->
+  <div id="print-container" class="w-full text-black">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+      <div style="text-align: left; line-height: 1.25;">
+        <div style="display: flex; flex-direction: column; align-items: center; width: fit-content;">
+          <div style="font-size: 9.5pt; font-weight: normal;">UBND XÃ MỘ ĐỨC</div>
+          <div style="font-weight: bold; font-size: 9.5pt;">TRẠM Y TẾ</div>
+        </div>
+        <div style="font-size: 8.5pt; margin-top: 2px;">Mã đơn vị có quan hệ với ngân sách : 1026187</div>
+      </div>
+      <div style="text-align: right; line-height: 1.25;">
+        <div style="font-weight: bold; font-size: 9.5pt;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+        <div style="font-weight: bold; font-size: 8.5pt;">Độc lập - Tự do - Hạnh phúc</div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 2px; margin-bottom: 8px;">
+      <div style="font-weight: bold; font-size: 13pt; letter-spacing: 0.5px;" id="print-heading-title">
+        BẢNG TỔNG HỢP THEO DÕI NGÀY PHÉP, NGHỈ BÙ THÁNG .../2026
+      </div>
+      <div id="print-station-subtitle"></div>
+    </div>
+
+    <!-- Bảng In -->
+    <table id="print-table" style="width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed;">
+      <colgroup id="print-colgroup"></colgroup>
+      <thead id="print-table-header"></thead>
+      <tbody id="print-table-body"></tbody>
+    </table>
+
+    <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 8pt;">
+      <div style="width: 60%; font-style: italic;">
+        <b>Ghi chú:</b> Số ngày bù bắt đầu tính từ ngày 01/01/2026. Ca trực vào các ngày Lễ theo quy định của Nhà nước được tính <b>02 ngày bù</b>/ca trực 24/24.
+      </div>
+      <div style="width: 40%; text-align: right; font-style: italic;" id="print-footer-date">
+        Mộ Đức, ngày ... tháng ... năm 2026
+      </div>
+    </div>
+
+    <!-- Khu vực 3 chữ ký -->
+    <div style="display: flex; justify-content: space-between; margin-top: 16px; text-align: center; font-size: 8.5pt; page-break-inside: avoid;">
+      <div style="width: 32%;">
+        <div style="font-weight: bold;">Phụ trách điểm y tế</div>
+        <div style="font-style: italic; font-size: 7.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, ghi rõ họ tên)</div>
+      </div>
+      <div style="width: 32%;">
+        <div style="font-weight: bold;">Người tổng hợp</div>
+        <div style="font-style: italic; font-size: 7.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, ghi rõ họ tên)</div>
+      </div>
+      <div style="width: 32%;">
+        <div style="font-weight: bold;">Giám đốc trạm y tế</div>
+        <div style="font-style: italic; font-size: 7.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, ghi rõ họ tên)</div>
+        <div style="font-weight: bold; font-size: 8.5pt;">BS. Phạm Minh Đức</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. CẤU HÌNH BẢNG MẬT KHẨU PHÂN QUYỀN ĐIỂM TRẠM
+    // =========================================================================
+    const STATION_PASSWORDS = {
+      "Điểm trạm chính": "ductan123",
+      "Điểm y tế số 1": "moduc123",
+      "Điểm y tế số 2": "duchoa123",
+      "Điểm y tế số 3": "ducphu123",
+      "Ban Giám Đốc": "bgd123"
+    };
+
+    // Google Apps Script URLs
+    const GOOGLE_SHEET_PHEP_BU_URL = "https://script.google.com/macros/s/AKfycbx92KG3erh_dfFT94IThq8CMPcBApMwKpulUmPORfWv7eHYVEtlA-nx0_6IyD9ljJZM/exec";
+    const GOOGLE_SHEET_CHAM_CONG_URL = "https://script.google.com/macros/s/AKfycbwjYcU1KIGtTBQHmUnrdrNZD6nS1DTVGImvKCP1PbRtweAqLe0KMIUNc8YsZrL-28Ss8A/exec";
+    const GOOGLE_SHEET_STAFF_URL = "https://script.google.com/macros/s/AKfycbxtHm89HEoyWzivmq2vuu5uUAX4mejLfR2hWU3W1x0Hy9LdhRI-aFuGRsXkSz_Id0Hl/exec";
+
+    // =========================================================================
+    // 2. DANH SÁCH CHUẨN 29 CÁN BỘ Y TẾ THEO 04 ĐIỂM TRẠM
+    // =========================================================================
+    const STAFF_LIST_FULL = [
+      // 1. Điểm trạm chính (Đức Tân) - 10 cán bộ
+      { name: "Trần Thị Lệ Thy", point: "Điểm trạm chính", shortName: "NHS Thy" },
+      { name: "Trịnh Thị Minh Tuệ", point: "Điểm trạm chính", shortName: "Ys Tuệ" },
+      { name: "Huỳnh Thị Thuỳ Yên", point: "Điểm trạm chính", shortName: "DS Yên" },
+      { name: "Võ Thị Thanh Thùy", point: "Điểm trạm chính", shortName: "NHS Thuỳ" },
+      { name: "Bùi Đạt Hiếu", point: "Điểm trạm chính", shortName: "DS Hiếu" },
+      { name: "Nguyễn Thị Như Nguyện", point: "Điểm trạm chính", shortName: "BS Nguyện" },
+      { name: "Võ Thị Thanh Thuyên", point: "Điểm trạm chính", shortName: "Bs Thuyên" },
+      { name: "Lê Thị Thủy", point: "Điểm trạm chính", shortName: "Ys Thủy" },
+      { name: "Trần Thị Việt Châu", point: "Điểm trạm chính", shortName: "CN Châu" },
+      { name: "Võ Quang Vinh", point: "Điểm trạm chính", shortName: "ĐD Vinh" },
+
+      // 2. Điểm y tế số 1 (Mộ Đức) - 6 cán bộ
+      { name: "Phạm Minh Đức", point: "Điểm y tế số 1", shortName: "BS Đức" },
+      { name: "Đoàn Thị Diễm", point: "Điểm y tế số 1", shortName: "DS Diễm" },
+      { name: "Võ Thị Thanh Việt", point: "Điểm y tế số 1", shortName: "NHS Việt" },
+      { name: "Huỳnh Thị Anh Tin", point: "Điểm y tế số 1", shortName: "NHS Tin" },
+      { name: "Nguyễn Thị Thu Nguyệt", point: "Điểm y tế số 1", shortName: "ĐD Nguyệt" },
+      { name: "Trần Thị Lài", point: "Điểm y tế số 1", shortName: "ĐD Lài" },
+
+      // 3. Điểm y tế số 2 (Đức Hòa) - 6 cán bộ
+      { name: "Trần Thị Kim Thanh", point: "Điểm y tế số 2", shortName: "ĐD Thanh" },
+      { name: "Nguyễn Thị Phương Thảo", point: "Điểm y tế số 2", shortName: "DS Thảo" },
+      { name: "Cao Thị Ánh Trúc", point: "Điểm y tế số 2", shortName: "ĐD Trúc" },
+      { name: "Huỳnh Văn Phương", point: "Điểm y tế số 2", shortName: "Ys Phương" },
+      { name: "Nguyễn Thị Kiều Thắm", point: "Điểm y tế số 2", shortName: "NHS Thắm" },
+      { name: "Nguyễn Phu", point: "Điểm y tế số 2", shortName: "BS Phu" },
+
+      // 4. Điểm y tế số 3 (Đức Phú) - 7 cán bộ
+      { name: "Phạm Trần Thị Hoà", point: "Điểm y tế số 3", shortName: "DS Hoà" },
+      { name: "Nguyễn Thị Ánh Thu", point: "Điểm y tế số 3", shortName: "CN Thu" },
+      { name: "Nguyễn Thị Bé", point: "Điểm y tế số 3", shortName: "NHS Bé" },
+      { name: "Nguyễn Anh Vũ", point: "Điểm y tế số 3", shortName: "Ys Vũ" },
+      { name: "Phạm Thị Mỹ Trâm", point: "Điểm y tế số 3", shortName: "NHS Trâm" },
+      { name: "Lê Thị Tố Lan", point: "Điểm y tế số 3", shortName: "NHS Lan" },
+      { name: "Nguyễn Thị Ly Va", point: "Điểm y tế số 3", shortName: "ĐD Ly Va" }
+    ];
+
+    // LẤY DANH SÁCH NHÂN SỰ TẬP TRUNG TỪ BỘ NHỚ TRUNG TÂM
+    function getMasterStaffList() {
+      const stored = localStorage.getItem('TYT_STAFF_LIST');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          const activeList = parsed.filter(s => s.status === 'active');
+          if (activeList.length > 0) {
+            return activeList.map((item, idx) => ({
+              name: item.name,
+              point: item.point,
+              shortName: item.shortName || item.name
+            }));
+          }
+        } catch(e) {}
+      }
+      return STAFF_LIST_FULL;
+    }
+
+    let phepBuData = [];
+    let currentMonth = new Date().getMonth() + 1;
+    let currentYear = new Date().getFullYear();
+    let selectedStationFilter = 'all';
+
+    // Quản lý quyền mở khóa
+    let authorizedStation = sessionStorage.getItem('TYT_AUTH_STATION') || null;
+    let pendingAuthContext = null;
+    let confirmCallback = null;
+
+    // Lắng nghe tín hiệu cập nhật nhân sự thời gian thực
+    const staffBroadcast = new BroadcastChannel('TYT_STAFF_CHANNEL');
+    staffBroadcast.onmessage = (e) => {
+      if (e.data && e.data.action === 'staff_updated') {
+        const oldMap = {};
+        phepBuData.forEach(emp => { oldMap[emp.name] = emp; });
+        initEmptyData();
+        phepBuData.forEach(emp => {
+          if (oldMap[emp.name]) {
+            Object.assign(emp, oldMap[emp.name]);
+          }
+        });
+        renderBody();
+        showToast('Danh sách nhân sự vừa được đồng bộ tự động!', 'info');
+      }
+    };
+
+    window.onload = () => {
+      document.getElementById('select-month').value = currentMonth;
+      document.getElementById('select-year').value = currentYear;
+
+      initEmptyData();
+      renderAuthStatus();
+      generateGrid();
+      fetchLiveStaffList();
+    };
+
+    async function fetchLiveStaffList() {
+      if (!GOOGLE_SHEET_STAFF_URL) return;
+      try {
+        const url = GOOGLE_SHEET_STAFF_URL + (GOOGLE_SHEET_STAFF_URL.includes('?') ? '&' : '?') + `action=loadStaffList&t=${Date.now()}`;
+        const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+        const result = await res.json();
+        if (result.status === 'success' && result.records && result.records.length > 0) {
+          localStorage.setItem('TYT_STAFF_LIST', JSON.stringify(result.records));
+          const oldMap = {};
+          phepBuData.forEach(emp => { oldMap[emp.name] = emp; });
+          initEmptyData();
+          phepBuData.forEach(emp => {
+            if (oldMap[emp.name]) Object.assign(emp, oldMap[emp.name]);
+          });
+          renderBody();
+        }
+      } catch(err) {
+        console.warn('Lấy danh bạ online dự phòng không thành công:', err);
+      }
+    }
+
+    function initEmptyData() {
+      const masterList = getMasterStaffList();
+      phepBuData = masterList.map((item, index) => ({
+        id: index,
+        name: item.name,
+        point: item.point,
+        shortName: item.shortName,
+        buTonTruoc: 0,
+        buTruc: 0,
+        buT7CN: 0,
+        buDaNghi: 0,
+        thoiGianCT: "",
+        phepTonTruoc: 0,
+        phepNamNay: 12,
+        phepConLaiDenThang: 12,
+        phepDaNghi: 0
+      }));
+    }
+
+    function getPrevNextMonth(m, y) {
+      let prevM = m - 1, prevY = y;
+      if (prevM < 1) { prevM = 12; prevY = y - 1; }
+      
+      let nextM = m + 1, nextY = y;
+      if (nextM > 12) { nextM = 1; nextY = y + 1; }
+      
+      return { prevM, prevY, nextM, nextY };
+    }
+
+    function getSafeNum(val) {
+      const num = parseFloat(val);
+      return isNaN(num) ? 0 : num;
+    }
+
+    function formatNumberDisplay(val) {
+      const num = getSafeNum(val);
+      return num === 0 ? '' : num;
+    }
+
+    // =========================================================================
+    // 3. QUẢN LÝ PHÂN QUYỀN & MẬT KHẨU ĐIỂM TRẠM
+    // =========================================================================
+    function renderAuthStatus() {
+      const container = document.getElementById('auth-status-container');
+      if (!authorizedStation) {
+        container.innerHTML = `
+          <button onclick="openAuthModal()" class="px-3 py-2 bg-amber-50 text-amber-800 border border-amber-300 font-bold rounded-xl hover:bg-amber-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-lock text-amber-600"></i> Mở khóa điểm trạm
+          </button>
+        `;
+      } else {
+        const isBGD = authorizedStation === 'Ban Giám Đốc';
+        container.innerHTML = `
+          <div class="flex items-center gap-1.5 bg-indigo-50 text-indigo-800 border border-indigo-300 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm">
+            <i class="fa-solid fa-lock-open text-indigo-600"></i>
+            <span>Đang mở: <b class="${isBGD ? 'text-purple-700' : 'text-indigo-900'}">${authorizedStation}</b></span>
+            <button onclick="logoutStation()" class="ml-1 text-slate-400 hover:text-rose-600 p-0.5" title="Đăng xuất khỏi điểm trạm này">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    function openAuthModal(preSelectStation = null, pendingContext = null) {
+      pendingAuthContext = pendingContext;
+      const select = document.getElementById('auth-station-select');
+      if (preSelectStation) {
+        select.value = preSelectStation;
+      }
+      document.getElementById('auth-password-input').value = '';
+      document.getElementById('auth-error-msg').classList.add('hidden');
+      document.getElementById('auth-modal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('auth-password-input').focus(), 100);
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+      pendingAuthContext = null;
+    }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById('auth-password-input');
+      const icon = document.getElementById('pwd-eye-icon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-regular fa-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'fa-regular fa-eye';
+      }
+    }
+
+    function handleAuthSubmit() {
+      const station = document.getElementById('auth-station-select').value;
+      const pwd = document.getElementById('auth-password-input').value.trim();
+      const expectedPwd = STATION_PASSWORDS[station];
+
+      if (pwd === expectedPwd) {
+        authorizedStation = station;
+        sessionStorage.setItem('TYT_AUTH_STATION', station);
+        renderAuthStatus();
+        closeAuthModal();
+        renderBody();
+        showToast(`Đã mở khóa thành công quyền quản lý: ${station}`, 'success');
+      } else {
+        const errorEl = document.getElementById('auth-error-msg');
+        errorEl.innerText = 'Mật khẩu không chính xác! Vui lòng thử lại.';
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    function logoutStation() {
+      authorizedStation = null;
+      sessionStorage.removeItem('TYT_AUTH_STATION');
+      renderAuthStatus();
+      renderBody();
+      showToast('Đã khóa quyền quản lý điểm trạm.', 'info');
+    }
+
+    function canEditStaff(emp) {
+      if (!authorizedStation) return false;
+      if (authorizedStation === 'Ban Giám Đốc') return true;
+      return emp.point === authorizedStation;
+    }
+
+    // =========================================================================
+    // 4. BỘ LỌC ĐIỂM TRẠM & RENDER GIAO DIỆN
+    // =========================================================================
+    function filterByStation(stationKey) {
+      selectedStationFilter = stationKey;
+      
+      const buttons = [
+        { id: 'btn-station-all', key: 'all' },
+        { id: 'btn-station-chinh', key: 'Điểm trạm chính' },
+        { id: 'btn-station-1', key: 'Điểm y tế số 1' },
+        { id: 'btn-station-2', key: 'Điểm y tế số 2' },
+        { id: 'btn-station-3', key: 'Điểm y tế số 3' }
+      ];
+
+      buttons.forEach(b => {
+        const el = document.getElementById(b.id);
+        if (b.key === stationKey) {
+          el.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition bg-indigo-600 text-white shadow-sm whitespace-nowrap";
+        } else {
+          el.className = "px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap";
+        }
+      });
+
+      renderBody();
+    }
+
+    function generateGrid(autoLoad = true) {
+      currentMonth = parseInt(document.getElementById('select-month').value);
+      currentYear = parseInt(document.getElementById('select-year').value);
+
+      renderHeader();
+      renderBody();
+
+      if (autoLoad && GOOGLE_SHEET_PHEP_BU_URL) {
+        loadData(true);
+      }
+    }
+
+    function renderHeader() {
+      const { prevM, nextM } = getPrevNextMonth(currentMonth, currentYear);
+      const thead = document.getElementById('grid-header');
+      
+      thead.innerHTML = `
+        <tr class="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
+          <th rowspan="2" class="p-1 sticky-col-1 bg-slate-100 z-50 text-xs md:text-sm font-extrabold">TT</th>
+          <th rowspan="2" class="p-1 px-2.5 sticky-col-2 text-left bg-slate-100 z-50 text-xs md:text-sm font-extrabold text-slate-900">Họ và tên</th>
+          <th colspan="6" class="p-1.5 border-b border-r border-slate-300 bg-blue-50 text-blue-950 text-xs md:text-sm font-black uppercase tracking-wide">
+            Quỹ Ngày Bù (Tính từ 01/01/2026)
+          </th>
+          <th colspan="6" class="p-1.5 border-b border-slate-300 bg-amber-50 text-amber-950 text-xs md:text-sm font-black uppercase tracking-wide">
+            Quỹ Ngày Phép Năm ${currentYear}
+          </th>
+        </tr>
+        <tr class="bg-slate-50 text-slate-800 font-bold text-[11px] md:text-xs leading-tight">
+          <!-- CỘT BÙ -->
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Số ngày bù tồn lũy kế hết tháng ${prevM}">Bù tồn<br>hết T${prevM}</th>
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Ngày trực đêm ca 24/24 trong tháng ${currentMonth} (Lễ = x2)">Trực đêm<br>T${currentMonth}</th>
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Đi làm ngày Thứ 7, Chủ Nhật">Làm T7,<br>CN</th>
+          <th class="p-1.5 border-b border-r border-slate-200 bg-blue-100/80 text-blue-950 font-black" title="Tổng ngày bù tháng ${currentMonth}">Tổng bù<br>T${currentMonth}</th>
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Số ngày bù đã giải quyết nghỉ trong tháng ${currentMonth}">Bù nghỉ<br>T${currentMonth}</th>
+          <th class="p-1.5 border-b border-r border-slate-300 bg-blue-200/80 text-blue-950 font-black" title="Ngày bù chuyển sang tháng ${nextM}">Bù chuyển<br>sang T${nextM}</th>
+          
+          <!-- CỘT PHÉP -->
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Thời gian công tác">TG công<br>tác</th>
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Số ngày phép tồn của năm ${currentYear - 1}">Phép tồn<br>năm ${currentYear - 1}</th>
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Tổng quỹ phép được cấp trong năm ${currentYear}">Phép năm<br>${currentYear}</th>
+          <th class="p-1.5 border-b border-r border-slate-200 bg-amber-100/80 text-amber-950 font-black" title="Số ngày phép còn lại tính đến tháng ${currentMonth}">Phép còn<br>đến T${currentMonth}</th>
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Số ngày phép đã nghỉ trong tháng ${currentMonth}">Phép nghỉ<br>T${currentMonth}</th>
+          <th class="p-1.5 border-b border-slate-200 bg-amber-200/80 text-amber-950 font-black" title="Ngày phép tồn chuyển sang tháng ${nextM}">Phép chuyển<br>sang T${nextM}</th>
+        </tr>
+      `;
+    }
+
+    function renderBody() {
+      const tbody = document.getElementById('grid-body');
+      let html = '';
+      let totals = {
+        buTonTruoc: 0, buTruc: 0, buT7CN: 0, tongBu: 0, buDaNghi: 0, buTonSau: 0,
+        phepTonTruoc: 0, phepNamNay: 0, phepConLaiDenThang: 0, phepDaNghi: 0, phepTonSau: 0
+      };
+
+      const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
+      const filteredData = phepBuData.filter(emp => {
+        const matchSearch = emp.name.toLowerCase().includes(searchTerm) || 
+                            (emp.shortName && emp.shortName.toLowerCase().includes(searchTerm));
+        const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
+        return matchSearch && matchStation;
+      });
+
+      let displayIndex = 1;
+
+      filteredData.forEach((emp) => {
+        const isEditable = canEditStaff(emp);
+        const originalIndex = emp.id;
+
+        const tongBu = getSafeNum(emp.buTonTruoc) + getSafeNum(emp.buTruc) + getSafeNum(emp.buT7CN);
+        const buTonSau = tongBu - getSafeNum(emp.buDaNghi);
+        const phepTonSau = getSafeNum(emp.phepConLaiDenThang) - getSafeNum(emp.phepDaNghi);
+
+        totals.buTonTruoc += getSafeNum(emp.buTonTruoc);
+        totals.buTruc += getSafeNum(emp.buTruc);
+        totals.buT7CN += getSafeNum(emp.buT7CN);
+        totals.tongBu += tongBu;
+        totals.buDaNghi += getSafeNum(emp.buDaNghi);
+        totals.buTonSau += buTonSau;
+
+        totals.phepTonTruoc += getSafeNum(emp.phepTonTruoc);
+        totals.phepNamNay += getSafeNum(emp.phepNamNay);
+        totals.phepConLaiDenThang += getSafeNum(emp.phepConLaiDenThang);
+        totals.phepDaNghi += getSafeNum(emp.phepDaNghi);
+        totals.phepTonSau += phepTonSau;
+
+        const lockNotice = !isEditable ? `onclick="handleLockedCellClick('${emp.point}')"` : '';
+
+        html += `
+          <tr class="hover:bg-slate-50/70 border-b border-slate-100 transition group h-[32px]">
+            <td class="p-0.5 sticky-col-1 font-bold text-slate-500 bg-white border-r border-slate-200 text-[10.5px]">${displayIndex}</td>
+            <td class="py-1 px-2.5 sticky-col-2 text-left bg-white border-r border-slate-300 truncate" title="${emp.name}">
+              <span class="text-xs md:text-[13px] font-bold text-slate-900 tracking-tight select-none">${emp.name}</span>
+            </td>
+
+            <!-- CỘT BÙ -->
+            <td class="p-0 border-r border-slate-200 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
+              <input type="number" step="0.5" class="cell-input" value="${formatNumberDisplay(emp.buTonTruoc)}" 
+                     ${!isEditable ? 'readonly tabindex="-1"' : ''} oninput="handleLiveInput(${originalIndex}, 'buTonTruoc', this.value)">
+            </td>
+            <td class="p-0 border-r border-slate-200 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
+              <input type="number" step="0.5" class="cell-input" value="${formatNumberDisplay(emp.buTruc)}" 
+                     ${!isEditable ? 'readonly tabindex="-1"' : ''} oninput="handleLiveInput(${originalIndex}, 'buTruc', this.value)">
+            </td>
+            <td class="p-0 border-r border-slate-200 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
+              <input type="number" step="0.5" class="cell-input" value="${formatNumberDisplay(emp.buT7CN)}" 
+                     ${!isEditable ? 'readonly tabindex="-1"' : ''} oninput="handleLiveInput(${originalIndex}, 'buT7CN', this.value)">
+            </td>
+            <td class="p-0 border-r border-slate-200 bg-blue-50/50">
+              <input type="text" class="cell-input font-bold text-blue-900" id="row-tongbu-${originalIndex}" value="${formatNumberDisplay(tongBu)}" readonly tabindex="-1">
+            </td>
+            <td class="p-0 border-r border-slate-200 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
+              <input type="number" step="0.5" class="cell-input" value="${formatNumberDisplay(emp.buDaNghi)}" 
+                     ${!isEditable ? 'readonly tabindex="-1"' : ''} oninput="handleLiveInput(${originalIndex}, 'buDaNghi', this.value)">
+            </td>
+            <td class="p-0 border-r border-slate-300 bg-blue-100/50">
+              <input type="text" class="cell-input font-black text-blue-700" id="row-butonsau-${originalIndex}" value="${formatNumberDisplay(buTonSau)}" readonly tabindex="-1">
+            </td>
+
+            <!-- CỘT PHÉP -->
+            <td class="p-0 border-r border-slate-200 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
+              <input type="text" class="cell-input text-[11px] text-slate-700 font-semibold" value="${emp.thoiGianCT || ''}" 
+                     ${!isEditable ? 'readonly tabindex="-1"' : ''} oninput="handleLiveInput(${originalIndex}, 'thoiGianCT', this.value)">
+            </td>
+            <td class="p-0 border-r border-slate-200 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
+              <input type="number" step="0.5" class="cell-input" value="${formatNumberDisplay(emp.phepTonTruoc)}" 
+                     ${!isEditable ? 'readonly tabindex="-1"' : ''} oninput="handleLiveInput(${originalIndex}, 'phepTonTruoc', this.value)">
+            </td>
+            <td class="p-0 border-r border-slate-200 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
+              <input type="number" step="0.5" class="cell-input" value="${formatNumberDisplay(emp.phepNamNay)}" 
+                     ${!isEditable ? 'readonly tabindex="-1"' : ''} oninput="handleLiveInput(${originalIndex}, 'phepNamNay', this.value)">
+            </td>
+            <td class="p-0 border-r border-slate-200 bg-amber-50/40 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
+              <input type="number" step="0.5" class="cell-input font-bold text-amber-900" value="${formatNumberDisplay(emp.phepConLaiDenThang)}" 
+                     ${!isEditable ? 'readonly tabindex="-1"' : ''} oninput="handleLiveInput(${originalIndex}, 'phepConLaiDenThang', this.value)">
+            </td>
+            <td class="p-0 border-r border-slate-200 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
+              <input type="number" step="0.5" class="cell-input" value="${formatNumberDisplay(emp.phepDaNghi)}" 
+                     ${!isEditable ? 'readonly tabindex="-1"' : ''} oninput="handleLiveInput(${originalIndex}, 'phepDaNghi', this.value)">
+            </td>
+            <td class="p-0 bg-amber-100/50">
+              <input type="text" class="cell-input font-black text-amber-700" id="row-pheptonsau-${originalIndex}" value="${formatNumberDisplay(phepTonSau)}" readonly tabindex="-1">
+            </td>
+          </tr>
+        `;
+        displayIndex++;
+      });
+
+      // DÒNG TỔNG CỘNG CUỐI BẢNG
+      html += `
+        <tr class="font-bold bg-slate-100 border-t-2 border-slate-300 text-xs md:text-sm text-slate-900 h-8">
+          <td class="p-1 sticky-col-1 bg-slate-100 border-r border-slate-300 z-40"></td>
+          <td class="py-1 px-2.5 sticky-col-2 text-center bg-slate-100 border-r border-slate-300 z-40 uppercase tracking-wider text-xs md:text-sm font-extrabold">TỔNG</td>
+
+          <td class="p-0.5 border-r border-slate-200 font-black text-slate-800" id="tot-butontruoc">${formatNumberDisplay(totals.buTonTruoc)}</td>
+          <td class="p-0.5 border-r border-slate-200 font-black text-slate-800" id="tot-butruc">${formatNumberDisplay(totals.buTruc)}</td>
+          <td class="p-0.5 border-r border-slate-200 font-black text-slate-800" id="tot-but7cn">${formatNumberDisplay(totals.buT7CN)}</td>
+          <td class="p-0.5 border-r border-slate-200 font-black text-blue-900 bg-blue-100/50" id="tot-tongbu">${formatNumberDisplay(totals.tongBu)}</td>
+          <td class="p-0.5 border-r border-slate-200 font-black text-slate-800" id="tot-budanghi">${formatNumberDisplay(totals.buDaNghi)}</td>
+          <td class="p-0.5 border-r border-slate-300 font-black text-blue-700 bg-blue-200/50" id="tot-butonsau">${formatNumberDisplay(totals.buTonSau)}</td>
+
+          <td class="p-0.5 border-r border-slate-200"></td>
+          <td class="p-0.5 border-r border-slate-200 font-black text-slate-800" id="tot-pheptontruoc">${formatNumberDisplay(totals.phepTonTruoc)}</td>
+          <td class="p-0.5 border-r border-slate-200 font-black text-slate-800" id="tot-phepnamnay">${formatNumberDisplay(totals.phepNamNay)}</td>
+          <td class="p-0.5 border-r border-slate-200 font-black text-amber-900 bg-amber-100/50" id="tot-phepconlai">${formatNumberDisplay(totals.phepConLaiDenThang)}</td>
+          <td class="p-0.5 border-r border-slate-200 font-black text-slate-800" id="tot-phepdanghi">${formatNumberDisplay(totals.phepDaNghi)}</td>
+          <td class="p-0.5 font-black text-amber-700 bg-amber-200/50" id="tot-pheptonsau">${formatNumberDisplay(totals.phepTonSau)}</td>
+        </tr>
+      `;
+
+      tbody.innerHTML = html;
+    }
+
+    function handleLockedCellClick(pointName) {
+      openAuthModal(pointName);
+      showToast(`Vui lòng nhập mật khẩu của ${pointName} để điều chỉnh số ngày.`, 'warning');
+    }
+
+    function handleLiveInput(empId, field, rawVal) {
+      const emp = phepBuData.find(e => e.id === empId);
+      if (!emp) return;
+
+      if (field === 'thoiGianCT') {
+        emp[field] = rawVal;
+      } else {
+        emp[field] = rawVal === '' ? 0 : getSafeNum(rawVal);
+      }
+
+      // Cập nhật các ô phụ thuộc ngay lập tức mà không làm mất focus
+      const tongBu = getSafeNum(emp.buTonTruoc) + getSafeNum(emp.buTruc) + getSafeNum(emp.buT7CN);
+      const buTonSau = tongBu - getSafeNum(emp.buDaNghi);
+      const phepTonSau = getSafeNum(emp.phepConLaiDenThang) - getSafeNum(emp.phepDaNghi);
+
+      const elTongBu = document.getElementById(`row-tongbu-${empId}`);
+      const elBuTonSau = document.getElementById(`row-butonsau-${empId}`);
+      const elPhepTonSau = document.getElementById(`row-pheptonsau-${empId}`);
+
+      if (elTongBu) elTongBu.value = formatNumberDisplay(tongBu);
+      if (elBuTonSau) elBuTonSau.value = formatNumberDisplay(buTonSau);
+      if (elPhepTonSau) elPhepTonSau.value = formatNumberDisplay(phepTonSau);
+
+      updateTotalsRow();
+    }
+
+    function updateTotalsRow() {
+      const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
+      const filteredData = phepBuData.filter(emp => {
+        const matchSearch = emp.name.toLowerCase().includes(searchTerm) || 
+                            (emp.shortName && emp.shortName.toLowerCase().includes(searchTerm));
+        const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
+        return matchSearch && matchStation;
+      });
+
+      let totals = {
+        buTonTruoc: 0, buTruc: 0, buT7CN: 0, tongBu: 0, buDaNghi: 0, buTonSau: 0,
+        phepTonTruoc: 0, phepNamNay: 0, phepConLaiDenThang: 0, phepDaNghi: 0, phepTonSau: 0
+      };
+
+      filteredData.forEach(emp => {
+        const tongBu = getSafeNum(emp.buTonTruoc) + getSafeNum(emp.buTruc) + getSafeNum(emp.buT7CN);
+        const buTonSau = tongBu - getSafeNum(emp.buDaNghi);
+        const phepTonSau = getSafeNum(emp.phepConLaiDenThang) - getSafeNum(emp.phepDaNghi);
+
+        totals.buTonTruoc += getSafeNum(emp.buTonTruoc);
+        totals.buTruc += getSafeNum(emp.buTruc);
+        totals.buT7CN += getSafeNum(emp.buT7CN);
+        totals.tongBu += tongBu;
+        totals.buDaNghi += getSafeNum(emp.buDaNghi);
+        totals.buTonSau += buTonSau;
+
+        totals.phepTonTruoc += getSafeNum(emp.phepTonTruoc);
+        totals.phepNamNay += getSafeNum(emp.phepNamNay);
+        totals.phepConLaiDenThang += getSafeNum(emp.phepConLaiDenThang);
+        totals.phepDaNghi += getSafeNum(emp.phepDaNghi);
+        totals.phepTonSau += phepTonSau;
+      });
+
+      const setT = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = formatNumberDisplay(v); };
+      setT('tot-butontruoc', totals.buTonTruoc);
+      setT('tot-butruc', totals.buTruc);
+      setT('tot-but7cn', totals.buT7CN);
+      setT('tot-tongbu', totals.tongBu);
+      setT('tot-budanghi', totals.buDaNghi);
+      setT('tot-butonsau', totals.buTonSau);
+      setT('tot-pheptontruoc', totals.phepTonTruoc);
+      setT('tot-phepnamnay', totals.phepNamNay);
+      setT('tot-phepconlai', totals.phepConLaiDenThang);
+      setT('tot-phepdanghi', totals.phepDaNghi);
+      setT('tot-pheptonsau', totals.phepTonSau);
+    }
+
+    // =========================================================================
+    // 5. ĐỒNG BỘ TỪ BẢNG CHẤM CÔNG (TÍNH TỰ ĐỘNG 2 NGÀY BÙ NẾU TRỰC NGÀY LỄ)
+    // =========================================================================
+    async function syncFromTimesheet() {
+      const url = GOOGLE_SHEET_CHAM_CONG_URL;
+      if (!url) {
+        showToast("Chưa cấu hình URL kết nối Bảng Chấm Công.", 'warning');
+        return;
+      }
+
+      showConfirmModal(
+        'Đồng bộ từ Bảng Chấm Công',
+        `Hệ thống sẽ kéo dữ liệu chấm công Tháng ${currentMonth}/${currentYear} để tự động tính:
+• Ca trực ngày thường (+T): 1 ngày bù/ca (0.5 ngày/buổi)
+• Ca trực NGÀY LỄ (+ VÀNG): 2 ngày bù/ca (1.0 ngày/buổi)
+• Đi làm T7/CN, Phép đã nghỉ (P) và Bù đã nghỉ (NB).
+
+Bạn có muốn tiếp tục?`,
+        async () => {
+          showLoading(`Đang trích xuất dữ liệu Bảng Chấm Công Tháng ${currentMonth}...`);
+          try {
+            const fetchUrl = url + (url.includes('?') ? '&' : '?') + `action=loadAttendance&month=${currentMonth}&year=${currentYear}&t=${Date.now()}`;
+            const response = await fetch(fetchUrl, { method: 'GET', cache: 'no-store' });
+            const result = await response.json();
+
+            if (result.status === 'success' && result.records) {
+              let syncCount = 0;
+              let totalHolidayShifts = 0;
+              const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+              result.records.forEach(rec => {
+                const targetEmp = phepBuData.find(e => e.name === rec.name || (rec.shortName && e.shortName === rec.shortName));
+                if (targetEmp && rec.days && canEditStaff(targetEmp)) {
+                  let buTruc = 0;
+                  let buT7CN = 0;
+                  let buDaNghi = 0;
+                  let phepDaNghi = 0;
+
+                  for (let d = 1; d <= daysInMonth; d++) {
+                    const dateObj = new Date(currentYear, currentMonth - 1, d);
+                    const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
+
+                    const codeStr = rec.days[d] || '';
+                    const parts = codeStr.split('|');
+                    const am = parts[0] || '';
+                    const pm = parts[1] || '';
+
+                    [am, pm].forEach(code => {
+                      if (code === '+L') {
+                        // TRỰC NGÀY LỄ (+ VÀNG DO NGƯỜI DÙNG TỰ ĐÁNH VÀO)
+                        // 1.0 ngày bù / buổi => Cả ngày trực 2 buổi = 2.0 ngày bù!
+                        buTruc += 1.0;
+                        totalHolidayShifts += 0.5;
+                      } else if (code === '+T') {
+                        // Ca trực ngày thường: 0.5 ngày bù / buổi => Cả ca trực = 1.0 ngày bù
+                        buTruc += 0.5;
+                      } else if ((code === '+' || code === 'SP') && isWeekend) {
+                        // Đi làm ngày Thứ 7, CN
+                        buT7CN += 0.5;
+                      } else if (code === 'NB') {
+                        buDaNghi += 0.5; // Nghỉ bù
+                      } else if (code === 'P') {
+                        phepDaNghi += 0.5; // Nghỉ phép
+                      }
+                    });
+                  }
+
+                  targetEmp.buTruc = buTruc;
+                  targetEmp.buT7CN = buT7CN;
+                  targetEmp.buDaNghi = buDaNghi;
+                  targetEmp.phepDaNghi = phepDaNghi;
+                  syncCount++;
+                }
+              });
+
+              renderBody();
+              const holidayMsg = totalHolidayShifts > 0 
+                ? ` (Phát hiện ${totalHolidayShifts} ca trực ngày Lễ (+ vàng): đã tính x2 = 2 ngày bù/ca)` 
+                : '';
+              showToast(`Đã đồng bộ dữ liệu của ${syncCount} cán bộ thành công!${holidayMsg}`, 'success');
+            } else {
+              showToast(`Chưa có dữ liệu Bảng Chấm Công Tháng ${currentMonth}/${currentYear} trên Cloud. Vui lòng chấm công và lưu trước.`, 'warning');
+            }
+          } catch (err) {
+            console.error(err);
+            showToast("Lỗi kết nối khi đồng bộ dữ liệu chấm công.", 'error');
+          } finally {
+            hideLoading();
+          }
+        }
+      );
+    }
+
+    // =========================================================================
+    // 6. LƯU & TẢI DỮ LIỆU GOOGLE SHEETS
+    // =========================================================================
+    function showLoading(text) {
+      document.getElementById('loading-text').innerText = text;
+      document.getElementById('loading-overlay').style.display = 'flex';
+    }
+    function hideLoading() {
+      document.getElementById('loading-overlay').style.display = 'none';
+    }
+
+    async function saveData() {
+      const url = GOOGLE_SHEET_PHEP_BU_URL;
+      if (!url) {
+        showToast("Vui lòng cấu hình GOOGLE_SHEET_PHEP_BU_URL trong mã nguồn.", 'warning');
+        return;
+      }
+
+      showLoading(`Đang lưu dữ liệu Phép, Bù Tháng ${currentMonth}/${currentYear}...`);
+      const payload = {
+        action: 'savePhepBu',
+        data: {
+          month: currentMonth,
+          year: currentYear,
+          records: phepBuData.map(e => ({
+            name: e.name,
+            shortName: e.shortName,
+            point: e.point,
+            buTonTruoc: getSafeNum(e.buTonTruoc),
+            buTruc: getSafeNum(e.buTruc),
+            buT7CN: getSafeNum(e.buT7CN),
+            buDaNghi: getSafeNum(e.buDaNghi),
+            thoiGianCT: e.thoiGianCT || '',
+            phepTonTruoc: getSafeNum(e.phepTonTruoc),
+            phepNamNay: getSafeNum(e.phepNamNay),
+            phepConLaiDenThang: getSafeNum(e.phepConLaiDenThang),
+            phepDaNghi: getSafeNum(e.phepDaNghi)
+          }))
+        }
+      };
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        const res = await response.json();
+        if (res.status === 'success') {
+          showToast(`Đã lưu thành công dữ liệu Phép, Bù Tháng ${currentMonth}/${currentYear}!`, 'success');
+        } else {
+          showToast("Lỗi lưu dữ liệu: " + res.message, 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Lỗi kết nối khi gửi dữ liệu lên Google Sheet.", 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function loadData(isAuto = false) {
+      const url = GOOGLE_SHEET_PHEP_BU_URL;
+      if (!url) {
+        if (!isAuto) showToast("Vui lòng cấu hình GOOGLE_SHEET_PHEP_BU_URL trong mã nguồn.", 'warning');
+        return;
+      }
+
+      showLoading(`Đang ${isAuto ? 'tự động ' : ''}tải dữ liệu Phép, Bù Tháng ${currentMonth}/${currentYear}...`);
+      try {
+        const fetchUrl = url + (url.includes('?') ? '&' : '?') + `action=loadPhepBu&month=${currentMonth}&year=${currentYear}&t=${Date.now()}`;
+        const response = await fetch(fetchUrl, { method: 'GET', cache: 'no-store' });
+        const res = await response.json();
+
+        if (res.status === 'success' && res.records && res.records.length > 0) {
+          const masterList = getMasterStaffList();
+          phepBuData = masterList.map((item, index) => {
+            const found = res.records.find(r => r.name === item.name);
+            if (found) {
+              return { ...item, ...found, id: index };
+            }
+            return {
+              id: index, name: item.name, shortName: item.shortName, point: item.point,
+              buTonTruoc: 0, buTruc: 0, buT7CN: 0, buDaNghi: 0,
+              thoiGianCT: '', phepTonTruoc: 0, phepNamNay: 12, phepConLaiDenThang: 12, phepDaNghi: 0
+            };
+          });
+          renderBody();
+          showToast(`Đã đồng bộ dữ liệu Tháng ${currentMonth}/${currentYear} từ Google Sheet!`, 'success');
+        } else {
+          // TỰ ĐỘNG KẾT CHUYỂN TỒN TỪ THÁNG TRƯỚC NẾU THÁNG HIỆN TẠI CHƯA CÓ
+          const { prevM, prevY } = getPrevNextMonth(currentMonth, currentYear);
+          const prevUrl = url + (url.includes('?') ? '&' : '?') + `action=loadPhepBu&month=${prevM}&year=${prevY}&t=${Date.now()}`;
+          const prevRes = await fetch(prevUrl, { method: 'GET', cache: 'no-store' });
+          const prevResult = await prevRes.json();
+
+          if (prevResult.status === 'success' && prevResult.records && prevResult.records.length > 0) {
+            const masterList = getMasterStaffList();
+            phepBuData = masterList.map((item, index) => {
+              const rec = prevResult.records.find(r => r.name === item.name);
+              if (rec) {
+                const tongBuTruoc = getSafeNum(rec.buTonTruoc) + getSafeNum(rec.buTruc) + getSafeNum(rec.buT7CN);
+                const buTonSauTruoc = tongBuTruoc - getSafeNum(rec.buDaNghi);
+                const phepTonSauTruoc = getSafeNum(rec.phepConLaiDenThang) - getSafeNum(rec.phepDaNghi);
+
+                let phepConLai = phepTonSauTruoc;
+                let phepTonTruoc = getSafeNum(rec.phepTonTruoc);
+                let phepNamNay = getSafeNum(rec.phepNamNay) || 12;
+
+                // Nếu là Tháng 1 đầu năm: Kết chuyển phép tồn sang năm cũ và cấp 12 ngày phép mới
+                if (currentMonth === 1) {
+                  phepTonTruoc = phepTonSauTruoc;
+                  phepNamNay = 12;
+                  phepConLai = phepTonTruoc + phepNamNay;
+                }
+
+                return {
+                  id: index, name: item.name, shortName: item.shortName, point: item.point,
+                  buTonTruoc: buTonSauTruoc, buTruc: 0, buT7CN: 0, buDaNghi: 0,
+                  thoiGianCT: rec.thoiGianCT || '',
+                  phepTonTruoc: phepTonTruoc,
+                  phepNamNay: phepNamNay,
+                  phepConLaiDenThang: phepConLai,
+                  phepDaNghi: 0
+                };
+              }
+              return {
+                id: index, name: item.name, shortName: item.shortName, point: item.point,
+                buTonTruoc: 0, buTruc: 0, buT7CN: 0, buDaNghi: 0,
+                thoiGianCT: '', phepTonTruoc: 0, phepNamNay: 12, phepConLaiDenThang: 12, phepDaNghi: 0
+              };
+            });
+            renderBody();
+            showToast(`Tháng ${currentMonth} chưa có dữ liệu: Tự động kết chuyển số dư tồn từ Tháng ${prevM}/${prevY}!`, 'info');
+          } else {
+            initEmptyData();
+            renderBody();
+            if (!isAuto) {
+              showToast(`Chưa có dữ liệu Phép, Bù cho Tháng ${currentMonth}/${currentYear}.`, 'info');
+            }
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        if (!isAuto) showToast("Lỗi khi kết nối Google Sheet.", 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // =========================================================================
+    // 7. XUẤT EXCEL & IN BẢNG TỔNG HỢP
+    // =========================================================================
+    function exportToExcel() {
+      const { prevM, nextM } = getPrevNextMonth(currentMonth, currentYear);
+      const wsData = [
+        ['TRẠM Y TẾ XÃ MỘ ĐỨC', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+        [`BẢNG TỔNG HỢP THEO DÕI NGÀY PHÉP, NGHỈ BÙ THÁNG ${currentMonth}/${currentYear}`],
+        [],
+        ['TT', 'Họ và tên', 'NGÀY BÙ', '', '', '', '', '', 'NGÀY PHÉP NĂM', '', '', '', '', ''],
+        [
+          '', '',
+          `Số ngày bù tồn lại hết tháng ${prevM}`,
+          `Ngày trực trong tháng ${currentMonth}`,
+          `Đi làm ngày T7, CN, Lễ`,
+          `Tổng cộng ngày bù tháng ${currentMonth}`,
+          `Ngày bù đã nghỉ trong tháng ${currentMonth}`,
+          `Ngày bù tồn chuyển sang tháng ${nextM}`,
+          `Thời gian công tác`,
+          `Phép tồn lại của năm ${currentYear - 1}`,
+          `Phép năm ${currentYear}`,
+          `Phép còn lại đến tháng ${currentMonth}`,
+          `Phép đã nghỉ trong tháng`,
+          `Ngày phép tồn chuyển sang tháng ${nextM}`
+        ]
+      ];
+
+      const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
+      const filteredData = phepBuData.filter(emp => {
+        const matchSearch = emp.name.toLowerCase().includes(searchTerm) || 
+                            (emp.shortName && emp.shortName.toLowerCase().includes(searchTerm));
+        const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
+        return matchSearch && matchStation;
+      });
+
+      filteredData.forEach((emp, idx) => {
+        const tongBu = getSafeNum(emp.buTonTruoc) + getSafeNum(emp.buTruc) + getSafeNum(emp.buT7CN);
+        const buTonSau = tongBu - getSafeNum(emp.buDaNghi);
+        const phepTonSau = getSafeNum(emp.phepConLaiDenThang) - getSafeNum(emp.phepDaNghi);
+
+        wsData.push([
+          idx + 1,
+          emp.name,
+          emp.buTonTruoc || 0,
+          emp.buTruc || 0,
+          emp.buT7CN || 0,
+          tongBu,
+          emp.buDaNghi || 0,
+          buTonSau,
+          emp.thoiGianCT || '',
+          emp.phepTonTruoc || 0,
+          emp.phepNamNay || 0,
+          emp.phepConLaiDenThang || 0,
+          emp.phepDaNghi || 0,
+          phepTonSau
+        ]);
+      });
+
+      const merges = [
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 13 } },
+        { s: { r: 3, c: 0 }, e: { r: 4, c: 0 } },
+        { s: { r: 3, c: 1 }, e: { r: 4, c: 1 } },
+        { s: { r: 3, c: 2 }, e: { r: 3, c: 7 } },
+        { s: { r: 3, c: 8 }, e: { r: 3, c: 13 } }
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      ws['!merges'] = merges;
+      ws['!cols'] = [
+        { wch: 5 }, { wch: 24 },
+        { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 12 }, { wch: 11 }, { wch: 12 },
+        { wch: 12 }, { wch: 11 }, { wch: 11 }, { wch: 12 }, { wch: 11 }, { wch: 12 }
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, `PhepBu_T${currentMonth}`);
+      XLSX.writeFile(wb, `TheoDoi_PhepBu_TYTMoDuc_T${currentMonth}_${currentYear}.xlsx`);
+    }
+
+    function printSummary() {
+      const { prevM, nextM } = getPrevNextMonth(currentMonth, currentYear);
+      document.getElementById('print-heading-title').innerText = `BẢNG TỔNG HỢP THEO DÕI NGÀY PHÉP, NGHỈ BÙ THÁNG ${currentMonth}/${currentYear}`;
+
+      const subtitleEl = document.getElementById('print-station-subtitle');
+      if (subtitleEl) {
+        subtitleEl.innerHTML = (selectedStationFilter === 'all')
+          ? ''
+          : `<div style="font-weight: bold; font-size: 9pt; text-transform: uppercase; margin-top: 2px;">(${selectedStationFilter})</div>`;
+      }
+
+      // Khóa cứng tỷ lệ 14 cột theo khổ A4 ngang
+      const colTT = 3.5;
+      const colName = 18.5;
+      const otherColWidth = ((100 - (colTT + colName)) / 12).toFixed(3);
+
+      let colgroupHtml = `
+        <col style="width: ${colTT}%;">
+        <col style="width: ${colName}%;">
+      `;
+      for (let i = 0; i < 12; i++) {
+        colgroupHtml += `<col style="width: ${otherColWidth}%;">`;
+      }
+      document.getElementById('print-colgroup').innerHTML = colgroupHtml;
+
+      const thead = document.getElementById('print-table-header');
+      thead.innerHTML = `
+        <tr>
+          <th rowspan="2">TT</th>
+          <th rowspan="2">Họ và tên</th>
+          <th colspan="6">NGÀY BÙ</th>
+          <th colspan="6">NGÀY PHÉP NĂM</th>
+        </tr>
+        <tr>
+          <th>Bù tồn hết T${prevM}</th>
+          <th>Trực đêm T${currentMonth}</th>
+          <th>Làm T7, CN, Lễ</th>
+          <th>Tổng bù T${currentMonth}</th>
+          <th>Bù đã nghỉ T${currentMonth}</th>
+          <th>Bù chuyển sang T${nextM}</th>
+
+          <th>Thời gian công tác</th>
+          <th>Phép tồn năm ${currentYear - 1}</th>
+          <th>Phép năm ${currentYear}</th>
+          <th>Phép còn đến T${currentMonth}</th>
+          <th>Phép đã nghỉ T${currentMonth}</th>
+          <th>Phép chuyển sang T${nextM}</th>
+        </tr>
+      `;
+
+      const tbody = document.getElementById('print-table-body');
+      let bHtml = '';
+
+      const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
+      const filteredData = phepBuData.filter(emp => {
+        const matchSearch = emp.name.toLowerCase().includes(searchTerm) || 
+                            (emp.shortName && emp.shortName.toLowerCase().includes(searchTerm));
+        const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
+        return matchSearch && matchStation;
+      });
+
+      filteredData.forEach((emp, idx) => {
+        const tongBu = getSafeNum(emp.buTonTruoc) + getSafeNum(emp.buTruc) + getSafeNum(emp.buT7CN);
+        const buTonSau = tongBu - getSafeNum(emp.buDaNghi);
+        const phepTonSau = getSafeNum(emp.phepConLaiDenThang) - getSafeNum(emp.phepDaNghi);
+
+        bHtml += `
+          <tr>
+            <td>${idx + 1}</td>
+            <td style="text-align: left !important; padding-left: 5px !important; font-weight: bold; font-size: 8pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${emp.name}</td>
+            <td>${formatNumberDisplay(emp.buTonTruoc)}</td>
+            <td>${formatNumberDisplay(emp.buTruc)}</td>
+            <td>${formatNumberDisplay(emp.buT7CN)}</td>
+            <td style="font-weight: bold;">${formatNumberDisplay(tongBu)}</td>
+            <td>${formatNumberDisplay(emp.buDaNghi)}</td>
+            <td style="font-weight: bold;">${formatNumberDisplay(buTonSau)}</td>
+
+            <td style="font-size: 6.5pt;">${emp.thoiGianCT || ''}</td>
+            <td>${formatNumberDisplay(emp.phepTonTruoc)}</td>
+            <td>${formatNumberDisplay(emp.phepNamNay)}</td>
+            <td style="font-weight: bold;">${formatNumberDisplay(emp.phepConLaiDenThang)}</td>
+            <td>${formatNumberDisplay(emp.phepDaNghi)}</td>
+            <td style="font-weight: bold;">${formatNumberDisplay(phepTonSau)}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = bHtml;
+
+      const lastDay = new Date(currentYear, currentMonth, 0).getDate();
+      document.getElementById('print-footer-date').innerText = `Mộ Đức, ngày ${lastDay} tháng ${currentMonth} năm ${currentYear}`;
+
+      setTimeout(() => { window.print(); }, 350);
+    }
+
+    // =========================================================================
+    // 8. TIỆN ÍCH TOAST & HỘP THOẠI XÁC NHẬN (KHÔNG DÙNG ALERT/CONFIRM)
+    // =========================================================================
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      const colors = {
+        success: 'bg-emerald-600 text-white shadow-emerald-600/30',
+        error: 'bg-rose-600 text-white shadow-rose-600/30',
+        warning: 'bg-amber-500 text-white shadow-amber-500/30',
+        info: 'bg-slate-800 text-white shadow-slate-800/30'
+      };
+
+      const icons = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-xmark',
+        warning: 'fa-triangle-exclamation',
+        info: 'fa-circle-info'
+      };
+
+      toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2.5 text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i> <span>${msg}</span>`;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function showConfirmModal(title, msg, onConfirm) {
+      document.getElementById('confirm-modal-title').innerText = title;
+      document.getElementById('confirm-modal-msg').innerText = msg;
+      document.getElementById('confirm-modal').classList.remove('hidden');
+      confirmCallback = onConfirm;
+    }
+
+    function closeConfirmModal(accepted) {
+      document.getElementById('confirm-modal').classList.add('hidden');
+      if (accepted && typeof confirmCallback === 'function') {
+        confirmCallback();
+      }
+      confirmCallback = null;
+    }
+  </script>
+</body>
+</html>
