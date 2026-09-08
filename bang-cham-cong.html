@@ -263,11 +263,13 @@
           <!-- Render tự động bằng JavaScript -->
         </tbody>
       </table>
+      <!-- Khoảng đệm an toàn giúp các dòng cán bộ cuối danh sách luôn cuộn lên cao thoải mái -->
+      <div class="h-28 w-full"></div>
     </div>
   </div>
 
-  <!-- MENU CHẤM CÔNG NHANH (QUICK MENU POPUP) -->
-  <div id="quick-menu" class="fixed hidden bg-white shadow-2xl rounded-2xl border border-slate-200 p-2.5 z-50 transform -translate-x-1/2 translate-y-2 w-[290px]">
+  <!-- MENU CHẤM CÔNG NHANH (QUICK MENU POPUP) - CƠ CHẾ ĐẢO CHIỀU TỰ ĐỘNG -->
+  <div id="quick-menu" class="fixed hidden bg-white shadow-2xl rounded-2xl border border-slate-200 p-2.5 z-50 transform -translate-x-1/2 w-[290px] transition-all duration-150">
     <div class="text-[11px] text-slate-700 font-bold mb-2 uppercase text-center border-b border-slate-100 pb-1.5 flex justify-between items-center" id="quick-menu-title">
       <span>Chấm công</span>
       <span class="text-slate-400 hover:text-slate-600 cursor-pointer font-bold text-xs" onclick="closeQuickMenu()">✕</span>
@@ -1031,15 +1033,42 @@
         <span class="text-slate-400 hover:text-slate-600 cursor-pointer font-bold text-xs" onclick="closeQuickMenu()">✕</span>
       `;
       
-      let left = rect.left + rect.width / 2;
-      let top = rect.bottom + 6;
+      // 1. Mở menu trước để đo kích thước thực tế chính xác
+      menu.classList.remove('hidden');
+      const menuWidth = menu.offsetWidth || 290;
+      const menuHeight = menu.offsetHeight || 215;
 
-      if (left + 145 > window.innerWidth) left = window.innerWidth - 150;
-      if (left < 150) left = 150;
+      // 2. Tính toán trục ngang (X) - Chống tràn mép trái và mép phải màn hình
+      let left = rect.left + rect.width / 2;
+      const halfWidth = menuWidth / 2;
+      if (left + halfWidth > window.innerWidth - 12) {
+        left = window.innerWidth - 12 - halfWidth;
+      }
+      if (left - halfWidth < 12) {
+        left = 12 + halfWidth;
+      }
+
+      // 3. Tính toán trục dọc (Y) - Tự động đảo chiều LÊN TRÊN nếu bấm ở các dòng sát đáy
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      let top;
+      if (spaceBelow < menuHeight + 15 && spaceAbove > spaceBelow) {
+        // Không đủ chỗ phía dưới -> Tự động nhảy LÊN PHÍA TRÊN ô đang bấm
+        top = rect.top - menuHeight - 6;
+      } else {
+        // Đủ chỗ phía dưới -> Mở XUỐNG PHÍA DƯỚI ô đang bấm như bình thường
+        top = rect.bottom + 6;
+      }
+
+      // 4. Khóa biên an toàn, không bao giờ để menu chui ra ngoài khung nhìn của thiết bị
+      if (top < 10) top = 10;
+      if (top + menuHeight > window.innerHeight - 10) {
+        top = window.innerHeight - menuHeight - 10;
+      }
 
       menu.style.left = `${left}px`;
-      menu.style.top = `${top}px`; 
-      menu.classList.remove('hidden');
+      menu.style.top = `${top}px`;
 
       activeCell = { empIndex, day, session };
       
