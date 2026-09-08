@@ -521,6 +521,7 @@
     // CẤU HÌNH GOOGLE APPS SCRIPT URL CHO BẢNG CHẤM CÔNG
     const GOOGLE_SHEET_CHAM_CONG_URL = "https://script.google.com/macros/s/AKfycbwjYcU1KIGtTBQHmUnrdrNZD6nS1DTVGImvKCP1PbRtweAqLe0KMIUNc8YsZrL-28Ss8A/exec";
     const GOOGLE_SHEET_LICH_TRUC_URL = "";
+    const GOOGLE_SHEET_STAFF_URL = "https://script.google.com/macros/s/AKfycbxtHm89HEoyWzivmq2vuu5uUAX4mejLfR2hWU3W1x0Hy9LdhRI-aFuGRsXkSz_Id0Hl/exec";
 
     // =========================================================================
     // 2. DANH SÁCH 29 CÁN BỘ Y TẾ - CHỈ LƯU HỌ VÀ TÊN ĐẦY ĐỦ
@@ -564,6 +565,26 @@
       { name: "Nguyễn Thị Ly Va", point: "Điểm y tế số 3", shortName: "ĐD Ly Va" }
     ];
 
+    // LẤY DANH SÁCH NHÂN SỰ TẬP TRUNG TỪ BỘ NHỚ TRUNG TÂM
+    function getMasterStaffList() {
+      const stored = localStorage.getItem('TYT_STAFF_LIST');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          // Chỉ lấy cán bộ đang công tác (active)
+          const activeList = parsed.filter(s => s.status === 'active');
+          if (activeList.length > 0) {
+            return activeList.map((item, idx) => ({
+              name: item.name,
+              point: item.point,
+              shortName: item.shortName || item.name
+            }));
+          }
+        } catch(e) {}
+      }
+      return STAFF_LIST_FULL;
+    }
+
     let attendanceData = [];
     let currentMonth = new Date().getMonth() + 1;
     let currentYear = new Date().getFullYear();
@@ -578,6 +599,21 @@
     // Hộp thoại xác nhận chung
     let confirmCallback = null;
 
+    // Lắng nghe tín hiệu cập nhật nhân sự từ trang Quản Lý Nhân Viên
+    const staffBroadcast = new BroadcastChannel('TYT_STAFF_CHANNEL');
+    staffBroadcast.onmessage = (e) => {
+      if (e.data && e.data.action === 'staff_updated') {
+        const oldDaysMap = {};
+        attendanceData.forEach(emp => { oldDaysMap[emp.name] = emp.days; });
+        initEmptyData();
+        attendanceData.forEach(emp => {
+          if (oldDaysMap[emp.name]) emp.days = oldDaysMap[emp.name];
+        });
+        renderBody();
+        showToast('Danh sách cán bộ đã được tự động cập nhật!', 'info');
+      }
+    };
+
     window.onload = () => {
       document.getElementById('select-month').value = currentMonth;
       document.getElementById('select-year').value = currentYear;
@@ -585,6 +621,7 @@
       initEmptyData();
       renderAuthStatus();
       generateGrid();
+      fetchLiveStaffList();
 
       // Đóng menu khi bấm ra ngoài
       document.addEventListener('click', (e) => {
@@ -720,13 +757,35 @@
     }
 
     function initEmptyData() {
-      attendanceData = STAFF_LIST_FULL.map((item, index) => ({
+      const masterList = getMasterStaffList();
+      attendanceData = masterList.map((item, index) => ({
         id: index,
         name: item.name,
         point: item.point,
         shortName: item.shortName,
         days: {} // Lưu trạng thái dạng "S|C", VD: "+|+"
       }));
+    }
+
+    async function fetchLiveStaffList() {
+      if (!GOOGLE_SHEET_STAFF_URL) return;
+      try {
+        const url = GOOGLE_SHEET_STAFF_URL + (GOOGLE_SHEET_STAFF_URL.includes('?') ? '&' : '?') + `action=loadStaffList&t=${Date.now()}`;
+        const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+        const result = await res.json();
+        if (result.status === 'success' && result.records && result.records.length > 0) {
+          localStorage.setItem('TYT_STAFF_LIST', JSON.stringify(result.records));
+          const oldDaysMap = {};
+          attendanceData.forEach(emp => { oldDaysMap[emp.name] = emp.days; });
+          initEmptyData();
+          attendanceData.forEach(emp => {
+            if (oldDaysMap[emp.name]) emp.days = oldDaysMap[emp.name];
+          });
+          renderBody();
+        }
+      } catch(err) {
+        console.warn('Lấy danh bạ online dự phòng không thành công:', err);
+      }
     }
 
     function parseDayCode(str) {
