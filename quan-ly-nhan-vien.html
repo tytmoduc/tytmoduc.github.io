@@ -1,1131 +1,4520 @@
 <!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Quản Lý Nhân Viên & Cán Bộ - Trạm Y Tế Xã Mộ Đức</title>
 
-  <!-- Tailwind CSS & SheetJS & FontAwesome & Roboto -->
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>Quản Lý Nhân Viên & Cán Bộ Y Tế - Trạm Y Tế Xã Mộ Đức</title>
+
+
+
+  <!-- Tailwind CSS & SheetJS & FontAwesome & Google Fonts -->
+
   <script src="https://cdn.tailwindcss.com"></script>
+
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Times+New+Roman&display=swap" rel="stylesheet">
+
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Times+New+Roman&display=swap" rel="stylesheet">
+
+
 
   <style>
-    body { font-family: 'Roboto', sans-serif; background-color: #f8fafc; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* Thanh cuộn dọc hiển thị rõ ràng, mượt mà cho bảng cán bộ */
+    body {
+
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+      background-color: #f8fafc;
+
+    }
+
+
+
+    /* Thanh cuộn mềm cho bảng */
+
     .table-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+
     .table-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+
     .table-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+
     .table-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
-    #loading-overlay { display: none; }
-    .loader {
-      border: 4px solid #f1f5f9; border-top: 4px solid #0891b2;
-      border-radius: 50%; width: 42px; height: 42px;
-      animation: spin 1s linear infinite;
+
+
+    /* Ghim cố định cột Checkbox, TT và Họ tên khi cuộn ngang */
+
+    .sticky-col-check {
+
+      position: sticky;
+
+      left: 0;
+
+      z-index: 20;
+
+      background-color: white;
+
+      width: 42px;
+
+      min-width: 42px;
+
+      max-width: 42px;
+
+      border-right: 1px solid #e2e8f0;
+
     }
+
+    .sticky-col-tt {
+
+      position: sticky;
+
+      left: 42px;
+
+      z-index: 20;
+
+      background-color: white;
+
+      width: 46px;
+
+      min-width: 46px;
+
+      max-width: 46px;
+
+      border-right: 1px solid #e2e8f0;
+
+    }
+
+    .sticky-col-name {
+
+      position: sticky;
+
+      left: 88px;
+
+      z-index: 20;
+
+      background-color: white;
+
+      min-width: 210px;
+
+      border-right: 2px solid #cbd5e1;
+
+    }
+
+
+
+    /* Đổ màu nền đặc 100% cho hàng tiêu đề thead để chống dính/xuyên thấu chữ khi cuộn */
+
+    thead th { 
+
+      position: sticky; 
+
+      top: 0; 
+
+      z-index: 30; 
+
+      background-color: #f1f5f9 !important;
+
+      box-shadow: inset 0 -1px 0 #cbd5e1;
+
+    }
+
+    thead th.sticky-col-check, thead th.sticky-col-tt, thead th.sticky-col-name { 
+
+      z-index: 40; 
+
+      background-color: #f1f5f9 !important; 
+
+    }
+
+
+
+    #loading-overlay { display: none; }
+
+    .loader {
+
+      border: 4px solid #f1f5f9; border-top: 4px solid #0d9488;
+
+      border-radius: 50%; width: 44px; height: 44px;
+
+      animation: spin 1s linear infinite;
+
+    }
+
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+
+
+    /* Mẫu in chuẩn A4 ngang: Cân đối tiêu đề, tiêu ngữ & loại bỏ viền đen ngoài ý muốn */
+
     @media print {
-      body { background-color: white !important; margin: 0 !important; padding: 0 !important; }
+
+      body {
+
+        background-color: white !important;
+
+        margin: 0 !important;
+
+        padding: 0 !important;
+
+        -webkit-print-color-adjust: exact !important;
+
+        print-color-adjust: exact !important;
+
+      }
+
       body > *:not(#print-container) { display: none !important; }
-      #print-container { display: block !important; }
-      @page { size: A4 portrait; margin: 10mm 8mm 10mm 8mm; }
-      #print-container table { border-collapse: collapse !important; width: 100% !important; }
-      #print-container th, #print-container td { border: 0.5pt solid black !important; padding: 4px 6px !important; }
+
+
+
+      @page {
+
+        size: A4 landscape;
+
+        margin: 8mm 7mm 8mm 7mm;
+
+      }
+
+
+
+      #print-container {
+
+        display: block !important;
+
+        width: 100% !important;
+
+        margin: 0 !important;
+
+        padding: 0 !important;
+
+        font-family: 'Times New Roman', Times, serif;
+
+        color: black;
+
+      }
+
+
+
+      /* Bảng dữ liệu danh bạ có viền kẻ chuẩn 0.5pt */
+
+      #print-container table.print-data-table {
+
+        border-collapse: collapse !important;
+
+        width: 100% !important;
+
+        table-layout: fixed !important;
+
+      }
+
+
+
+      #print-container table.print-data-table th, 
+
+      #print-container table.print-data-table td {
+
+        border: 0.5pt solid black !important;
+
+        padding: 3.5px 2px !important;
+
+        vertical-align: middle !important;
+
+        font-size: 7.5pt !important;
+
+      }
+
+
+
+      /* Bảng tiêu đề và bảng chữ ký tuyệt đối không có viền bao */
+
+      #print-container table.print-header-table,
+
+      #print-container table.print-footer-table,
+
+      #print-container table.print-header-table td,
+
+      #print-container table.print-footer-table td {
+
+        border: none !important;
+
+        padding: 0 !important;
+
+      }
+
     }
-    #print-container { display: none; font-family: 'Times New Roman', Times, serif; color: black; }
+
+    #print-container { display: none; }
+
   </style>
+
 </head>
-<body class="text-slate-800 h-screen flex flex-col overflow-hidden">
+
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden selection:bg-teal-100 selection:text-teal-900">
+
+
 
   <!-- OVERLAY LOADING -->
+
   <div id="loading-overlay" class="fixed inset-0 bg-white/85 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
-    <div class="loader mb-4"></div>
-    <p class="text-teal-700 font-bold text-base" id="loading-text">Đang đồng bộ dữ liệu nhân sự...</p>
+
+    <div class="loader mb-3.5"></div>
+
+    <p class="text-teal-800 font-extrabold text-sm" id="loading-text">Đang đồng bộ dữ liệu nhân sự từ Google Sheet...</p>
+
   </div>
 
-  <!-- THÔNG BÁO TOAST -->
+
+
+  <!-- TOAST THÔNG BÁO -->
+
   <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-  <!-- HEADER THANH ĐIỀU HÀNH -->
+
+
+  <!-- HEADER ĐIỀU HÀNH CHÍNH -->
+
   <header class="flex-none p-3 md:p-5 pb-2">
+
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-3 flex flex-col md:flex-row justify-between items-center gap-3 border-l-4 border-l-teal-600">
+
+      
+
+      <!-- Thông tin đơn vị & Tiêu đề -->
+
       <div class="flex items-center gap-3">
+
         <a href="index.html" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-600 hover:text-teal-700 flex items-center justify-center transition" title="Về trang chủ">
+
           <i class="fa-solid fa-arrow-left"></i>
+
         </a>
+
         <div>
+
           <div class="flex items-center gap-2">
-            <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center">
-              <i class="fa-solid fa-users-gear text-teal-600 mr-2.5"></i>Quản Lý Nhân Viên & Điều Chuyển
+
+            <h1 class="text-lg sm:text-xl md:text-2xl font-black text-slate-800 tracking-tight flex items-center">
+
+              <i class="fa-solid fa-users-gear text-teal-600 mr-2.5"></i>Quản Lý Nhân Viên & Cán Bộ Y Tế
+
             </h1>
-            <span class="bg-teal-50 text-teal-700 text-xs px-2.5 py-0.5 rounded-full font-bold border border-teal-200">Dữ Liệu Trung Tâm</span>
+
+            <span class="bg-teal-50 text-teal-700 text-xs px-2.5 py-0.5 rounded-full font-bold border border-teal-200">Trụ Cột Trung Tâm TYT Mộ Đức</span>
+
           </div>
-          <p class="text-xs text-slate-500 mt-0.5">Tự động đồng bộ sang Bảng Chấm Công, Ngày Phép Bù & Lịch Trực toàn xã</p>
+
+          <p class="text-xs text-slate-500 mt-0.5">Nguồn dữ liệu gốc toàn xã • Tự động đồng bộ thời gian thực sang Chấm Công, Phép Bù, Lịch Trực & Công Việc</p>
+
         </div>
+
       </div>
 
-      <!-- CÁC NÚT THAO TÁC -->
+
+
+      <!-- Các nút thao tác chính -->
+
       <div class="flex flex-wrap gap-2 justify-end items-center">
-        <!-- Huy hiệu trạng thái phân quyền -->
+
+        <!-- Trạng thái mở khóa phân quyền -->
+
         <div id="auth-status-container"></div>
 
-        <button onclick="openStaffModal()" class="px-3.5 py-2 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition text-xs flex items-center gap-1.5 shadow-sm shadow-teal-600/30">
-          <i class="fa-solid fa-user-plus"></i> Thêm Nhân Viên Mới
+
+
+        <button onclick="openAddStaffModal()" class="px-3.5 py-2 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition text-xs flex items-center gap-1.5 shadow-sm shadow-teal-600/30">
+
+          <i class="fa-solid fa-user-plus"></i> Thêm Cán Bộ Mới
+
         </button>
+
+
+
+        <button onclick="openStationManagerModal()" class="px-3 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold rounded-xl hover:bg-indigo-100 transition text-xs flex items-center gap-1.5 shadow-sm" title="Quản lý danh sách điểm trạm & mở rộng thêm trạm mới trong tương lai">
+
+          <i class="fa-solid fa-hospital"></i> Quản Lý Điểm Trạm
+
+        </button>
+
+
 
         <button onclick="exportToExcel()" class="px-3 py-2 bg-green-50 text-green-700 border border-green-200 font-bold rounded-xl hover:bg-green-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+
           <i class="fa-solid fa-file-excel"></i> Xuất Excel
+
         </button>
+
+
 
         <button onclick="printStaffDirectory()" class="px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded-xl hover:bg-rose-100 transition text-xs flex items-center gap-1.5 shadow-sm">
-          <i class="fa-solid fa-file-pdf"></i> In Danh Bạ
+
+          <i class="fa-solid fa-print"></i> In Danh Bạ A4
+
         </button>
 
-        <button onclick="loadStaffFromCloud()" class="px-3 py-2 bg-slate-100 text-slate-700 border border-slate-200 font-bold rounded-xl hover:bg-slate-200 transition text-xs flex items-center gap-1.5 shadow-sm">
-          <i class="fa-solid fa-cloud-arrow-down"></i> Tải về
+
+
+        <button onclick="loadStaffFromCloud(false)" class="px-3 py-2 bg-slate-100 text-slate-700 border border-slate-200 font-bold rounded-xl hover:bg-slate-200 transition text-xs flex items-center gap-1.5 shadow-sm">
+
+          <i class="fa-solid fa-cloud-arrow-down"></i> Tải Về
+
         </button>
 
-        <button onclick="saveStaffToCloud()" class="px-3 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold rounded-xl hover:bg-indigo-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+
+
+        <button onclick="saveStaffToCloud()" class="px-3.5 py-2 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition text-xs flex items-center gap-1.5 shadow-sm shadow-emerald-600/30">
+
           <i class="fa-solid fa-cloud-arrow-up"></i> Lưu Google Sheet
+
         </button>
+
       </div>
+
     </div>
 
-    <!-- THANH THỐNG KÊ NHANH & BỘ LỌC ĐIỂM TRẠM -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-2.5">
-      <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-        <div>
-          <div class="text-[10.5px] font-bold text-slate-400 uppercase">Tổng Cán Bộ</div>
-          <div class="text-lg font-black text-slate-800" id="stat-total">0</div>
-        </div>
-        <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center text-sm font-bold">
-          <i class="fa-solid fa-user-doctor"></i>
-        </div>
+
+
+    <!-- THANH BỘ LỌC ĐIỂM TRẠM ĐỘNG & Ô TÌM KIẾM NHÂN SỰ -->
+
+    <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-2.5 mb-2">
+
+      
+
+      <!-- Danh sách nút lọc điểm trạm (Kết xuất tự động từ danh sách điểm trạm) -->
+
+      <div class="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 shadow-sm overflow-x-auto table-scrollbar" id="station-filter-container">
+
+        <!-- Render động qua JavaScript -->
+
       </div>
 
-      <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-        <div>
-          <div class="text-[10.5px] font-bold text-slate-400 uppercase">Đang Công Tác</div>
-          <div class="text-lg font-black text-emerald-600" id="stat-active">0</div>
-        </div>
-        <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">
-          <i class="fa-solid fa-user-check"></i>
-        </div>
-      </div>
 
-      <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-        <div>
-          <div class="text-[10.5px] font-bold text-slate-400 uppercase">Nghỉ / Chuyển Đi</div>
-          <div class="text-lg font-black text-amber-600" id="stat-inactive">0</div>
-        </div>
-        <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold">
-          <i class="fa-solid fa-user-xmark"></i>
-        </div>
-      </div>
 
-      <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-        <div>
-          <div class="text-[10.5px] font-bold text-slate-400 uppercase">Đồng Bộ Hệ Thống</div>
-          <div class="text-xs font-black text-indigo-600 flex items-center gap-1 mt-1">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Thời Gian Thực
-          </div>
-        </div>
-        <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold">
-          <i class="fa-solid fa-network-wired"></i>
-        </div>
-      </div>
-    </div>
+      <!-- Ô tìm kiếm cán bộ -->
 
-    <!-- BỘ LỌC ĐIỂM TRẠM, TRẠNG THÁI VÀ Ô TÌM KIẾM -->
-    <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-2 mb-1">
-      <div class="flex flex-wrap items-center gap-1.5">
-        <!-- Bộ lọc điểm trạm -->
-        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
-          <button onclick="filterByStation('all')" id="btn-station-all" class="px-2.5 py-1 rounded-lg text-xs font-bold transition bg-teal-600 text-white shadow-sm whitespace-nowrap">
-            Tất cả
-          </button>
-          <button onclick="filterByStation('Điểm trạm chính')" id="btn-station-chinh" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
-            Đức Tân
-          </button>
-          <button onclick="filterByStation('Điểm y tế số 1')" id="btn-station-1" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
-            Mộ Đức
-          </button>
-          <button onclick="filterByStation('Điểm y tế số 2')" id="btn-station-2" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
-            Đức Hòa
-          </button>
-          <button onclick="filterByStation('Điểm y tế số 3')" id="btn-station-3" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
-            Đức Phú
-          </button>
-        </div>
-
-        <!-- Bộ lọc trạng thái làm việc -->
-        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
-          <button onclick="filterByStatus('all')" id="btn-status-all" class="px-2 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white transition">Tất cả trạng thái</button>
-          <button onclick="filterByStatus('active')" id="btn-status-active" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Đang làm</button>
-          <button onclick="filterByStatus('inactive')" id="btn-status-inactive" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Đã nghỉ/Chuyển</button>
-        </div>
-      </div>
-
-      <!-- Ô tìm kiếm -->
       <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm flex-1 lg:max-w-xs">
+
         <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
-        <input type="text" id="search-input" placeholder="Tìm họ tên, viết tắt, chức danh..." class="w-full bg-transparent border-none outline-none text-xs text-slate-700 focus:ring-0" onkeyup="renderStaffList()">
+
+        <input type="text" id="search-staff-input" placeholder="Tìm họ tên, viết tắt, SĐT, email..." class="w-full bg-transparent border-none outline-none text-xs text-slate-700 focus:ring-0" onkeyup="renderStaffTable()">
+
       </div>
+
+
+
+      <!-- Thống kê nhanh quân số -->
+
+      <div class="flex items-center gap-2 text-xs font-semibold bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm text-slate-600">
+
+        <div class="flex items-center gap-1.5">
+
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+
+          <span>Đang công tác: <b id="stat-active-count" class="text-emerald-700 font-black">29</b></span>
+
+        </div>
+
+        <span class="text-slate-300">|</span>
+
+        <div class="flex items-center gap-1.5">
+
+          <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+
+          <span>Đã chuyển/nghỉ: <b id="stat-inactive-count" class="text-slate-600 font-black">0</b></span>
+
+        </div>
+
+      </div>
+
+
+
     </div>
+
+
+
+    <!-- THANH THAO TÁC HÀNG LOẠT (GỬI GMAIL HÀNG LOẠT) -->
+
+    <div id="bulk-actions-bar" class="hidden bg-teal-50 border border-teal-200 p-2.5 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs mb-2 transition-all">
+
+      <div class="flex items-center gap-2 font-bold text-teal-900">
+
+        <span class="w-6 h-6 rounded-lg bg-teal-600 text-white flex items-center justify-center text-xs">
+
+          <i class="fa-solid fa-check"></i>
+
+        </span>
+
+        <span>Đã chọn: <b id="selected-count-badge" class="text-teal-700 font-black text-sm">0</b> cán bộ</span>
+
+        <span class="text-slate-400 font-normal">• (<span id="selected-valid-emails">0</span> địa chỉ email hợp lệ)</span>
+
+      </div>
+
+
+
+      <div class="flex items-center gap-2">
+
+        <button onclick="openMassEmailModal()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition text-xs flex items-center gap-1.5 shadow-sm shadow-rose-600/30">
+
+          <i class="fa-solid fa-envelope-open-text"></i> Soạn & Gửi Gmail Hàng Loạt
+
+        </button>
+
+        <button onclick="copySelectedEmails()" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition text-xs flex items-center gap-1">
+
+          <i class="fa-solid fa-copy"></i> Sao chép danh sách Email
+
+        </button>
+
+        <button onclick="clearAllSelections()" class="px-2.5 py-1.5 text-slate-500 hover:text-slate-700 font-bold text-xs">
+
+          Bỏ chọn
+
+        </button>
+
+      </div>
+
+    </div>
+
+
+
   </header>
 
-  <!-- BẢNG DANH SÁCH CÁN BỘ CHÍNH -->
+
+
+  <!-- BẢNG DANH SÁCH NHÂN SỰ CHÍNH -->
+
   <main class="flex-1 overflow-hidden p-3 md:p-5 pt-0 flex flex-col">
-    <div class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-y-auto overflow-x-auto table-scrollbar relative">
-      <table class="w-full text-left border-collapse table-fixed min-w-[860px]">
+
+    <div class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-auto table-scrollbar relative" id="table-container">
+
+      <table class="w-full text-xs text-center border-collapse table-fixed min-w-[1580px]">
+
         <colgroup>
-          <col style="width: 52px;">  <!-- TT -->
-          <col style="width: 23%;">   <!-- Họ và Tên -->
-          <col style="width: 12.5%;"> <!-- Tên Viết Tắt -->
-          <col style="width: 14%;">   <!-- Chức Danh -->
-          <col style="width: 19%;">   <!-- Điểm Trạm -->
-          <col style="width: 12%;">   <!-- Trạng Thái -->
-          <col style="width: 12.5%;"> <!-- Số Điện Thoại -->
-          <col style="width: 110px;"> <!-- Thao Tác -->
+
+          <col style="width: 42px;">   <!-- Checkbox -->
+
+          <col style="width: 46px;">   <!-- TT -->
+
+          <col style="width: 210px;">  <!-- Họ và tên (Ghim) -->
+
+          <col style="width: 100px;">  <!-- Tên viết tắt -->
+
+          <col style="width: 110px;">  <!-- Ngày sinh -->
+
+          <col style="width: 130px;">  <!-- Chức vụ -->
+
+          <col style="width: 230px;">  <!-- Ngạch / Chức danh nghề nghiệp -->
+
+          <col style="width: 110px;">  <!-- Hạng / Bậc -->
+
+          <col style="width: 160px;">  <!-- Điểm trạm phụ trách -->
+
+          <col style="width: 120px;">  <!-- Ngày tuyển dụng -->
+
+          <col style="width: 115px;">  <!-- Trạng thái -->
+
+          <col style="width: 145px;">  <!-- Số ĐT & Nút Zalo -->
+
+          <col style="width: 225px;">  <!-- Email & Nút Gmail -->
+
+          <col style="width: 120px;">  <!-- Thao tác -->
+
         </colgroup>
-        <thead>
-          <tr class="bg-slate-100 text-slate-800 text-[13.5px] font-extrabold border-b border-slate-200 sticky top-0 z-10">
-            <th class="py-2.5 px-2 text-center">TT</th>
-            <th class="py-2.5 px-3">Họ và Tên</th>
-            <th class="py-2.5 px-2 text-center">Tên Viết Tắt</th>
-            <th class="py-2.5 px-2.5">Chức Danh</th>
-            <th class="py-2.5 px-2.5">Điểm Trạm Phụ Trách</th>
-            <th class="py-2.5 px-2 text-center">Trạng Thái</th>
-            <th class="py-2.5 px-2.5">Số Điện Thoại</th>
-            <th class="py-2.5 px-2 text-center">Thao Tác</th>
+
+        <thead class="bg-slate-100 text-slate-800 font-extrabold text-[13px] uppercase tracking-wide border-b-2 border-slate-300">
+
+          <tr class="bg-slate-100">
+
+            <th class="p-2 sticky-col-check bg-slate-100">
+
+              <input type="checkbox" id="check-all-box" onchange="toggleSelectAll(this.checked)" class="w-4 h-4 text-teal-600 rounded cursor-pointer">
+
+            </th>
+
+            <th class="p-2 sticky-col-tt bg-slate-100">TT</th>
+
+            <th class="p-2 px-3 sticky-col-name text-left bg-slate-100 text-slate-900">Họ và tên</th>
+
+            <th class="p-2 border-r border-slate-200 bg-slate-100">Tên Tắt</th>
+
+            <th class="p-2 border-r border-slate-200 bg-slate-100">Ngày Sinh</th>
+
+            <th class="p-2 border-r border-slate-200 bg-slate-100">Chức Vụ</th>
+
+            <th class="p-2 border-r border-slate-200 text-left px-3 bg-slate-100">Chức Danh Nghề Nghiệp</th>
+
+            <th class="p-2 border-r border-slate-200 bg-slate-100">Hạng / Bậc</th>
+
+            <th class="p-2 border-r border-slate-200 bg-slate-100">Điểm Trạm</th>
+
+            <th class="p-2 border-r border-slate-200 bg-slate-100">Ngày Tuyển</th>
+
+            <th class="p-2 border-r border-slate-200 bg-slate-100">Trạng Thái</th>
+
+            <th class="p-2 border-r border-slate-200 bg-slate-100">Số ĐT & Zalo</th>
+
+            <th class="p-2 border-r border-slate-200 text-left px-3 bg-slate-100">Email Công Vụ</th>
+
+            <th class="p-2 bg-slate-100">Thao Tác</th>
+
           </tr>
+
         </thead>
-        <tbody id="staff-table-body" class="divide-y divide-slate-100">
-          <!-- Render tự động qua JS -->
+
+        <tbody id="staff-table-body" class="divide-y divide-slate-100 bg-white">
+
+          <!-- Render tự động qua JavaScript -->
+
         </tbody>
+
       </table>
+
     </div>
-    <div class="mt-2 text-[11px] text-slate-500 flex flex-wrap justify-between items-center gap-2">
-      <span class="flex items-center gap-1.5">
-        <i class="fa-solid fa-circle-check text-emerald-600"></i>
-        Mọi thay đổi tại đây sẽ được tự động đồng bộ sang <b>Bảng Chấm Công</b>, <b>Quản Lý Phép Bù</b> và <b>Lịch Trực</b>.
-      </span>
-      <span class="italic text-slate-400">Trạm Y Tế Xã Mộ Đức • Tỉnh Quảng Ngãi</span>
+
+
+
+    <!-- Thanh chú thích chân trang -->
+
+    <div class="mt-1.5 text-[11px] text-slate-500 flex flex-wrap justify-between items-center gap-2">
+
+      <div class="flex items-center gap-3">
+
+        <span><i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i> Phân quyền theo điểm trạm. Ban Giám Đốc có toàn quyền điều hành 04 điểm.</span>
+
+        <span><i class="fa-solid fa-arrows-rotate text-indigo-600 mr-1"></i> Mọi thay đổi về nhân sự sẽ tự động gửi tín hiệu cập nhật sang Bảng Chấm Công và Phép Bù.</span>
+
+      </div>
+
+      <div class="font-semibold text-slate-600">
+
+        * Bấm biểu tượng <b>Zalo</b> để gọi/nhắn tin ngay • Bấm biểu tượng <b>Gmail</b> để soạn thư riêng.
+
+      </div>
+
     </div>
+
   </main>
 
-  <!-- MODAL THÊM / SỬA CÁN BỘ -->
-  <div id="staff-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 overflow-hidden transform transition-all">
-      <div class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
-            <i class="fa-solid fa-user-pen"></i>
+
+
+  <!-- MODAL 1: THÊM / CHỈNH SỬA HỒ SƠ CÁN BỘ -->
+
+  <div id="staff-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-slate-200 overflow-hidden transform transition-all my-auto">
+
+      <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
+
+        <div class="flex items-center gap-2.5">
+
+          <div class="w-8 h-8 rounded-xl bg-teal-500 text-slate-950 flex items-center justify-center font-bold">
+
+            <i class="fa-solid fa-id-card"></i>
+
           </div>
-          <h3 class="font-extrabold text-slate-800 text-sm" id="staff-modal-title">Thêm Cán Bộ Mới</h3>
+
+          <div>
+
+            <h3 class="font-extrabold text-sm sm:text-base leading-tight" id="staff-modal-title">Hồ Sơ Cán Bộ Viên Chức Y Tế</h3>
+
+            <p class="text-[11px] text-slate-400">Thông tin nhân sự chuẩn hoá cho toàn bộ hệ thống Trạm Y Tế</p>
+
+          </div>
+
         </div>
-        <button onclick="closeStaffModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+
+        <button onclick="closeStaffModal()" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+
           <i class="fa-solid fa-xmark"></i>
+
         </button>
+
       </div>
 
-      <form onsubmit="handleSaveStaff(event)" class="p-5 space-y-3.5 text-xs">
+
+
+      <form onsubmit="handleStaffFormSubmit(event)" class="p-4 sm:p-5 space-y-3.5 text-xs max-h-[80vh] overflow-y-auto table-scrollbar">
+
         <input type="hidden" id="form-staff-id">
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Họ và Tên Đầy Đủ: <span class="text-rose-500">*</span></label>
-            <input type="text" id="form-name" required placeholder="VD: Nguyễn Văn A..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500" oninput="autoSuggestShortName()">
+
+
+        <!-- Nhóm 1: Họ tên, Tên viết tắt, Ngày sinh -->
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+          <div class="sm:col-span-2">
+
+            <label class="block font-bold text-slate-700 mb-1">Họ và tên đầy đủ: <span class="text-rose-500">*</span></label>
+
+            <input type="text" id="form-staff-name" required placeholder="Nhập họ và tên đầy đủ (VD: Nguyễn Thị Như Nguyện)..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500 text-xs" oninput="autoSuggestShortName(this.value)">
+
           </div>
+
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Tên Viết Tắt (Cho Lịch Trực): <span class="text-rose-500">*</span></label>
-            <input type="text" id="form-short-name" required placeholder="VD: BS A, NHS B..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
+
+            <label class="block font-bold text-slate-700 mb-1">Tên viết tắt (Lịch trực):</label>
+
+            <input type="text" id="form-staff-shortname" placeholder="VD: BS Nguyện" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-teal-800 outline-none focus:ring-2 focus:ring-teal-500 text-xs">
+
           </div>
+
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Chức Danh / Ngành Nghề:</label>
-            <select id="form-role" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
-              <option value="Bác sĩ">Bác sĩ</option>
-              <option value="Y sĩ">Y sĩ</option>
-              <option value="Điều dưỡng">Điều dưỡng</option>
-              <option value="Nữ hộ sinh">Nữ hộ sinh</option>
-              <option value="Dược sĩ">Dược sĩ</option>
-              <option value="Cử nhân">Cử nhân</option>
-              <option value="Kế toán">Kế toán</option>
-              <option value="Khác">Khác</option>
-            </select>
+
+            <label class="block font-bold text-slate-700 mb-1">Ngày tháng năm sinh: <span class="text-rose-500">*</span></label>
+
+            <input type="text" id="form-staff-dob" required placeholder="DD/MM/YYYY (VD: 02/01/1983)" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 outline-none focus:ring-2 focus:ring-teal-500 text-xs">
+
           </div>
+
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Điểm Trạm Phụ Trách: <span class="text-rose-500">*</span></label>
-            <select id="form-point" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
-              <option value="Điểm trạm chính">Điểm trạm chính (Đức Tân)</option>
-              <option value="Điểm y tế số 1">Điểm y tế số 1 (Mộ Đức)</option>
-              <option value="Điểm y tế số 2">Điểm y tế số 2 (Đức Hòa)</option>
-              <option value="Điểm y tế số 3">Điểm y tế số 3 (Đức Phú)</option>
+
+            <label class="block font-bold text-slate-700 mb-1">Chức vụ quản lý:</label>
+
+            <select id="form-staff-position" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500 text-xs">
+
+              <option value="Viên chức">Viên chức</option>
+
+              <option value="Giám đốc">Giám đốc</option>
+
+              <option value="Phó giám đốc">Phó giám đốc</option>
+
             </select>
+
           </div>
+
+          <div>
+
+            <label class="block font-bold text-slate-700 mb-1">Khoa - Phòng phụ trách:</label>
+
+            <input type="text" id="form-staff-department" placeholder="VD: Khám bệnh / YDP - Dân số..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 outline-none focus:ring-2 focus:ring-teal-500 text-xs">
+
+          </div>
+
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+
+        <!-- Nhóm 2: Chức danh nghề nghiệp, Hạng bậc, Điểm trạm -->
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+          <div class="sm:col-span-2">
+
+            <label class="block font-bold text-slate-700 mb-1">Mã ngạch & Chức danh nghề nghiệp: <span class="text-rose-500">*</span></label>
+
+            <input type="text" id="form-staff-title" required placeholder="VD: V.08.01.03 - Bác sĩ (hạng III)..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium text-slate-800 outline-none focus:ring-2 focus:ring-teal-500 text-xs">
+
+          </div>
+
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Trạng Thái Làm Việc:</label>
-            <select id="form-status" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
+
+            <label class="block font-bold text-slate-700 mb-1">Hạng ngạch:</label>
+
+            <input type="text" id="form-staff-rankgrade" placeholder="VD: Hạng III" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium text-slate-800 outline-none focus:ring-2 focus:ring-teal-500 text-xs">
+
+          </div>
+
+        </div>
+
+
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+          <div>
+
+            <label class="block font-bold text-slate-700 mb-1">Điểm trạm công tác: <span class="text-rose-500">*</span></label>
+
+            <select id="form-staff-point" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500 text-xs">
+
+              <!-- Render động từ danh sách điểm trạm -->
+
+            </select>
+
+          </div>
+
+          <div>
+
+            <label class="block font-bold text-slate-700 mb-1">Ngày tuyển dụng chính thức: <span class="text-rose-500">*</span></label>
+
+            <input type="text" id="form-staff-hiredate" required placeholder="DD/MM/YYYY (VD: 02/06/2008)" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 outline-none focus:ring-2 focus:ring-teal-500 text-xs">
+
+          </div>
+
+          <div>
+
+            <label class="block font-bold text-slate-700 mb-1">Trạng thái công tác:</label>
+
+            <select id="form-staff-status" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500 text-xs">
+
               <option value="active">Đang công tác</option>
-              <option value="inactive">Đã nghỉ việc / Chuyển công tác</option>
+
+              <option value="inactive">Đã nghỉ việc / Chuyển trạm khác</option>
+
             </select>
+
           </div>
+
+        </div>
+
+
+
+        <!-- Nhóm 3: Số điện thoại, Email, Ghi chú -->
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Số Điện Thoại:</label>
-            <input type="text" id="form-phone" placeholder="VD: 0912.xxx.xxx" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
+
+            <label class="block font-bold text-slate-700 mb-1">Số điện thoại di động: <span class="text-rose-500">*</span></label>
+
+            <div class="relative">
+
+              <input type="tel" id="form-staff-phone" required placeholder="Nhập số điện thoại (VD: 0962849485)..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500 text-xs pl-8">
+
+              <i class="fa-solid fa-phone text-slate-400 absolute left-2.5 top-3 text-xs"></i>
+
+            </div>
+
           </div>
+
+          <div>
+
+            <label class="block font-bold text-slate-700 mb-1">Địa chỉ Email công việc: <span class="text-rose-500">*</span></label>
+
+            <div class="relative">
+
+              <input type="email" id="form-staff-email" required placeholder="Email công vụ (@quangngai.gov.vn hoặc @gmail.com)..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium text-slate-800 outline-none focus:ring-2 focus:ring-teal-500 text-xs pl-8">
+
+              <i class="fa-solid fa-envelope text-slate-400 absolute left-2.5 top-3 text-xs"></i>
+
+            </div>
+
+          </div>
+
         </div>
+
+
 
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Ghi Chú Điều Chuyển / Ngày Tiếp Nhận:</label>
-          <input type="text" id="form-note" placeholder="Ghi chú thêm thông tin..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
+
+          <label class="block font-bold text-slate-700 mb-1">Ghi chú bổ sung:</label>
+
+          <input type="text" id="form-staff-note" placeholder="Ghi chú thêm về trình độ chuyên môn, đào tạo..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-700 outline-none focus:ring-2 focus:ring-teal-500 text-xs">
+
         </div>
 
-        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 flex items-start gap-2">
-          <i class="fa-solid fa-info-circle text-amber-600 mt-0.5"></i>
-          <span>Khi lưu, hệ thống sẽ tự động cập nhật tên vào bảng chấm công và bảng phép bù của điểm trạm tương ứng.</span>
+
+
+        <div class="p-3.5 bg-slate-50 border-t border-slate-200 flex justify-end gap-2 -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 mt-4">
+
+          <button type="button" onclick="closeStaffModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+
+            Hủy Bỏ
+
+          </button>
+
+          <button type="submit" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-teal-600/30">
+
+            Lưu Hồ Sơ Cán Bộ
+
+          </button>
+
         </div>
 
-        <div class="pt-2 flex gap-2 justify-end border-t border-slate-100">
-          <button type="button" onclick="closeStaffModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">Hủy</button>
-          <button type="submit" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-teal-600/30">Lưu Thông Tin</button>
-        </div>
       </form>
+
     </div>
+
   </div>
 
-  <!-- MODAL CHUYỂN ĐIỂM TRẠM NHANH -->
+
+
+  <!-- MODAL 2: ĐIỀU CHUYỂN CÔNG TÁC CÁN BỘ GIỮA CÁC ĐIỂM TRẠM -->
+
   <div id="transfer-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 p-5">
-      <div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center text-lg mb-3">
-        <i class="fa-solid fa-right-left"></i>
-      </div>
-      <h3 class="font-bold text-slate-800 text-sm mb-1">Điều Chuyển Điểm Trạm</h3>
-      <p class="text-xs text-slate-500 mb-3" id="transfer-desc">Chuyển điểm trạm cho cán bộ...</p>
 
-      <div class="space-y-3 text-xs mb-4">
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">Chọn Điểm Trạm Mới:</label>
-          <select id="transfer-station-select" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
-            <option value="Điểm trạm chính">Điểm trạm chính (Đức Tân)</option>
-            <option value="Điểm y tế số 1">Điểm y tế số 1 (Mộ Đức)</option>
-            <option value="Điểm y tế số 2">Điểm y tế số 2 (Đức Hòa)</option>
-            <option value="Điểm y tế số 3">Điểm y tế số 3 (Đức Phú)</option>
-          </select>
-        </div>
-      </div>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 overflow-hidden transform transition-all">
 
-      <div class="flex justify-end gap-2">
-        <button onclick="closeTransferModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Hủy</button>
-        <button onclick="confirmTransferStation()" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition">Xác Nhận Chuyển</button>
-      </div>
-    </div>
-  </div>
+      <div class="p-4 bg-indigo-900 text-white flex justify-between items-center">
 
-  <!-- MODAL XÁC THỰC MẬT KHẨU BẢO MẬT -->
-  <div id="auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 overflow-hidden transform transition-all">
-      <div class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
-            <i class="fa-solid fa-shield-halved"></i>
+
+          <div class="w-8 h-8 rounded-xl bg-indigo-500 text-white flex items-center justify-center font-bold">
+
+            <i class="fa-solid fa-right-left"></i>
+
           </div>
-          <h3 class="font-extrabold text-slate-800 text-sm">Xác Thực Quyền Nhân Sự</h3>
+
+          <div>
+
+            <h3 class="font-extrabold text-sm">Điều Chuyển Cán Bộ Y Tế</h3>
+
+            <p class="text-[11px] text-indigo-200">Thay đổi điểm trạm công tác phụ trách</p>
+
+          </div>
+
         </div>
-        <button onclick="closeAuthModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+
+        <button onclick="closeTransferModal()" class="w-7 h-7 rounded-lg hover:bg-indigo-800 text-indigo-300 hover:text-white flex items-center justify-center transition">
+
           <i class="fa-solid fa-xmark"></i>
+
         </button>
+
       </div>
 
-      <div class="p-5 space-y-4">
+
+
+      <div class="p-5 space-y-3.5 text-xs">
+
+        <input type="hidden" id="transfer-staff-id">
+
+
+
+        <div class="p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-1">
+
+          <div class="font-extrabold text-sm text-slate-900" id="transfer-staff-name">---</div>
+
+          <div class="text-indigo-800 font-semibold text-[11px]" id="transfer-staff-info">---</div>
+
+        </div>
+
+
+
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1.5">Chọn Điểm Trạm Hoặc Ban Giám Đốc:</label>
-          <select id="auth-station-select" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
-            <option value="Ban Giám Đốc">Ban Giám Đốc (Toàn quyền 4 điểm)</option>
-            <option value="Điểm trạm chính">Điểm trạm chính (Đức Tân)</option>
-            <option value="Điểm y tế số 1">Điểm y tế số 1 (Mộ Đức)</option>
-            <option value="Điểm y tế số 2">Điểm y tế số 2 (Đức Hòa)</option>
-            <option value="Điểm y tế số 3">Điểm y tế số 3 (Đức Phú)</option>
+
+          <label class="block font-bold text-slate-700 mb-1">Điểm trạm hiện tại:</label>
+
+          <input type="text" id="transfer-current-point" readonly class="w-full p-2.5 bg-slate-100 border border-slate-300 rounded-xl font-bold text-slate-600 outline-none">
+
+        </div>
+
+
+
+        <div>
+
+          <label class="block font-bold text-slate-700 mb-1">Chuyển đến điểm trạm mới: <span class="text-rose-500">*</span></label>
+
+          <select id="transfer-target-point" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-extrabold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+
+            <!-- Render động -->
+
           </select>
+
         </div>
+
+
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1.5">Nhập Mật Khẩu:</label>
-          <input type="password" id="auth-password-input" placeholder="Nhập mật khẩu..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500" onkeyup="if(event.key === 'Enter') handleAuthSubmit()">
-          <p id="auth-error-msg" class="text-rose-600 text-[11px] font-bold mt-1.5 hidden"></p>
+
+          <label class="block font-bold text-slate-700 mb-1">Lý do điều chuyển / Quyết định phân công:</label>
+
+          <input type="text" id="transfer-reason" placeholder="VD: Phân công tăng cường hỗ trợ chuyên môn theo Quyết định..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+
         </div>
 
-        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 space-y-1">
-          <div class="font-bold flex items-center gap-1"><i class="fa-solid fa-key text-amber-600"></i> Mật khẩu: <code class="font-mono text-amber-900 font-bold">bgd123</code> (BGD), <code class="font-mono text-amber-900 font-bold">ductan123</code>, <code class="font-mono text-amber-900 font-bold">moduc123</code>...</div>
-        </div>
       </div>
+
+
 
       <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2 justify-end">
-        <button onclick="closeAuthModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">Hủy</button>
-        <button onclick="handleAuthSubmit()" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition shadow-sm">Mở Khóa Quản Trị</button>
+
+        <button onclick="closeTransferModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+
+          Hủy
+
+        </button>
+
+        <button onclick="executeTransfer()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-indigo-600/30">
+
+          Xác Nhận Điều Chuyển
+
+        </button>
+
       </div>
+
     </div>
+
   </div>
 
-  <!-- MODAL XÁC NHẬN CHUNG -->
+
+
+  <!-- MODAL 3: QUẢN LÝ & MỞ RỘNG ĐIỂM TRẠM TRONG TƯƠNG LAI -->
+
+  <div id="station-manager-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl border border-slate-200 overflow-hidden transform transition-all my-auto flex flex-col max-h-[85vh]">
+
+      <div class="p-4 bg-slate-900 text-white flex justify-between items-center flex-none">
+
+        <div class="flex items-center gap-2.5">
+
+          <div class="w-8 h-8 rounded-xl bg-indigo-500 text-white flex items-center justify-center font-bold">
+
+            <i class="fa-solid fa-hospital"></i>
+
+          </div>
+
+          <div>
+
+            <h3 class="font-extrabold text-sm sm:text-base leading-tight">Quản Lý & Mở Rộng Điểm Trạm Y Tế</h3>
+
+            <p class="text-[11px] text-slate-400">Thiết lập danh mục điểm trạm, tên hiển thị và mật khẩu phân quyền</p>
+
+          </div>
+
+        </div>
+
+        <button onclick="closeStationManagerModal()" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+
+          <i class="fa-solid fa-xmark"></i>
+
+        </button>
+
+      </div>
+
+
+
+      <div class="p-4 overflow-y-auto table-scrollbar space-y-4 text-xs flex-1">
+
+        
+
+        <!-- Form thêm điểm trạm mới -->
+
+        <div class="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-2xl space-y-2.5">
+
+          <div class="font-extrabold text-slate-800 text-xs flex items-center gap-1.5 text-indigo-900">
+
+            <i class="fa-solid fa-plus-circle text-indigo-600"></i> Thêm Điểm Trạm Mới Vào Hệ Thống
+
+          </div>
+
+
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+
+            <div>
+
+              <label class="block font-bold text-slate-700 mb-1">Tên điểm trạm đầy đủ:</label>
+
+              <input type="text" id="new-station-name" placeholder="VD: Điểm y tế số 4 (Đức Chánh)..." class="w-full p-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500">
+
+            </div>
+
+            <div>
+
+              <label class="block font-bold text-slate-700 mb-1">Tên hiển thị rút gọn (Nút lọc):</label>
+
+              <input type="text" id="new-station-short" placeholder="VD: Đức Chánh" class="w-full p-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500">
+
+            </div>
+
+          </div>
+
+
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+
+            <div>
+
+              <label class="block font-bold text-slate-700 mb-1">Mật khẩu phân quyền điểm trạm:</label>
+
+              <input type="text" id="new-station-password" placeholder="VD: ducchanh123" class="w-full p-2 bg-white border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500">
+
+            </div>
+
+            <div class="flex items-end">
+
+              <button onclick="addNewStation()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition text-xs shadow-xs">
+
+                + Thêm Điểm Trạm Này
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+
+        <!-- Danh sách điểm trạm hiện hữu -->
+
+        <div>
+
+          <div class="font-bold text-slate-700 mb-2 flex items-center justify-between">
+
+            <span>Danh mục các điểm trạm đang hoạt động:</span>
+
+            <span class="text-[11px] text-indigo-700 font-bold flex items-center gap-1" id="station-sync-indicator">
+
+              <i class="fa-solid fa-cloud text-indigo-500"></i> Nguồn: Google Sheet (Đồng bộ 2 chiều)
+
+            </span>
+
+          </div>
+
+
+
+          <!-- Thông báo hướng dẫn vị trí xem trên Google Sheet -->
+
+          <div class="p-2.5 bg-indigo-100/70 rounded-xl border border-indigo-200 text-[11.5px] text-indigo-900 mb-2 space-y-1">
+
+            <div class="font-bold flex items-center gap-1.5 text-indigo-950">
+
+              <i class="fa-solid fa-circle-info text-indigo-600"></i> Vị trí hiển thị trên Google Sheet:
+
+            </div>
+
+            <div>
+
+              • <b>Vị trí 1 (Xem trực diện):</b> Nằm ngay tại <b>Cột Q $\rightarrow$ T</b> trên trang tính chính <b><code>DanhSachNhanVien</code></b> (tiêu đề màu tím ngay bên cạnh bảng cán bộ).
+
+            </div>
+
+            <div>
+
+              • <b>Vị trí 2 (Trang tính riêng):</b> Nằm tại tab riêng mang tên <b><code>DanhMucDiemTram</code></b> ở góc dưới cùng bên trái màn hình Google Sheet.
+
+            </div>
+
+          </div>
+
+
+
+          <div id="station-list-container" class="space-y-2">
+
+            <!-- Render động -->
+
+          </div>
+
+        </div>
+
+
+
+      </div>
+
+
+
+      <div class="p-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center flex-none">
+
+        <button onclick="saveStaffToCloud()" class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+
+          <i class="fa-solid fa-cloud-arrow-up"></i> Lưu Toàn Bộ Dữ Liệu (Cán Bộ & Điểm Trạm)
+
+        </button>
+
+        <button onclick="closeStationManagerModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition">
+
+          Hoàn Tất
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- MODAL 4: SOẠN & GỬI GMAIL HÀNG LOẠT CHO CÁN BỘ ĐƯỢC CHỌN -->
+
+  <div id="mass-email-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 overflow-hidden transform transition-all my-auto">
+
+      <div class="p-4 bg-rose-700 text-white flex justify-between items-center">
+
+        <div class="flex items-center gap-2">
+
+          <div class="w-8 h-8 rounded-xl bg-white text-rose-700 flex items-center justify-center font-bold">
+
+            <i class="fa-solid fa-paper-plane"></i>
+
+          </div>
+
+          <div>
+
+            <h3 class="font-extrabold text-sm sm:text-base leading-tight">Soạn & Gửi Thông Báo Gmail</h3>
+
+            <p class="text-[11px] text-rose-200">Gửi email đồng loạt đến các cán bộ y tế được chọn</p>
+
+          </div>
+
+        </div>
+
+        <button onclick="closeMassEmailModal()" class="w-7 h-7 rounded-lg hover:bg-rose-800 text-rose-200 hover:text-white flex items-center justify-center transition">
+
+          <i class="fa-solid fa-xmark"></i>
+
+        </button>
+
+      </div>
+
+
+
+      <div class="p-4 sm:p-5 space-y-3.5 text-xs">
+
+        <div>
+
+          <label class="block font-bold text-slate-700 mb-1">Người nhận (<span id="modal-email-count">0</span> email):</label>
+
+          <div id="modal-email-pills" class="flex flex-wrap gap-1 max-h-24 overflow-y-auto table-scrollbar p-2 bg-slate-50 border border-slate-200 rounded-xl">
+
+            <!-- Render danh sách email được chọn -->
+
+          </div>
+
+        </div>
+
+
+
+        <div>
+
+          <label class="block font-bold text-slate-700 mb-1">Chế độ gửi:</label>
+
+          <div class="grid grid-cols-2 gap-2">
+
+            <label class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer font-bold hover:bg-rose-50 transition">
+
+              <input type="radio" name="emailSendMode" value="bcc" checked class="text-rose-600 focus:ring-rose-500">
+
+              <span>BCC (Bảo mật, ẩn danh sách)</span>
+
+            </label>
+
+            <label class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer font-bold hover:bg-rose-50 transition">
+
+              <input type="radio" name="emailSendMode" value="to" class="text-rose-600 focus:ring-rose-500">
+
+              <span>TO (Hiện toàn bộ email)</span>
+
+            </label>
+
+          </div>
+
+        </div>
+
+
+
+        <div>
+
+          <label class="block font-bold text-slate-700 mb-1">Chủ đề thư / Mẫu có sẵn:</label>
+
+          <div class="flex flex-wrap gap-1 mb-1.5" id="email-subject-presets">
+
+            <!-- Render các mẫu chủ đề -->
+
+          </div>
+
+          <input type="text" id="mass-email-subject" placeholder="Nhập tiêu đề thư..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800 outline-none focus:ring-2 focus:ring-rose-500 text-xs">
+
+        </div>
+
+
+
+        <div>
+
+          <label class="block font-bold text-slate-700 mb-1">Nội dung thư thông báo:</label>
+
+          <textarea id="mass-email-body" rows="4" placeholder="Nhập nội dung gửi cán bộ..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 outline-none focus:ring-2 focus:ring-rose-500 text-xs"></textarea>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="p-3.5 bg-slate-50 border-t border-slate-100 flex flex-wrap gap-2 justify-end items-center">
+
+        <button onclick="closeMassEmailModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+
+          Hủy
+
+        </button>
+
+        <button onclick="launchGmailCompose()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-rose-600/30 flex items-center gap-1.5">
+
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Gmail Soạn Thư
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- MODAL 5: XÁC THỰC MẬT KHẨU ĐIỂM TRẠM -->
+
+  <div id="auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 overflow-hidden transform transition-all">
+
+      <div class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+
+        <div class="flex items-center gap-2">
+
+          <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
+
+            <i class="fa-solid fa-shield-halved"></i>
+
+          </div>
+
+          <h3 class="font-extrabold text-slate-800 text-sm">Xác Thực Quyền Nhân Sự</h3>
+
+        </div>
+
+        <button onclick="closeAuthModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+
+          <i class="fa-solid fa-xmark"></i>
+
+        </button>
+
+      </div>
+
+
+
+      <div class="p-5 space-y-4 text-xs">
+
+        <div>
+
+          <label class="block font-bold text-slate-700 mb-1.5">Chọn Điểm Trạm Hoặc Quyền:</label>
+
+          <select id="auth-station-select" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
+
+            <!-- Render tự động -->
+
+          </select>
+
+        </div>
+
+
+
+        <div>
+
+          <label class="block font-bold text-slate-700 mb-1.5">Nhập Mật Khẩu Quản Lý:</label>
+
+          <div class="relative">
+
+            <input type="password" id="auth-password-input" placeholder="Nhập mật khẩu..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500 pr-10" onkeyup="if(event.key === 'Enter') handleAuthSubmit()">
+
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs">
+
+              <i id="pwd-eye-icon" class="fa-regular fa-eye"></i>
+
+            </button>
+
+          </div>
+
+          <p id="auth-error-msg" class="text-rose-600 text-[11px] font-bold mt-1.5 hidden"></p>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2 justify-end">
+
+        <button onclick="closeAuthModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+
+          Hủy
+
+        </button>
+
+        <button onclick="handleAuthSubmit()" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-teal-600/30">
+
+          Mở Khóa Quản Lý
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- MODAL 6: XÁC NHẬN CHUNG (KHÔNG DÙNG CONFIRM/ALERT) -->
+
   <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 p-5">
+
       <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg mb-3">
+
         <i class="fa-solid fa-triangle-exclamation"></i>
+
       </div>
+
       <h3 class="font-bold text-slate-800 text-sm mb-1.5" id="confirm-modal-title">Xác nhận</h3>
+
       <p class="text-xs text-slate-600 mb-4 whitespace-pre-line" id="confirm-modal-msg"></p>
+
       <div class="flex justify-end gap-2">
-        <button onclick="closeConfirmModal(false)" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Hủy bỏ</button>
-        <button onclick="closeConfirmModal(true)" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition">Đồng ý</button>
+
+        <button onclick="closeConfirmModal(false)" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+
+          Hủy bỏ
+
+        </button>
+
+        <button onclick="closeConfirmModal(true)" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition">
+
+          Đồng ý
+
+        </button>
+
       </div>
+
     </div>
+
   </div>
 
-  <!-- BẢN IN PDF A4 DANH BẠ CÁN BỘ -->
+
+
+  <!-- KHUNG IN PDF A4 NGANG DANH BẠ CÁN BỘ (TIÊU ĐỀ, TIÊU NGỮ CÂN ĐỐI CHUẨN NGHỊ ĐỊNH 30) -->
+
   <div id="print-container" class="w-full text-black">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-      <div style="text-align: left; line-height: 1.25;">
-        <div style="font-size: 9pt; font-weight: normal;">UBND XÃ MỘ ĐỨC</div>
-        <div style="font-weight: bold; font-size: 9.5pt;">TRẠM Y TẾ</div>
-        <div style="font-size: 8pt; margin-top: 2px;">Mã đơn vị: 1026187</div>
-      </div>
-      <div style="text-align: right; line-height: 1.25;">
-        <div style="font-weight: bold; font-size: 9.5pt;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
-        <div style="font-weight: bold; font-size: 8.5pt;">Độc lập - Tự do - Hạnh phúc</div>
-      </div>
-    </div>
 
-    <div style="text-align: center; margin-top: 4px; margin-bottom: 12px;">
-      <div style="font-weight: bold; font-size: 14pt;">DANH SÁCH CÁN BỘ VIÊN CHỨC & NGƯỜI LAO ĐỘNG</div>
-      <div style="font-style: italic; font-size: 9pt;" id="print-station-title">Trạm Y Tế Xã Mộ Đức</div>
-    </div>
+    <!-- Bảng tiêu đề 2 cột: Cơ quan ban hành (trái) & Quốc hiệu - Tiêu ngữ (phải) -->
 
-    <table id="print-table" style="width: 100%; border-collapse: collapse; text-align: center; font-size: 8pt;">
-      <thead>
-        <tr style="background-color: #f1f5f9; font-weight: bold;">
-          <th style="width: 35px;">TT</th>
-          <th style="text-align: left; padding-left: 6px;">Họ và Tên</th>
-          <th style="width: 80px;">Viết Tắt</th>
-          <th style="width: 100px;">Chức Danh</th>
-          <th style="width: 130px;">Điểm Trạm</th>
-          <th style="width: 85px;">Trạng Thái</th>
-          <th style="width: 90px;">Số ĐT</th>
-        </tr>
-      </thead>
-      <tbody id="print-table-body"></tbody>
+    <table class="print-header-table" style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 8px;">
+
+      <tr>
+
+        <td style="width: 42%; vertical-align: top; text-align: center; border: none; padding: 0;">
+
+          <div style="font-size: 9.5pt; text-transform: uppercase; font-weight: normal; line-height: 1.35;">UBND XÃ MỘ ĐỨC</div>
+
+          <div style="font-size: 10pt; font-weight: bold; text-transform: uppercase; line-height: 1.35;">TRẠM Y TẾ</div>
+
+          <div style="width: 75px; height: 1px; background-color: #000; margin: 3px auto 4px auto;"></div>
+
+          <div style="font-size: 8pt; line-height: 1.25; color: #111;">Mã đơn vị có quan hệ ngân sách: 1026187</div>
+
+        </td>
+
+        <td style="width: 58%; vertical-align: top; text-align: center; border: none; padding: 0;">
+
+          <div style="font-size: 10pt; font-weight: bold; text-transform: uppercase; line-height: 1.35;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+
+          <div style="font-size: 10.5pt; font-weight: bold; line-height: 1.35;">Độc lập - Tự do - Hạnh phúc</div>
+
+          <div style="width: 155px; height: 1.5px; background-color: #000; margin: 3px auto 6px auto;"></div>
+
+        </td>
+
+      </tr>
+
     </table>
 
-    <div style="display: flex; justify-content: space-between; margin-top: 20px; font-size: 9pt;">
-      <div style="width: 45%;"></div>
-      <div style="width: 55%; text-align: right; font-style: italic;" id="print-date">
-        Mộ Đức, ngày ... tháng ... năm ...
-      </div>
+
+
+    <!-- Tên danh bạ & Điểm trạm lọc -->
+
+    <div style="text-align: center; margin-top: 4px; margin-bottom: 9px;">
+
+      <div style="font-weight: bold; font-size: 13.5pt; letter-spacing: 0.5px; text-transform: uppercase;">DANH BẠ CÁN BỘ VIÊN CHỨC Y TẾ NĂM 2026</div>
+
+      <div style="font-style: italic; font-size: 8.5pt;" id="print-sub-heading">Toàn bộ các điểm trạm y tế trực thuộc</div>
+
     </div>
 
-    <div style="display: flex; justify-content: space-between; margin-top: 15px; text-align: center; font-size: 9.5pt;">
-      <div style="width: 45%;">
-        <div style="font-weight: bold;">Người Lập Bảng</div>
-        <div style="font-style: italic; font-size: 8pt; margin-top: 2px; margin-bottom: 45px;">(Ký, ghi rõ họ tên)</div>
-      </div>
-      <div style="width: 45%;">
-        <div style="font-weight: bold;">Giám Đốc Trạm Y Tế</div>
-        <div style="font-style: italic; font-size: 8pt; margin-top: 2px; margin-bottom: 45px;">(Ký, đóng dấu)</div>
-        <div style="font-weight: bold;">BS. Phạm Minh Đức</div>
-      </div>
-    </div>
+
+
+    <!-- Bảng dữ liệu in (có viền 0.5pt chuẩn xác) -->
+
+    <table id="print-data-table" class="print-data-table" style="width: 100%; border-collapse: collapse; text-align: center;">
+
+      <thead>
+
+        <tr style="background-color: #f1f5f9; font-weight: bold;">
+
+          <th style="width: 25px;">TT</th>
+
+          <th style="width: 140px; text-align: left; padding-left: 4px;">Họ và tên</th>
+
+          <th style="width: 70px;">Ngày sinh</th>
+
+          <th style="width: 75px;">Chức vụ</th>
+
+          <th style="text-align: left; padding-left: 4px;">Ngạch / Chức danh nghề nghiệp</th>
+
+          <th style="width: 65px;">Hạng/Bậc</th>
+
+          <th style="width: 95px;">Điểm trạm</th>
+
+          <th style="width: 70px;">Ngày tuyển</th>
+
+          <th style="width: 80px;">Số ĐT</th>
+
+          <th style="width: 140px; text-align: left; padding-left: 4px;">Email công vụ</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody id="print-table-body"></tbody>
+
+    </table>
+
+
+
+    <!-- Chân trang ngày tháng & khu vực chữ ký 2 bên -->
+
+    <table class="print-footer-table" style="width: 100%; border: none; border-collapse: collapse; margin-top: 10px; font-size: 8.5pt;">
+
+      <tr>
+
+        <td style="border: none; width: 50%;"></td>
+
+        <td style="border: none; width: 50%; text-align: right; font-style: italic;" id="print-footer-date">
+
+          Mộ Đức, ngày ... tháng ... năm 2026
+
+        </td>
+
+      </tr>
+
+    </table>
+
+
+
+    <table class="print-footer-table" style="width: 100%; border: none; border-collapse: collapse; margin-top: 6px; text-align: center; font-size: 9pt; page-break-inside: avoid;">
+
+      <tr>
+
+        <td style="border: none; width: 50%;">
+
+          <div style="font-weight: bold;">Người lập danh bạ</div>
+
+          <div style="font-style: italic; font-size: 7.5pt; margin-top: 2px; margin-bottom: 45px;">(Ký, ghi rõ họ tên)</div>
+
+        </td>
+
+        <td style="border: none; width: 50%;">
+
+          <div style="font-weight: bold;">Giám đốc trạm y tế</div>
+
+          <div style="font-style: italic; font-size: 7.5pt; margin-top: 2px; margin-bottom: 45px;">(Ký, đóng dấu)</div>
+
+          <div style="font-weight: bold; font-size: 9.5pt;">BS. Phạm Minh Đức</div>
+
+        </td>
+
+      </tr>
+
+    </table>
+
   </div>
 
+
+
+  <!-- SCRIPT LOGIC XỬ LÝ TOÀN BỘ -->
+
   <script>
+
     // =========================================================================
-    // 1. CẤU HÌNH & KHỞI TẠO DANH SÁCH 29 CÁN BỘ GỐC
+
+    // 1. CẤU HÌNH LIÊN KẾT GOOGLE APPS SCRIPT WEB APP
+
     // =========================================================================
-    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbxtHm89HEoyWzivmq2vuu5uUAX4mejLfR2hWU3W1x0Hy9LdhRI-aFuGRsXkSz_Id0Hl/exec";
-    
-    const STATION_PASSWORDS = {
-      "Ban Giám Đốc": "bgd123",
-      "Điểm trạm chính": "ductan123",
-      "Điểm y tế số 1": "moduc123",
-      "Điểm y tế số 2": "duchoa123",
-      "Điểm y tế số 3": "ducphu123"
+
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbz8rE8UkPQOG-gk_annTiMfKic9qoUQRn-X-qII3Dtme_xPMwecwi0YzbxoSHlLbNZmBg/exec";
+
+
+
+    // Kênh truyền tin thời gian thực giữa các tab trên trình duyệt
+
+    const staffBroadcast = new BroadcastChannel('TYT_STAFF_CHANNEL');
+
+
+
+    // =========================================================================
+
+    // 2. KHỞI TẠO BẢNG ÁNH XẠ TỰ ĐỘNG KHÔI PHỤC HỌ TÊN VÀ TÊN VIẾT TẮT
+
+    // =========================================================================
+
+    const SHORT_TO_FULL_NAME_MAP = {
+
+      "Ys Tuệ": "Trịnh Thị Minh Tuệ",
+
+      "BS Phu": "Nguyễn Phu",
+
+      "BS Đức": "Phạm Minh Đức",
+
+      "BS Nguyện": "Nguyễn Thị Như Nguyện",
+
+      "Ys Thủy": "Lê Thị Thu Thủy",
+
+      "Ys Phương": "Huỳnh Văn Phương",
+
+      "Bs Thuyên": "Võ Thị Thanh Thuyên",
+
+      "ĐD Lài": "Trần Thị Lài",
+
+      "ĐD Nguyệt": "Nguyễn Thị Thu Nguyệt",
+
+      "ĐD Ly Va": "Nguyễn Thị Ly Va",
+
+      "NHS Việt": "Võ Thị Thanh Việt",
+
+      "ĐD Vinh": "Võ Quang Vinh",
+
+      "ĐD Thanh": "Trần Thị Kim Thanh",
+
+      "ĐD Trúc": "Cao Thị Ánh Trúc",
+
+      "CN Thu": "Nguyễn Thị Ánh Thu",
+
+      "NHS Bé": "Nguyễn Thị Bé",
+
+      "NHS Trâm": "Phạm Thị Mỹ Trâm",
+
+      "NHS Thuỳ": "Võ Thị Thanh Thùy",
+
+      "NHS Tin": "Huỳnh Thị Anh Tin",
+
+      "NHS Nương": "Lê Thị Nương",
+
+      "NHS Thắm": "Nguyễn Thị Kiều Thắm",
+
+      "NHS Thy": "Trần Thị Lệ Thy",
+
+      "NHS Lan": "Lê Thị Tố Lan",
+
+      "DS Hoà": "Phạm Trần Thị Hòa",
+
+      "DS Hiếu": "Bùi Đạt Hiếu",
+
+      "DS Yên": "Huỳnh Thị Thùy Yên",
+
+      "DS Diễm": "Đoàn Thị Diễm",
+
+      "DS Thảo": "Nguyễn Thị Phương Thảo",
+
+      "Ys Vũ": "Nguyễn Anh Vũ"
+
     };
 
-    const DEFAULT_STAFF_LIST = [
-      // 1. Điểm trạm chính (Đức Tân) - 10 cán bộ
-      { id: "CB01", name: "Trần Thị Lệ Thy", shortName: "NHS Thy", role: "Nữ hộ sinh", point: "Điểm trạm chính", status: "active", phone: "" },
-      { id: "CB02", name: "Trịnh Thị Minh Tuệ", shortName: "Ys Tuệ", role: "Y sĩ", point: "Điểm trạm chính", status: "active", phone: "" },
-      { id: "CB03", name: "Huỳnh Thị Thuỳ Yên", shortName: "DS Yên", role: "Dược sĩ", point: "Điểm trạm chính", status: "active", phone: "" },
-      { id: "CB04", name: "Võ Thị Thanh Thùy", shortName: "NHS Thuỳ", role: "Nữ hộ sinh", point: "Điểm trạm chính", status: "active", phone: "" },
-      { id: "CB05", name: "Bùi Đạt Hiếu", shortName: "DS Hiếu", role: "Dược sĩ", point: "Điểm trạm chính", status: "active", phone: "" },
-      { id: "CB06", name: "Nguyễn Thị Như Nguyện", shortName: "BS Nguyện", role: "Bác sĩ", point: "Điểm trạm chính", status: "active", phone: "" },
-      { id: "CB07", name: "Võ Thị Thanh Thuyên", shortName: "Bs Thuyên", role: "Bác sĩ", point: "Điểm trạm chính", status: "active", phone: "" },
-      { id: "CB08", name: "Lê Thị Thủy", shortName: "Ys Thủy", role: "Y sĩ", point: "Điểm trạm chính", status: "active", phone: "" },
-      { id: "CB09", name: "Trần Thị Việt Châu", shortName: "CN Châu", role: "Kế toán", point: "Điểm trạm chính", status: "active", phone: "" },
-      { id: "CB10", name: "Võ Quang Vinh", shortName: "ĐD Vinh", role: "Điều dưỡng", point: "Điểm trạm chính", status: "active", phone: "" },
 
-      // 2. Điểm y tế số 1 (Mộ Đức) - 6 cán bộ
-      { id: "CB11", name: "Phạm Minh Đức", shortName: "BS Đức", role: "Bác sĩ", point: "Điểm y tế số 1", status: "active", phone: "" },
-      { id: "CB12", name: "Đoàn Thị Diễm", shortName: "DS Diễm", role: "Dược sĩ", point: "Điểm y tế số 1", status: "active", phone: "" },
-      { id: "CB13", name: "Võ Thị Thanh Việt", shortName: "NHS Việt", role: "Nữ hộ sinh", point: "Điểm y tế số 1", status: "active", phone: "" },
-      { id: "CB14", name: "Huỳnh Thị Anh Tin", shortName: "NHS Tin", role: "Nữ hộ sinh", point: "Điểm y tế số 1", status: "active", phone: "" },
-      { id: "CB15", name: "Nguyễn Thị Thu Nguyệt", shortName: "ĐD Nguyệt", role: "Điều dưỡng", point: "Điểm y tế số 1", status: "active", phone: "" },
-      { id: "CB16", name: "Trần Thị Lài", shortName: "ĐD Lài", role: "Điều dưỡng", point: "Điểm y tế số 1", status: "active", phone: "" },
 
-      // 3. Điểm y tế số 2 (Đức Hòa) - 6 cán bộ
-      { id: "CB17", name: "Trần Thị Kim Thanh", shortName: "ĐD Thanh", role: "Điều dưỡng", point: "Điểm y tế số 2", status: "active", phone: "" },
-      { id: "CB18", name: "Nguyễn Thị Phương Thảo", shortName: "DS Thảo", role: "Dược sĩ", point: "Điểm y tế số 2", status: "active", phone: "" },
-      { id: "CB19", name: "Cao Thị Ánh Trúc", shortName: "ĐD Trúc", role: "Điều dưỡng", point: "Điểm y tế số 2", status: "active", phone: "" },
-      { id: "CB20", name: "Huỳnh Văn Phương", shortName: "Ys Phương", role: "Y sĩ", point: "Điểm y tế số 2", status: "active", phone: "" },
-      { id: "CB21", name: "Nguyễn Thị Kiều Thắm", shortName: "NHS Thắm", role: "Nữ hộ sinh", point: "Điểm y tế số 2", status: "active", phone: "" },
-      { id: "CB22", name: "Nguyễn Phu", shortName: "BS Phu", role: "Bác sĩ", point: "Điểm y tế số 2", status: "active", phone: "" },
+    const FULL_TO_SHORT_NAME_MAP = {};
 
-      // 4. Điểm y tế số 3 (Đức Phú) - 7 cán bộ
-      { id: "CB23", name: "Phạm Trần Thị Hoà", shortName: "DS Hoà", role: "Dược sĩ", point: "Điểm y tế số 3", status: "active", phone: "" },
-      { id: "CB24", name: "Nguyễn Thị Ánh Thu", shortName: "CN Thu", role: "Cử nhân", point: "Điểm y tế số 3", status: "active", phone: "" },
-      { id: "CB25", name: "Nguyễn Thị Bé", shortName: "NHS Bé", role: "Nữ hộ sinh", point: "Điểm y tế số 3", status: "active", phone: "" },
-      { id: "CB26", name: "Nguyễn Anh Vũ", shortName: "Ys Vũ", role: "Y sĩ", point: "Điểm y tế số 3", status: "active", phone: "" },
-      { id: "CB27", name: "Phạm Thị Mỹ Trâm", shortName: "NHS Trâm", role: "Nữ hộ sinh", point: "Điểm y tế số 3", status: "active", phone: "" },
-      { id: "CB28", name: "Lê Thị Tố Lan", shortName: "NHS Lan", role: "Nữ hộ sinh", point: "Điểm y tế số 3", status: "active", phone: "" },
-      { id: "CB29", name: "Nguyễn Thị Ly Va", shortName: "ĐD Ly Va", role: "Điều dưỡng", point: "Điểm y tế số 3", status: "active", phone: "" }
+    Object.keys(SHORT_TO_FULL_NAME_MAP).forEach(k => {
+
+      FULL_TO_SHORT_NAME_MAP[SHORT_TO_FULL_NAME_MAP[k]] = k;
+
+    });
+
+
+
+    // =========================================================================
+
+    // 3. DANH BẠ 29 CÁN BỘ GỐC CHUẨN XÁC 100%
+
+    // =========================================================================
+
+    const DEFAULT_STAFF_29 = [
+
+      {
+
+        id: "CB01", name: "Trịnh Thị Minh Tuệ", shortName: "Ys Tuệ", dob: "04/04/1973",
+
+        position: "Viên chức", department: "Khám bệnh",
+
+        title: "V.08.03.07 - Y sĩ (hạng IV)", rankGrade: "Hạng IV",
+
+        point: "Điểm trạm chính", hireDate: "01/07/1996", status: "active",
+
+        phone: "0949544799", email: "tuetrinh73@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB02", name: "Nguyễn Phu", shortName: "BS Phu", dob: "07/08/1969",
+
+        position: "Phó giám đốc", department: "Ban Giám Đốc",
+
+        title: "V.08.01.02 - Bác sĩ chính (hạng II)", rankGrade: "Hạng II",
+
+        point: "Điểm y tế số 2", hireDate: "01/04/1997", status: "active",
+
+        phone: "0777401717", email: "nphu2817@quangngai.gov.vn", note: ""
+
+      },
+
+      {
+
+        id: "CB03", name: "Phạm Minh Đức", shortName: "BS Đức", dob: "12/12/1969",
+
+        position: "Giám đốc", department: "Ban Giám Đốc",
+
+        title: "V.08.01.02 - Bác sĩ chính (hạng II)", rankGrade: "Hạng II",
+
+        point: "Điểm y tế số 1", hireDate: "27/06/1991", status: "active",
+
+        phone: "0914158350", email: "ducphammoduc@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB04", name: "Nguyễn Thị Như Nguyện", shortName: "BS Nguyện", dob: "02/01/1983",
+
+        position: "Phó giám đốc", department: "Ban Giám Đốc",
+
+        title: "V.08.01.03 - Bác sĩ (hạng III)", rankGrade: "Hạng III",
+
+        point: "Điểm trạm chính", hireDate: "02/06/2008", status: "active",
+
+        phone: "0962849485", email: "nhunguyenhealth@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB05", name: "Lê Thị Thu Thủy", shortName: "Ys Thủy", dob: "30/09/1990",
+
+        position: "Viên chức", department: "YDP - Dân số",
+
+        title: "V.08.03.07 - Y sĩ (hạng IV)", rankGrade: "Hạng IV",
+
+        point: "Điểm trạm chính", hireDate: "30/08/2022", status: "active",
+
+        phone: "0934083084", email: "han230717@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB06", name: "Huỳnh Văn Phương", shortName: "Ys Phương", dob: "20/08/1986",
+
+        position: "Viên chức", department: "YDP - Dân số",
+
+        title: "V.08.03.07 - Y sĩ (hạng IV)", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 2", hireDate: "05/10/2010", status: "active",
+
+        phone: "0976737118", email: "hvphuong@quangngai.gov.vn", note: ""
+
+      },
+
+      {
+
+        id: "CB07", name: "Võ Thị Thanh Thuyên", shortName: "Bs Thuyên", dob: "20/03/1986",
+
+        position: "Viên chức", department: "Khám bệnh",
+
+        title: "V.08.01.03 - Bác sĩ (hạng III)", rankGrade: "Hạng III",
+
+        point: "Điểm trạm chính", hireDate: "15/12/2008", status: "active",
+
+        phone: "0382237018", email: "vttthuyen6392@quangngai.gov.vn", note: ""
+
+      },
+
+      {
+
+        id: "CB08", name: "Trần Thị Lài", shortName: "ĐD Lài", dob: "06/06/1977",
+
+        position: "Viên chức", department: "Khám bệnh",
+
+        title: "V.08.05.13 - Điều dưỡng hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 1", hireDate: "15/12/2005", status: "active",
+
+        phone: "0767331264", email: "laitran0677@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB09", name: "Nguyễn Thị Thu Nguyệt", shortName: "ĐD Nguyệt", dob: "10/08/1972",
+
+        position: "Viên chức", department: "Khám bệnh",
+
+        title: "V.08.05.13 - Điều dưỡng hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 1", hireDate: "10/05/1995", status: "active",
+
+        phone: "0394319708", email: "thunguyetbvmd@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB10", name: "Nguyễn Thị Ly Va", shortName: "ĐD Ly Va", dob: "24/09/1988",
+
+        position: "Viên chức", department: "Khám bệnh",
+
+        title: "V.08.05.13 - Điều dưỡng hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 3", hireDate: "01/04/2011", status: "active",
+
+        phone: "0915618065", email: "nguyenthilyva@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB11", name: "Võ Thị Thanh Việt", shortName: "NHS Việt", dob: "07/11/1981",
+
+        position: "Phó giám đốc", department: "Ban Giám Đốc",
+
+        title: "V.08.05.13 - Điều dưỡng hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 1", hireDate: "01/09/2002", status: "active",
+
+        phone: "0974930431", email: "vothanhviet81@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB12", name: "Võ Quang Vinh", shortName: "ĐD Vinh", dob: "22/12/1973",
+
+        position: "Viên chức", department: "Khám bệnh",
+
+        title: "V.08.05.13 - Điều dưỡng hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm trạm chính", hireDate: "06/02/2008", status: "active",
+
+        phone: "0985530289", email: "quangvinh.tyt@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB13", name: "Trần Thị Kim Thanh", shortName: "ĐD Thanh", dob: "10/05/1980",
+
+        position: "Phó giám đốc", department: "Ban Giám Đốc",
+
+        title: "V.08.05.12 - Điều dưỡng hạng III", rankGrade: "Hạng III",
+
+        point: "Điểm y tế số 2", hireDate: "15/12/2005", status: "active",
+
+        phone: "0903700722", email: "ttkthanh2845@quangngai.gov.vn", note: ""
+
+      },
+
+      {
+
+        id: "CB14", name: "Cao Thị Ánh Trúc", shortName: "ĐD Trúc", dob: "11/11/1984",
+
+        position: "Viên chức", department: "Khám bệnh",
+
+        title: "V.08.05.13 - Điều dưỡng hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 2", hireDate: "30/01/2015", status: "active",
+
+        phone: "0944942416", email: "tytduchoa@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB15", name: "Nguyễn Thị Ánh Thu", shortName: "CN Thu", dob: "05/05/1975",
+
+        position: "Viên chức", department: "YDP - Dân số",
+
+        title: "V.08.06.15 - Hộ sinh hạng III", rankGrade: "Hạng III",
+
+        point: "Điểm y tế số 3", hireDate: "10/05/1996", status: "active",
+
+        phone: "0379949880", email: "anhthuphusan@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB16", name: "Nguyễn Thị Bé", shortName: "NHS Bé", dob: "01/11/1977",
+
+        position: "Viên chức", department: "Sản - Nhi",
+
+        title: "V.08.06.16 - Hộ sinh hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 3", hireDate: "02/06/2008", status: "active",
+
+        phone: "0918093101", email: "ntbe4043@quangngai.gov.vn", note: ""
+
+      },
+
+      {
+
+        id: "CB17", name: "Phạm Thị Mỹ Trâm", shortName: "NHS Trâm", dob: "01/01/1983",
+
+        position: "Viên chức", department: "Sản - Nhi",
+
+        title: "V.08.06.16 - Hộ sinh hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 3", hireDate: "02/06/2008", status: "active",
+
+        phone: "0916702207", email: "phamthimytramqng@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB18", name: "Võ Thị Thanh Thùy", shortName: "NHS Thuỳ", dob: "09/06/1987",
+
+        position: "Viên chức", department: "Sản - Nhi",
+
+        title: "V.08.06.16 - Hộ sinh hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm trạm chính", hireDate: "02/03/2009", status: "active",
+
+        phone: "0914126139", email: "votthuy1987@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB19", name: "Huỳnh Thị Anh Tin", shortName: "NHS Tin", dob: "11/07/1987",
+
+        position: "Viên chức", department: "Sản - Nhi",
+
+        title: "V.08.06.16 - Hộ sinh hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 1", hireDate: "17/08/2009", status: "active",
+
+        phone: "0377448814", email: "huynhtin2129@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB20", name: "Lê Thị Nương", shortName: "NHS Nương", dob: "16/06/1969",
+
+        position: "Viên chức", department: "Sản - Nhi",
+
+        title: "V.08.06.16 - Hộ sinh hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm trạm chính", hireDate: "07/12/2020", status: "active",
+
+        phone: "0907201285", email: "ltnuong8033@quangngai.gov.vn", note: ""
+
+      },
+
+      {
+
+        id: "CB21", name: "Nguyễn Thị Kiều Thắm", shortName: "NHS Thắm", dob: "10/04/1977",
+
+        position: "Viên chức", department: "Sản - Nhi",
+
+        title: "V.08.06.16 - Hộ sinh hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 2", hireDate: "17/07/2001", status: "active",
+
+        phone: "0779487016", email: "ntktham2623@quangngai.gov.vn", note: ""
+
+      },
+
+      {
+
+        id: "CB22", name: "Trần Thị Lệ Thy", shortName: "NHS Thy", dob: "08/03/1977",
+
+        position: "Viên chức", department: "Sản - Nhi",
+
+        title: "V.08.06.16 - Hộ sinh hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm trạm chính", hireDate: "01/11/2001", status: "active",
+
+        phone: "0365208605", email: "ttlthy2975@quangngai.gov.vn", note: ""
+
+      },
+
+      {
+
+        id: "CB23", name: "Lê Thị Tố Lan", shortName: "NHS Lan", dob: "08/11/1976",
+
+        position: "Viên chức", department: "Sản - Nhi",
+
+        title: "V.08.06.16 - Hộ sinh hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 3", hireDate: "07/12/2020", status: "active",
+
+        phone: "0985508847", email: "lethitolan23@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB24", name: "Phạm Trần Thị Hòa", shortName: "DS Hoà", dob: "10/08/1990",
+
+        position: "Viên chức", department: "Dược - VTYT",
+
+        title: "V.08.08.23 - Dược hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 3", hireDate: "15/09/2022", status: "active",
+
+        phone: "0942548742", email: "quahoamy@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB25", name: "Bùi Đạt Hiếu", shortName: "DS Hiếu", dob: "25/06/1989",
+
+        position: "Viên chức", department: "Dược - VTYT",
+
+        title: "V.08.08.22 - Dược sĩ", rankGrade: "Dược sĩ",
+
+        point: "Điểm trạm chính", hireDate: "03/09/2013", status: "active",
+
+        phone: "0984279097", email: "dathieu102@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB26", name: "Huỳnh Thị Thùy Yên", shortName: "DS Yên", dob: "11/04/1981",
+
+        position: "Viên chức", department: "Dược - VTYT",
+
+        title: "V.08.08.22 - Dược sĩ", rankGrade: "Dược sĩ",
+
+        point: "Điểm trạm chính", hireDate: "20/10/2015", status: "active",
+
+        phone: "0931511727", email: "dsthuyyen@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB27", name: "Đoàn Thị Diễm", shortName: "DS Diễm", dob: "11/11/1989",
+
+        position: "Viên chức", department: "Dược - VTYT",
+
+        title: "V.08.08.23 - Dược hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 1", hireDate: "15/01/2013", status: "active",
+
+        phone: "0977013706", email: "diemdoan1189@gmail.com", note: ""
+
+      },
+
+      {
+
+        id: "CB28", name: "Nguyễn Thị Phương Thảo", shortName: "DS Thảo", dob: "05/10/1981",
+
+        position: "Viên chức", department: "Dược - VTYT",
+
+        title: "V.08.08.23 - Dược hạng IV", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 2", hireDate: "02/06/2008", status: "active",
+
+        phone: "0394376446", email: "ntpthao1516@quangngai.gov.vn", note: ""
+
+      },
+
+      {
+
+        id: "CB29", name: "Nguyễn Anh Vũ", shortName: "Ys Vũ", dob: "01/01/1993",
+
+        position: "Viên chức", department: "Khám bệnh",
+
+        title: "V.08.03.07 - Y sĩ (hạng IV)", rankGrade: "Hạng IV",
+
+        point: "Điểm y tế số 3", hireDate: "30/05/2025", status: "active",
+
+        phone: "0349796028", email: "anhvucuto362@gmail.com", note: ""
+
+      }
+
     ];
 
-    let staffList = [];
-    let selectedStationFilter = 'all';
-    let selectedStatusFilter = 'all';
-    let transferringStaffId = null;
 
-    // Quản lý quyền
-    let authorizedStation = sessionStorage.getItem('TYT_AUTH_STATION') || null;
-    let pendingAuthAction = null;
-    let confirmCallback = null;
 
-    // Kênh phát tín hiệu đồng bộ giữa các tab
-    const staffBroadcastChannel = new BroadcastChannel('TYT_STAFF_CHANNEL');
+    // =========================================================================
 
-    window.onload = () => {
-      initStaffData();
-      renderAuthStatus();
-      renderStaffList();
+    // 4. DANH MỤC ĐIỂM TRẠM & BẢNG ÁNH XẠ ĐIỂM TRẠM
 
-      // Lắng nghe tín hiệu cập nhật từ các tab khác
-      staffBroadcastChannel.onmessage = (event) => {
-        if (event.data && event.data.action === 'staff_updated') {
-          initStaffData();
-          renderStaffList();
-          showToast('Dữ liệu cán bộ vừa được cập nhật từ hệ thống!', 'info');
-        }
-      };
+    // =========================================================================
 
-      // Tự động kéo dữ liệu mới nhất từ Cloud
-      loadStaffFromCloud(true);
+    const DEFAULT_STATIONS = [
+
+      { id: "st_chinh", name: "Điểm trạm chính", shortName: "Đức Tân", password: "ductan123" },
+
+      { id: "st_1", name: "Điểm y tế số 1", shortName: "Mộ Đức", password: "moduc123" },
+
+      { id: "st_2", name: "Điểm y tế số 2", shortName: "Đức Hòa", password: "duchoa123" },
+
+      { id: "st_3", name: "Điểm y tế số 3", shortName: "Đức Phú", password: "ducphu123" }
+
+    ];
+
+
+
+    const CANONICAL_STAFF_POINT_MAP = {
+
+      "Trần Thị Lệ Thy": "Điểm trạm chính",
+
+      "Trịnh Thị Minh Tuệ": "Điểm trạm chính",
+
+      "Huỳnh Thị Thuỳ Yên": "Điểm trạm chính",
+
+      "Huỳnh Thị Thùy Yên": "Điểm trạm chính",
+
+      "Võ Thị Thanh Thùy": "Điểm trạm chính",
+
+      "Bùi Đạt Hiếu": "Điểm trạm chính",
+
+      "Nguyễn Thị Như Nguyện": "Điểm trạm chính",
+
+      "Võ Thị Thanh Thuyên": "Điểm trạm chính",
+
+      "Lê Thị Thủy": "Điểm trạm chính",
+
+      "Lê Thị Thu Thủy": "Điểm trạm chính",
+
+      "Võ Quang Vinh": "Điểm trạm chính",
+
+      "Lê Thị Nương": "Điểm trạm chính",
+
+
+
+      "Phạm Minh Đức": "Điểm y tế số 1",
+
+      "Đoàn Thị Diễm": "Điểm y tế số 1",
+
+      "Võ Thị Thanh Việt": "Điểm y tế số 1",
+
+      "Huỳnh Thị Anh Tin": "Điểm y tế số 1",
+
+      "Nguyễn Thị Thu Nguyệt": "Điểm y tế số 1",
+
+      "Trần Thị Lài": "Điểm y tế số 1",
+
+
+
+      "Trần Thị Kim Thanh": "Điểm y tế số 2",
+
+      "Nguyễn Thị Phương Thảo": "Điểm y tế số 2",
+
+      "Cao Thị Ánh Trúc": "Điểm y tế số 2",
+
+      "Huỳnh Văn Phương": "Điểm y tế số 2",
+
+      "Nguyễn Thị Kiều Thắm": "Điểm y tế số 2",
+
+      "Nguyễn Phu": "Điểm y tế số 2",
+
+
+
+      "Phạm Trần Thị Hoà": "Điểm y tế số 3",
+
+      "Phạm Trần Thị Hòa": "Điểm y tế số 3",
+
+      "Nguyễn Thị Ánh Thu": "Điểm y tế số 3",
+
+      "Nguyễn Thị Bé": "Điểm y tế số 3",
+
+      "Nguyễn Anh Vũ": "Điểm y tế số 3",
+
+      "Phạm Thị Mỹ Trâm": "Điểm y tế số 3",
+
+      "Lê Thị Tố Lan": "Điểm y tế số 3",
+
+      "Nguyễn Thị Ly Va": "Điểm y tế số 3"
+
     };
 
-    function initStaffData() {
-      const stored = localStorage.getItem('TYT_STAFF_LIST');
-      if (stored) {
-        try {
-          staffList = JSON.parse(stored);
-        } catch (e) {
-          staffList = [...DEFAULT_STAFF_LIST];
+
+
+    const INVALID_STATION_KEYWORDS = [
+
+      'viên chức', 'giám đốc', 'phó giám đốc', 'bác sĩ', 'y sĩ',
+
+      'điều dưỡng', 'hộ sinh', 'dược', 'dược sĩ', 'kế toán'
+
+    ];
+
+
+
+    let staffList = [];
+
+    let stationsList = [...DEFAULT_STATIONS];
+
+    let selectedStationFilter = 'all';
+
+    let authorizedStation = sessionStorage.getItem('TYT_AUTH_STATION') || null;
+
+    let selectedStaffIds = new Set();
+
+    let confirmCallback = null;
+
+
+
+    // =========================================================================
+
+    // 5. HÀM CHUẨN HÓA NGÀY THÁNG VÀ SỬA LỖI DỮ LIỆU TỰ ĐỘNG
+
+    // =========================================================================
+
+    function formatDateVN(dateVal) {
+
+      if (!dateVal) return '';
+
+      if (dateVal instanceof Date) {
+
+        var d = dateVal.getDate();
+
+        var m = dateVal.getMonth() + 1;
+
+        var y = dateVal.getFullYear();
+
+        return (d < 10 ? '0' + d : d) + '/' + (m < 10 ? '0' + m : m) + '/' + y;
+
+      }
+
+      var s = String(dateVal).trim();
+
+      if (!s) return '';
+
+
+
+      // Nếu đã chuẩn DD/MM/YYYY
+
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+
+        var parts = s.split('/');
+
+        return ('0' + parts[0]).slice(-2) + '/' + ('0' + parts[1]).slice(-2) + '/' + parts[2];
+
+      }
+
+
+
+      // Nếu là ISO YYYY-MM-DD
+
+      var matchIso = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+
+      if (matchIso) {
+
+        return ('0' + matchIso[3]).slice(-2) + '/' + ('0' + matchIso[2]).slice(-2) + '/' + matchIso[1];
+
+      }
+
+
+
+      // Nếu là chuỗi Date JavaScript dạng "Wed Apr 04 1973 00:00:00 GMT+0700..."
+
+      if ((s.indexOf('GMT') !== -1 || s.indexOf('UTC') !== -1 || s.indexOf('T') !== -1) && !isNaN(Date.parse(s))) {
+
+        var parsed = new Date(s);
+
+        if (!isNaN(parsed.getTime())) {
+
+          var day = parsed.getDate();
+
+          var month = parsed.getMonth() + 1;
+
+          var year = parsed.getFullYear();
+
+          return (day < 10 ? '0' + day : day) + '/' + (month < 10 ? '0' + month : month) + '/' + year;
+
         }
-      } else {
-        staffList = [...DEFAULT_STAFF_LIST];
-        saveStaffToStorage();
+
       }
+
+
+
+      return s;
+
     }
 
-    function saveStaffToStorage(notify = true) {
-      localStorage.setItem('TYT_STAFF_LIST', JSON.stringify(staffList));
-      if (notify) {
-        staffBroadcastChannel.postMessage({ action: 'staff_updated', timestamp: Date.now() });
-      }
-    }
 
-    // =========================================================================
-    // 2. PHÂN QUYỀN & MẬT KHẨU
-    // =========================================================================
-    function renderAuthStatus() {
-      const container = document.getElementById('auth-status-container');
-      if (!authorizedStation) {
-        container.innerHTML = `
-          <button onclick="openAuthModal()" class="px-3 py-2 bg-amber-50 text-amber-800 border border-amber-300 font-bold rounded-xl hover:bg-amber-100 transition text-xs flex items-center gap-1.5 shadow-sm">
-            <i class="fa-solid fa-lock text-amber-600"></i> Mở khóa quản trị
-          </button>
-        `;
-      } else {
-        const isBGD = authorizedStation === 'Ban Giám Đốc';
-        container.innerHTML = `
-          <div class="flex items-center gap-1.5 bg-teal-50 text-teal-800 border border-teal-300 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm">
-            <i class="fa-solid fa-lock-open text-teal-600"></i>
-            <span>Đang mở: <b class="${isBGD ? 'text-indigo-700' : 'text-teal-900'}">${authorizedStation}</b></span>
-            <button onclick="logoutStation()" class="ml-1 text-slate-400 hover:text-rose-600 p-0.5" title="Khóa lại">
-              <i class="fa-solid fa-arrow-right-from-bracket"></i>
-            </button>
-          </div>
-        `;
-      }
-    }
 
-    function canManageStaff(staffPoint) {
-      if (!authorizedStation) return false;
-      if (authorizedStation === 'Ban Giám Đốc') return true;
-      return authorizedStation === staffPoint;
-    }
+    function sanitizeStaffRecord(emp) {
 
-    function openAuthModal(preSelect = null, pendingAction = null) {
-      pendingAuthAction = pendingAction;
-      if (preSelect) document.getElementById('auth-station-select').value = preSelect;
-      document.getElementById('auth-password-input').value = '';
-      document.getElementById('auth-error-msg').classList.add('hidden');
-      document.getElementById('auth-modal').classList.remove('hidden');
-      setTimeout(() => document.getElementById('auth-password-input').focus(), 100);
-    }
+      if (!emp) return emp;
 
-    function closeAuthModal() {
-      document.getElementById('auth-modal').classList.add('hidden');
-      pendingAuthAction = null;
-    }
 
-    function handleAuthSubmit() {
-      const station = document.getElementById('auth-station-select').value;
-      const pwd = document.getElementById('auth-password-input').value.trim();
-      const expected = STATION_PASSWORDS[station];
 
-      if (pwd === expected) {
-        authorizedStation = station;
-        sessionStorage.setItem('TYT_AUTH_STATION', station);
-        renderAuthStatus();
-        closeAuthModal();
-        showToast(`Đã mở khóa quyền: ${station}`, 'success');
+      if (SHORT_TO_FULL_NAME_MAP[emp.name]) {
 
-        if (typeof pendingAuthAction === 'function') {
-          const act = pendingAuthAction;
-          pendingAuthAction = null;
-          act();
+        if (!emp.shortName || emp.shortName === emp.name) {
+
+          emp.shortName = emp.name;
+
         }
-      } else {
-        const err = document.getElementById('auth-error-msg');
-        err.innerText = "Mật khẩu không chính xác! Vui lòng thử lại.";
-        err.classList.remove('hidden');
+
+        emp.name = SHORT_TO_FULL_NAME_MAP[emp.name];
+
       }
+
+
+
+      if (FULL_TO_SHORT_NAME_MAP[emp.shortName]) {
+
+        emp.shortName = FULL_TO_SHORT_NAME_MAP[emp.shortName];
+
+      }
+
+
+
+      if (!emp.shortName && FULL_TO_SHORT_NAME_MAP[emp.name]) {
+
+        emp.shortName = FULL_TO_SHORT_NAME_MAP[emp.name];
+
+      }
+
+
+
+      emp.dob = formatDateVN(emp.dob);
+
+      emp.hireDate = formatDateVN(emp.hireDate);
+
+
+
+      var canonicalPoint = CANONICAL_STAFF_POINT_MAP[emp.name];
+
+      if (canonicalPoint && (!emp.point || INVALID_STATION_KEYWORDS.some(kw => (emp.point || '').toLowerCase().indexOf(kw) !== -1))) {
+
+        emp.point = canonicalPoint;
+
+      }
+
+
+
+      return emp;
+
     }
 
-    function logoutStation() {
-      authorizedStation = null;
-      sessionStorage.removeItem('TYT_AUTH_STATION');
-      renderAuthStatus();
-      showToast("Đã khóa quyền quản trị.", 'info');
-    }
 
-    // =========================================================================
-    // 3. HIỂN THỊ DANH SÁCH & THỐNG KÊ
-    // =========================================================================
-    function renderStaffList() {
-      const tbody = document.getElementById('staff-table-body');
-      const searchTerm = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
 
-      const filtered = staffList.filter(s => {
-        const matchSearch = s.name.toLowerCase().includes(searchTerm) ||
-                            (s.shortName && s.shortName.toLowerCase().includes(searchTerm)) ||
-                            (s.role && s.role.toLowerCase().includes(searchTerm)) ||
-                            (s.point && s.point.toLowerCase().includes(searchTerm));
-        const matchStation = (selectedStationFilter === 'all') || (s.point === selectedStationFilter);
-        const matchStatus = (selectedStatusFilter === 'all') || (s.status === selectedStatusFilter);
-        return matchSearch && matchStation && matchStatus;
+    function sanitizeStations(list) {
+
+      if (!Array.isArray(list)) return [...DEFAULT_STATIONS];
+
+      const valid = list.filter(st => {
+
+        if (!st || !st.name) return false;
+
+        const nameLower = st.name.toLowerCase().trim();
+
+        return !INVALID_STATION_KEYWORDS.some(kw => nameLower === kw || nameLower.startsWith(kw));
+
       });
 
-      // Cập nhật số liệu KPI
+      return valid.length > 0 ? valid : [...DEFAULT_STATIONS];
+
+    }
+
+
+
+    // =========================================================================
+
+    // 6. KHỞI TẠO VÀ TỰ ĐỘNG TẢI DỮ LIỆU TỪ GOOGLE SHEET
+
+    // =========================================================================
+
+    window.onload = async function() {
+
+      localStorage.removeItem('TYT_STATION_LIST');
+
+
+
+      initStaffData();
+
+      renderStationSelectOptions();
+
+      renderAuthStatus();
+
+      renderStationFilterButtons();
+
+      renderStaffTable();
+
+
+
+      if (GOOGLE_SHEET_URL) {
+
+        await loadStaffFromCloud(true);
+
+      }
+
+    };
+
+
+
+    function initStaffData() {
+
+      const stored = localStorage.getItem('TYT_STAFF_LIST');
+
+      if (stored) {
+
+        try {
+
+          const parsed = JSON.parse(stored);
+
+          if (Array.isArray(parsed) && parsed.length >= 29) {
+
+            staffList = parsed.map(sanitizeStaffRecord);
+
+          } else {
+
+            staffList = JSON.parse(JSON.stringify(DEFAULT_STAFF_29)).map(sanitizeStaffRecord);
+
+            saveStaffToStorage(false);
+
+          }
+
+        } catch(e) {
+
+          staffList = JSON.parse(JSON.stringify(DEFAULT_STAFF_29)).map(sanitizeStaffRecord);
+
+        }
+
+      } else {
+
+        staffList = JSON.parse(JSON.stringify(DEFAULT_STAFF_29)).map(sanitizeStaffRecord);
+
+        saveStaffToStorage(false);
+
+      }
+
+    }
+
+
+
+    function saveStaffToStorage(broadcast = true) {
+
+      localStorage.setItem('TYT_STAFF_LIST', JSON.stringify(staffList));
+
+      if (broadcast) {
+
+        staffBroadcast.postMessage({
+
+          action: 'staff_updated',
+
+          timestamp: Date.now(),
+
+          count: staffList.length
+
+        });
+
+      }
+
+      updateStaffStatistics();
+
+    }
+
+
+
+    function updateStaffStatistics() {
+
       const activeCount = staffList.filter(s => s.status === 'active').length;
+
       const inactiveCount = staffList.filter(s => s.status === 'inactive').length;
-      document.getElementById('stat-total').innerText = staffList.length;
-      document.getElementById('stat-active').innerText = activeCount;
-      document.getElementById('stat-inactive').innerText = inactiveCount;
+
+      const elActive = document.getElementById('stat-active-count');
+
+      const elInactive = document.getElementById('stat-inactive-count');
+
+      if (elActive) elActive.innerText = activeCount;
+
+      if (elInactive) elInactive.innerText = inactiveCount;
+
+    }
+
+
+
+    // =========================================================================
+
+    // 7. BỘ LỌC ĐIỂM TRẠM ĐỘNG & TIỆN ÍCH CHỌN ĐIỂM TRẠM
+
+    // =========================================================================
+
+    function renderStationFilterButtons() {
+
+      const container = document.getElementById('station-filter-container');
+
+      if (!container) return;
+
+
+
+      const totalActiveStaff = staffList.filter(s => s.status === 'active').length;
+
+      const isAllActive = (selectedStationFilter === 'all');
+
+
+
+      let html = `
+
+        <button onclick="filterByStation('all')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap shadow-xs ${isAllActive ? 'bg-teal-600 text-white' : 'text-slate-600 hover:bg-slate-100'}">
+
+          Tất cả (${totalActiveStaff})
+
+        </button>
+
+      `;
+
+
+
+      stationsList.forEach(st => {
+
+        const count = staffList.filter(s => s.point === st.name && s.status === 'active').length;
+
+        const isCurrent = (selectedStationFilter === st.name);
+
+        html += `
+
+          <button onclick="filterByStation('${st.name.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap shadow-xs ${isCurrent ? 'bg-teal-600 text-white' : 'text-slate-600 hover:bg-slate-100'}">
+
+            ${st.shortName || st.name} (${count})
+
+          </button>
+
+        `;
+
+      });
+
+
+
+      container.innerHTML = html;
+
+    }
+
+
+
+    function filterByStation(stName) {
+
+      selectedStationFilter = stName;
+
+      renderStationFilterButtons();
+
+      renderStaffTable();
+
+    }
+
+
+
+    function renderStationSelectOptions() {
+
+      const selectStaff = document.getElementById('form-staff-point');
+
+      const selectTransfer = document.getElementById('transfer-target-point');
+
+      const selectAuth = document.getElementById('auth-station-select');
+
+
+
+      let optionsHtml = '';
+
+      stationsList.forEach(st => {
+
+        optionsHtml += `<option value="${st.name}">${st.name} (${st.shortName})</option>`;
+
+      });
+
+
+
+      if (selectStaff) selectStaff.innerHTML = optionsHtml;
+
+      if (selectTransfer) selectTransfer.innerHTML = optionsHtml;
+
+      if (selectAuth) {
+
+        selectAuth.innerHTML = optionsHtml + `<option value="Ban Giám Đốc">Ban Giám Đốc (Toàn quyền 04 điểm trạm)</option>`;
+
+      }
+
+    }
+
+
+
+    // =========================================================================
+
+    // 8. KẾT XUẤT BẢNG NHÂN SỰ CHÍNH & CHỌN HÀNG LOẠT
+
+    // =========================================================================
+
+    function renderStaffTable() {
+
+      const tbody = document.getElementById('staff-table-body');
+
+      if (!tbody) return;
+
+
+
+      const searchTerm = (document.getElementById('search-staff-input')?.value || '').toLowerCase().trim();
+
+
+
+      const filtered = staffList.filter(emp => {
+
+        const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
+
+        const matchSearch = !searchTerm || 
+
+          (emp.name && emp.name.toLowerCase().includes(searchTerm)) ||
+
+          (emp.shortName && emp.shortName.toLowerCase().includes(searchTerm)) ||
+
+          (emp.phone && emp.phone.includes(searchTerm)) ||
+
+          (emp.email && emp.email.toLowerCase().includes(searchTerm)) ||
+
+          (emp.title && emp.title.toLowerCase().includes(searchTerm));
+
+
+
+        return matchStation && matchSearch;
+
+      });
+
+
 
       if (filtered.length === 0) {
+
         tbody.innerHTML = `
+
           <tr>
-            <td colspan="8" class="p-8 text-center text-slate-400 italic">
-              <i class="fa-solid fa-users-slash text-2xl mb-2 block"></i> Không tìm thấy cán bộ phù hợp với bộ lọc.
+
+            <td colspan="14" class="p-8 text-center text-slate-400 italic">
+
+              <div class="text-3xl mb-2">🔍</div>
+
+              <div>Không tìm thấy cán bộ nào phù hợp với bộ lọc hiện tại.</div>
+
             </td>
+
           </tr>
+
         `;
+
+        updateStaffStatistics();
+
+        updateBulkActionBar();
+
         return;
+
       }
 
-      tbody.innerHTML = filtered.map((emp, index) => {
-        const isEditable = canManageStaff(emp.point);
-        const isActive = emp.status === 'active';
 
-        return `
-          <tr class="hover:bg-slate-50/80 transition ${!isActive ? 'bg-slate-50/50 opacity-75' : ''}">
-            <td class="py-2.5 px-2 text-center font-bold text-slate-500 text-sm">${index + 1}</td>
-            <td class="py-2.5 px-3">
-              <div class="font-bold text-slate-900 text-[15px] leading-tight">${emp.name}</div>
-              ${emp.note ? `<div class="text-[11px] text-slate-400 italic mt-0.5">${emp.note}</div>` : ''}
+
+      let html = '';
+
+      filtered.forEach((emp, idx) => {
+
+        const isSelected = selectedStaffIds.has(emp.id);
+
+        const isInactive = (emp.status === 'inactive');
+
+        const canEdit = canEditStation(emp.point);
+
+
+
+        html += `
+
+          <tr class="hover:bg-slate-50 transition border-b border-slate-100 ${isInactive ? 'opacity-60 bg-slate-50/70' : ''}">
+
+            <!-- Checkbox -->
+
+            <td class="p-2 sticky-col-check bg-white">
+
+              <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelectStaff('${emp.id}', this.checked)" class="w-4 h-4 text-teal-600 rounded cursor-pointer">
+
             </td>
-            <td class="py-2.5 px-2 text-center">
-              <span class="px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800 font-bold border border-teal-200 text-[13px] inline-block">${emp.shortName}</span>
+
+
+
+            <!-- TT -->
+
+            <td class="p-2 sticky-col-tt bg-white font-mono text-slate-500 font-bold">
+
+              ${idx + 1}
+
             </td>
-            <td class="py-2.5 px-2.5 font-bold text-slate-800 text-[13.5px] truncate" title="${emp.role || 'Cán bộ'}">${emp.role || 'Cán bộ'}</td>
-            <td class="py-2.5 px-2.5">
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12.5px] font-bold ${
-                emp.point === 'Điểm trạm chính' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' :
-                emp.point === 'Điểm y tế số 1' ? 'bg-sky-50 text-sky-700 border border-sky-200' :
-                emp.point === 'Điểm y tế số 2' ? 'bg-teal-50 text-teal-700 border border-teal-200' :
-                'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              }">
-                <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
-                ${emp.point}
-              </span>
-            </td>
-            <td class="py-2.5 px-2 text-center">
-              <span class="px-2.5 py-1 rounded-full text-xs font-bold ${
-                isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
-              }">
-                ${isActive ? 'Đang làm' : 'Đã nghỉ/Chuyển'}
-              </span>
-            </td>
-            <td class="py-2.5 px-2.5 text-slate-700 font-mono text-[13px] font-medium">${emp.phone || '---'}</td>
-            <td class="py-2.5 px-2 text-center">
-              <div class="flex items-center justify-center gap-1.5">
-                <button onclick="handleEditStaff('${emp.id}')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-teal-50 text-slate-600 hover:text-teal-700 flex items-center justify-center transition" title="Sửa thông tin">
-                  <i class="fa-solid fa-pen text-xs"></i>
-                </button>
-                <button onclick="handleTransferStaff('${emp.id}')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 flex items-center justify-center transition" title="Điều chuyển điểm trạm">
-                  <i class="fa-solid fa-right-left text-xs"></i>
-                </button>
-                <button onclick="handleToggleStatus('${emp.id}')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-700 flex items-center justify-center transition" title="${isActive ? 'Báo nghỉ việc / chuyển đi' : 'Khôi phục lại'}">
-                  <i class="fa-solid ${isActive ? 'fa-user-slash text-amber-600' : 'fa-user-check text-emerald-600'} text-xs"></i>
-                </button>
-                <button onclick="handleDeleteStaff('${emp.id}')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 flex items-center justify-center transition" title="Xóa cán bộ">
-                  <i class="fa-solid fa-trash-can text-xs"></i>
-                </button>
+
+
+
+            <!-- Họ và tên (Ghim) -->
+
+            <td class="p-2 px-3 sticky-col-name text-left bg-white font-bold text-slate-900">
+
+              <div class="flex items-center gap-1.5">
+
+                <span class="truncate">${emp.name}</span>
+
+                ${emp.position && emp.position !== 'Viên chức' ? `<span class="px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 text-[10px] font-black">${emp.position}</span>` : ''}
+
               </div>
+
             </td>
+
+
+
+            <!-- Tên tắt -->
+
+            <td class="p-2 border-r border-slate-200 font-bold text-teal-800 font-mono">
+
+              ${emp.shortName || '---'}
+
+            </td>
+
+
+
+            <!-- Ngày sinh -->
+
+            <td class="p-2 border-r border-slate-200 font-mono text-slate-600">
+
+              ${emp.dob || '---'}
+
+            </td>
+
+
+
+            <!-- Chức vụ -->
+
+            <td class="p-2 border-r border-slate-200 font-semibold text-slate-700">
+
+              ${emp.position || 'Viên chức'}
+
+            </td>
+
+
+
+            <!-- Chức danh nghề nghiệp -->
+
+            <td class="p-2 border-r border-slate-200 text-left px-3 text-slate-800 font-medium truncate" title="${emp.title || ''}">
+
+              ${emp.title || '---'}
+
+            </td>
+
+
+
+            <!-- Hạng / Bậc -->
+
+            <td class="p-2 border-r border-slate-200 font-semibold text-slate-600">
+
+              ${emp.rankGrade || '---'}
+
+            </td>
+
+
+
+            <!-- Điểm trạm -->
+
+            <td class="p-2 border-r border-slate-200 font-bold text-slate-800">
+
+              <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+
+                ${emp.point || 'Điểm trạm chính'}
+
+              </span>
+
+            </td>
+
+
+
+            <!-- Ngày tuyển -->
+
+            <td class="p-2 border-r border-slate-200 font-mono text-slate-600">
+
+              ${emp.hireDate || '---'}
+
+            </td>
+
+
+
+            <!-- Trạng thái -->
+
+            <td class="p-2 border-r border-slate-200">
+
+              ${isInactive 
+
+                ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">Đã nghỉ</span>'
+
+                : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Đang công tác</span>'
+
+              }
+
+            </td>
+
+
+
+            <!-- Số ĐT & Nút Zalo -->
+
+            <td class="p-2 border-r border-slate-200 font-mono">
+
+              <div class="flex items-center justify-center gap-1.5">
+
+                <a href="tel:${emp.phone}" class="text-slate-800 font-bold hover:text-teal-700 transition" title="Gọi điện thoại">${emp.phone || '---'}</a>
+
+                ${emp.phone ? `
+
+                  <a href="https://zalo.me/${emp.phone.replace(/[^0-9]/g, '')}" target="_blank" class="px-1.5 py-0.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-black text-[10px] shadow-xs" title="Nhắn tin / Gọi Zalo">
+
+                    Zalo
+
+                  </a>
+
+                ` : ''}
+
+              </div>
+
+            </td>
+
+
+
+            <!-- Email & Nút Gmail -->
+
+            <td class="p-2 border-r border-slate-200 text-left px-3 font-mono text-slate-700">
+
+              <div class="flex items-center justify-between gap-1">
+
+                <span class="truncate" title="${emp.email}">${emp.email || '---'}</span>
+
+                ${emp.email ? `
+
+                  <a href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(emp.email)}" target="_blank" class="px-1.5 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded text-[10px] font-bold shrink-0" title="Soạn thư Gmail cho cán bộ này">
+
+                    <i class="fa-solid fa-envelope"></i>
+
+                  </a>
+
+                ` : ''}
+
+              </div>
+
+            </td>
+
+
+
+            <!-- Thao tác -->
+
+            <td class="p-2">
+
+              <div class="flex items-center justify-center gap-1">
+
+                <button onclick="openEditStaffModal('${emp.id}')" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-teal-50 text-slate-600 hover:text-teal-700 flex items-center justify-center transition" title="Chỉnh sửa hồ sơ">
+
+                  <i class="fa-solid fa-pen text-[10.5px]"></i>
+
+                </button>
+
+                <button onclick="openTransferModal('${emp.id}')" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 flex items-center justify-center transition" title="Điều chuyển điểm trạm">
+
+                  <i class="fa-solid fa-right-left text-[10.5px]"></i>
+
+                </button>
+
+                <button onclick="toggleStaffStatus('${emp.id}')" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-700 flex items-center justify-center transition" title="${isInactive ? 'Phục hồi công tác' : 'Chuyển sang đã nghỉ'}">
+
+                  <i class="fa-solid ${isInactive ? 'fa-rotate-left text-emerald-600' : 'fa-user-slash text-slate-400'} text-[10.5px]"></i>
+
+                </button>
+
+                <button onclick="deleteStaff('${emp.id}')" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 flex items-center justify-center transition" title="Xóa vĩnh viễn">
+
+                  <i class="fa-solid fa-trash text-[10.5px]"></i>
+
+                </button>
+
+              </div>
+
+            </td>
+
           </tr>
+
         `;
-      }).join('');
+
+      });
+
+
+
+      tbody.innerHTML = html;
+
+      updateStaffStatistics();
+
+      updateBulkActionBar();
+
     }
 
-    function filterByStation(st) {
-      selectedStationFilter = st;
-      const btns = [
-        { id: 'btn-station-all', key: 'all' },
-        { id: 'btn-station-chinh', key: 'Điểm trạm chính' },
-        { id: 'btn-station-1', key: 'Điểm y tế số 1' },
-        { id: 'btn-station-2', key: 'Điểm y tế số 2' },
-        { id: 'btn-station-3', key: 'Điểm y tế số 3' }
-      ];
-      btns.forEach(b => {
-        const el = document.getElementById(b.id);
-        if (b.key === st) {
-          el.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition bg-teal-600 text-white shadow-sm whitespace-nowrap";
-        } else {
-          el.className = "px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap";
-        }
-      });
-      renderStaffList();
-    }
 
-    function filterByStatus(status) {
-      selectedStatusFilter = status;
-      const btns = [
-        { id: 'btn-status-all', key: 'all' },
-        { id: 'btn-status-active', key: 'active' },
-        { id: 'btn-status-inactive', key: 'inactive' }
-      ];
-      btns.forEach(b => {
-        const el = document.getElementById(b.id);
-        if (b.key === status) {
-          el.className = "px-2 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white transition";
-        } else {
-          el.className = "px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition";
-        }
-      });
-      renderStaffList();
-    }
 
     // =========================================================================
-    // 4. THÊM / SỬA / ĐIỀU CHUYỂN / XÓA CÁN BỘ
+
+    // 9. THAO TÁC HÀNG LOẠT & GỬI GMAIL ĐỒNG LOẠT
+
     // =========================================================================
-    function autoSuggestShortName() {
-      const name = document.getElementById('form-name').value.trim();
-      const role = document.getElementById('form-role').value;
-      const shortNameInput = document.getElementById('form-short-name');
 
-      if (!name || shortNameInput.value) return;
+    function toggleSelectAll(checked) {
 
-      const words = name.split(' ');
-      const lastName = words[words.length - 1] || '';
-      let prefix = 'CB';
-      if (role === 'Bác sĩ') prefix = 'BS';
-      else if (role === 'Điều dưỡng') prefix = 'ĐD';
-      else if (role === 'Nữ hộ sinh') prefix = 'NHS';
-      else if (role === 'Y sĩ') prefix = 'Ys';
-      else if (role === 'Dược sĩ') prefix = 'DS';
-      else if (role === 'Cử nhân' || role === 'Kế toán') prefix = 'CN';
+      if (checked) {
 
-      shortNameInput.value = `${prefix} ${lastName}`;
-    }
+        staffList.forEach(s => selectedStaffIds.add(s.id));
 
-    function openStaffModal(emp = null) {
-      if (!emp && !authorizedStation) {
-        openAuthModal(null, () => openStaffModal());
-        showToast("Vui lòng mở khóa để thêm cán bộ.", 'warning');
-        return;
-      }
-
-      document.getElementById('form-staff-id').value = emp ? emp.id : '';
-      document.getElementById('form-name').value = emp ? emp.name : '';
-      document.getElementById('form-short-name').value = emp ? emp.shortName : '';
-      document.getElementById('form-role').value = emp ? (emp.role || 'Bác sĩ') : 'Bác sĩ';
-      document.getElementById('form-point').value = emp ? emp.point : (authorizedStation && authorizedStation !== 'Ban Giám Đốc' ? authorizedStation : 'Điểm trạm chính');
-      document.getElementById('form-status').value = emp ? (emp.status || 'active') : 'active';
-      document.getElementById('form-phone').value = emp ? (emp.phone || '') : '';
-      document.getElementById('form-note').value = emp ? (emp.note || '') : '';
-
-      document.getElementById('staff-modal-title').innerText = emp ? `Chỉnh Sửa Cán Bộ: ${emp.name}` : "Thêm Cán Bộ Mới";
-      document.getElementById('staff-modal').classList.remove('hidden');
-      setTimeout(() => document.getElementById('form-name').focus(), 100);
-    }
-
-    function closeStaffModal() {
-      document.getElementById('staff-modal').classList.add('hidden');
-    }
-
-    function handleSaveStaff(e) {
-      e.preventDefault();
-      const id = document.getElementById('form-staff-id').value;
-      const name = document.getElementById('form-name').value.trim();
-      const shortName = document.getElementById('form-short-name').value.trim();
-      const role = document.getElementById('form-role').value;
-      const point = document.getElementById('form-point').value;
-      const status = document.getElementById('form-status').value;
-      const phone = document.getElementById('form-phone').value.trim();
-      const note = document.getElementById('form-note').value.trim();
-
-      if (!canManageStaff(point)) {
-        openAuthModal(point, () => handleSaveStaff(e));
-        showToast(`Bạn cần quyền của ${point} hoặc Ban Giám Đốc để thao tác.`, 'warning');
-        return;
-      }
-
-      if (id) {
-        // Cập nhật
-        const target = staffList.find(s => s.id === id);
-        if (target) {
-          target.name = name;
-          target.shortName = shortName;
-          target.role = role;
-          target.point = point;
-          target.status = status;
-          target.phone = phone;
-          target.note = note;
-          showToast(`Đã cập nhật cán bộ: ${name}`, 'success');
-        }
       } else {
-        // Thêm mới
-        const newId = 'CB' + Date.now().toString().slice(-5);
-        staffList.push({ id: newId, name, shortName, role, point, status, phone, note });
-        showToast(`Đã thêm mới cán bộ: ${name}`, 'success');
+
+        selectedStaffIds.clear();
+
       }
 
-      saveStaffToStorage();
-      closeStaffModal();
-      renderStaffList();
-      saveStaffToCloud(true); // Tự động đồng bộ lên Google Sheet ngầm
+      renderStaffTable();
+
     }
 
-    function handleEditStaff(id) {
-      const emp = staffList.find(s => s.id === id);
-      if (!emp) return;
-      if (!canManageStaff(emp.point)) {
-        openAuthModal(emp.point, () => openStaffModal(emp));
-        showToast(`Vui lòng mở khóa ${emp.point} để chỉnh sửa.`, 'warning');
+
+
+    function toggleSelectStaff(id, checked) {
+
+      if (checked) {
+
+        selectedStaffIds.add(id);
+
+      } else {
+
+        selectedStaffIds.delete(id);
+
+      }
+
+      updateBulkActionBar();
+
+      const allBox = document.getElementById('check-all-box');
+
+      if (allBox) allBox.checked = (selectedStaffIds.size === staffList.length);
+
+    }
+
+
+
+    function updateBulkActionBar() {
+
+      const bar = document.getElementById('bulk-actions-bar');
+
+      const countBadge = document.getElementById('selected-count-badge');
+
+      const validEmailsSpan = document.getElementById('selected-valid-emails');
+
+
+
+      if (!bar) return;
+
+
+
+      if (selectedStaffIds.size > 0) {
+
+        bar.classList.remove('hidden');
+
+        if (countBadge) countBadge.innerText = selectedStaffIds.size;
+
+
+
+        const validEmails = staffList
+
+          .filter(s => selectedStaffIds.has(s.id) && s.email && s.email.includes('@'))
+
+          .map(s => s.email.trim());
+
+
+
+        if (validEmailsSpan) validEmailsSpan.innerText = validEmails.length;
+
+      } else {
+
+        bar.classList.add('hidden');
+
+      }
+
+    }
+
+
+
+    function clearAllSelections() {
+
+      selectedStaffIds.clear();
+
+      const allBox = document.getElementById('check-all-box');
+
+      if (allBox) allBox.checked = false;
+
+      renderStaffTable();
+
+    }
+
+
+
+    function copySelectedEmails() {
+
+      const validEmails = staffList
+
+        .filter(s => selectedStaffIds.has(s.id) && s.email && s.email.includes('@'))
+
+        .map(s => s.email.trim());
+
+
+
+      if (validEmails.length === 0) {
+
+        showToast("Các cán bộ được chọn chưa có địa chỉ email hợp lệ!", "warning");
+
         return;
-      }
-      openStaffModal(emp);
-    }
 
-    function handleTransferStaff(id) {
-      const emp = staffList.find(s => s.id === id);
-      if (!emp) return;
-      if (!canManageStaff(emp.point)) {
-        openAuthModal(emp.point, () => handleTransferStaff(id));
-        showToast(`Cần quyền của ${emp.point} để điều chuyển.`, 'warning');
-        return;
       }
 
-      transferringStaffId = id;
-      document.getElementById('transfer-desc').innerHTML = `Điều chuyển cán bộ: <b>${emp.name}</b> (Hiện tại: <i>${emp.point}</i>)`;
-      document.getElementById('transfer-station-select').value = emp.point;
-      document.getElementById('transfer-modal').classList.remove('hidden');
-    }
 
-    function closeTransferModal() {
-      document.getElementById('transfer-modal').classList.add('hidden');
-      transferringStaffId = null;
-    }
 
-    function confirmTransferStation() {
-      if (!transferringStaffId) return;
-      const target = staffList.find(s => s.id === transferringStaffId);
-      const newPoint = document.getElementById('transfer-station-select').value;
+      navigator.clipboard.writeText(validEmails.join(', ')).then(() => {
 
-      if (target) {
-        const oldPoint = target.point;
-        target.point = newPoint;
-        target.note = `Chuyển từ ${oldPoint} sang ${newPoint} (${new Date().toLocaleDateString('vi-VN')})`;
-        saveStaffToStorage();
-        renderStaffList();
-        closeTransferModal();
-        saveStaffToCloud(true);
-        showToast(`Đã điều chuyển ${target.name} sang ${newPoint}!`, 'success');
-      }
-    }
+        showToast(`Đã sao chép ${validEmails.length} địa chỉ email vào Clipboard!`, "success");
 
-    function handleToggleStatus(id) {
-      const emp = staffList.find(s => s.id === id);
-      if (!emp) return;
-      if (!canManageStaff(emp.point)) {
-        openAuthModal(emp.point, () => handleToggleStatus(id));
-        return;
-      }
+      }).catch(() => {
 
-      const isNowActive = emp.status === 'active';
-      const actionText = isNowActive ? 'báo Nghỉ việc / Chuyển công tác' : 'khôi phục trạng thái Đang làm việc';
+        showToast("Không thể sao chép tự động!", "error");
 
-      showConfirmModal(
-        'Thay đổi trạng thái cán bộ',
-        `Bạn có chắc chắn muốn ${actionText} cho cán bộ: "${emp.name}"?
-Khi nghỉ việc/chuyển đi, cán bộ sẽ tự động được ẩn khỏi bảng chấm công mới.`,
-        () => {
-          emp.status = isNowActive ? 'inactive' : 'active';
-          saveStaffToStorage();
-          renderStaffList();
-          saveStaffToCloud(true);
-          showToast(`Đã cập nhật trạng thái cho ${emp.name}!`, 'success');
-        }
-      );
-    }
-
-    function handleDeleteStaff(id) {
-      const emp = staffList.find(s => s.id === id);
-      if (!emp) return;
-      if (!canManageStaff(emp.point)) {
-        openAuthModal(emp.point, () => handleDeleteStaff(id));
-        return;
-      }
-
-      showConfirmModal(
-        'Xóa cán bộ vĩnh viễn',
-        `Bạn có chắc chắn muốn xóa cán bộ "${emp.name}" khỏi hệ thống toàn xã?
-Dữ liệu sẽ bị xóa khỏi danh sách nhân sự của trạm.`,
-        () => {
-          staffList = staffList.filter(s => s.id !== id);
-          saveStaffToStorage();
-          renderStaffList();
-          saveStaffToCloud(true);
-          showToast(`Đã xóa cán bộ ${emp.name}!`, 'success');
-        }
-      );
-    }
-
-    // =========================================================================
-    // 5. ĐỒNG BỘ GOOGLE SHEET
-    // =========================================================================
-    function showLoading(text) {
-      document.getElementById('loading-text').innerText = text;
-      document.getElementById('loading-overlay').style.display = 'flex';
-    }
-    function hideLoading() {
-      document.getElementById('loading-overlay').style.display = 'none';
-    }
-
-    async function saveStaffToCloud(isSilent = false) {
-      if (!GOOGLE_SHEET_URL) return;
-      if (!isSilent) showLoading("Đang lưu danh sách nhân sự lên Google Sheet...");
-
-      try {
-        const payload = {
-          action: 'saveStaffList',
-          data: {
-            records: staffList.map(s => ({
-              id: s.id,
-              name: s.name,
-              shortName: s.shortName,
-              role: s.role,
-              point: s.point,
-              status: s.status,
-              phone: s.phone || '',
-              note: s.note || ''
-            }))
-          }
-        };
-
-        const response = await fetch(GOOGLE_SHEET_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
-        const res = await response.json();
-        if (res.status === 'success' && !isSilent) {
-          showToast("Đã lưu danh sách nhân sự lên Google Sheet thành công!", 'success');
-        }
-      } catch (e) {
-        console.error(e);
-        if (!isSilent) showToast("Lỗi khi kết nối Google Sheet.", 'error');
-      } finally {
-        if (!isSilent) hideLoading();
-      }
-    }
-
-    async function loadStaffFromCloud(isAuto = false) {
-      if (!GOOGLE_SHEET_URL) return;
-      if (!isAuto) showLoading("Đang tải danh sách nhân sự từ Google Sheet...");
-
-      try {
-        const url = GOOGLE_SHEET_URL + (GOOGLE_SHEET_URL.includes('?') ? '&' : '?') + `action=loadStaffList&t=${Date.now()}`;
-        const response = await fetch(url, { method: 'GET', cache: 'no-store' });
-        const res = await response.json();
-
-        if (res.status === 'success' && res.records && res.records.length > 0) {
-          staffList = res.records;
-          saveStaffToStorage(false);
-          renderStaffList();
-          if (!isAuto) showToast("Đã đồng bộ danh sách nhân sự từ Cloud!", 'success');
-        } else {
-          if (!isAuto) showToast("Chưa có danh sách nhân sự riêng trên Cloud. Đang dùng danh sách chuẩn 29 cán bộ.", 'info');
-        }
-      } catch (e) {
-        console.error(e);
-        if (!isAuto) showToast("Không thể tải từ Google Sheet.", 'warning');
-      } finally {
-        if (!isAuto) hideLoading();
-      }
-    }
-
-    // =========================================================================
-    // 6. XUẤT EXCEL & IN DANH BẠ PDF
-    // =========================================================================
-    function exportToExcel() {
-      const wsData = [
-        ['TRẠM Y TẾ XÃ MỘ ĐỨC', '', '', '', '', '', ''],
-        ['DANH SÁCH CÁN BỘ VIÊN CHỨC & NGƯỜI LAO ĐỘNG'],
-        [`Thời điểm xuất: ${new Date().toLocaleDateString('vi-VN')}`],
-        [],
-        ['TT', 'Họ và Tên', 'Tên Viết Tắt', 'Chức Danh', 'Điểm Trạm', 'Trạng Thái', 'Số Điện Thoại']
-      ];
-
-      const filtered = staffList.filter(s => {
-        const matchStation = (selectedStationFilter === 'all') || (s.point === selectedStationFilter);
-        const matchStatus = (selectedStatusFilter === 'all') || (s.status === selectedStatusFilter);
-        return matchStation && matchStatus;
       });
 
-      filtered.forEach((emp, i) => {
-        wsData.push([
-          i + 1,
-          emp.name,
-          emp.shortName,
-          emp.role,
-          emp.point,
-          emp.status === 'active' ? 'Đang công tác' : 'Đã nghỉ/chuyển',
-          emp.phone || ''
-        ]);
-      });
-
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      ws['!cols'] = [{ wch: 5 }, { wch: 26 }, { wch: 14 }, { wch: 16 }, { wch: 22 }, { wch: 16 }, { wch: 16 }];
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'DanhSachNhanSu');
-      XLSX.writeFile(wb, `DanhSach_CanBo_TYTMoDuc_${Date.now()}.xlsx`);
     }
 
-    function printStaffDirectory() {
-      const tbody = document.getElementById('print-table-body');
-      const filtered = staffList.filter(s => {
-        const matchStation = (selectedStationFilter === 'all') || (s.point === selectedStationFilter);
-        const matchStatus = (selectedStatusFilter === 'all') || (s.status === selectedStatusFilter);
-        return matchStation && matchStatus;
-      });
 
-      document.getElementById('print-station-title').innerText = selectedStationFilter === 'all' 
-        ? 'Trạm Y Tế Xã Mộ Đức (Toàn xã 04 điểm)' 
-        : `Phân ban: ${selectedStationFilter}`;
 
-      tbody.innerHTML = filtered.map((emp, i) => `
-        <tr>
-          <td>${i + 1}</td>
-          <td style="text-align: left; padding-left: 6px; font-weight: bold;">${emp.name}</td>
-          <td>${emp.shortName}</td>
-          <td>${emp.role}</td>
-          <td>${emp.point}</td>
-          <td>${emp.status === 'active' ? 'Đang công tác' : 'Đã nghỉ/chuyển'}</td>
-          <td>${emp.phone || '---'}</td>
-        </tr>
+    function openMassEmailModal() {
+
+      const validEmails = staffList
+
+        .filter(s => selectedStaffIds.has(s.id) && s.email && s.email.includes('@'))
+
+        .map(s => s.email.trim());
+
+
+
+      if (validEmails.length === 0) {
+
+        showToast("Không có cán bộ nào được chọn có địa chỉ email hợp lệ!", "warning");
+
+        return;
+
+      }
+
+
+
+      document.getElementById('modal-email-count').innerText = validEmails.length;
+
+      const pillsContainer = document.getElementById('modal-email-pills');
+
+      pillsContainer.innerHTML = validEmails.map(em => `
+
+        <span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded-md font-mono text-[11px] font-bold">
+
+          ${em}
+
+        </span>
+
       `).join('');
 
-      const today = new Date();
-      document.getElementById('print-date').innerText = `Mộ Đức, ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
+
+
+      // Gợi ý chủ đề mẫu
+
+      const presets = [
+
+        "Lịch trực trạm y tế tuần này",
+
+        "Thông báo lịch họp giao ban chuyên môn",
+
+        "Kế hoạch triển khai tiêm chủng mở rộng",
+
+        "Phân công nhiệm vụ tăng cường phòng chống dịch"
+
+      ];
+
+      const presetContainer = document.getElementById('email-subject-presets');
+
+      presetContainer.innerHTML = presets.map(p => `
+
+        <button type="button" onclick="document.getElementById('mass-email-subject').value='${p}'" class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-rose-100 hover:text-rose-800 text-[10.5px] font-semibold text-slate-700 transition">
+
+          + ${p}
+
+        </button>
+
+      `).join('');
+
+
+
+      document.getElementById('mass-email-modal').classList.remove('hidden');
+
+    }
+
+
+
+    function closeMassEmailModal() {
+
+      document.getElementById('mass-email-modal').classList.add('hidden');
+
+    }
+
+
+
+    function launchGmailCompose() {
+
+      const validEmails = staffList
+
+        .filter(s => selectedStaffIds.has(s.id) && s.email && s.email.includes('@'))
+
+        .map(s => s.email.trim());
+
+
+
+      if (validEmails.length === 0) return;
+
+
+
+      const subject = document.getElementById('mass-email-subject').value.trim();
+
+      const body = document.getElementById('mass-email-body').value.trim();
+
+      const mode = document.querySelector('input[name="emailSendMode"]:checked')?.value || 'bcc';
+
+
+
+      const emailParam = (mode === 'bcc') ? `bcc=${encodeURIComponent(validEmails.join(','))}` : `to=${encodeURIComponent(validEmails.join(','))}`;
+
+      const subjectParam = subject ? `&su=${encodeURIComponent(subject)}` : '';
+
+      const bodyParam = body ? `&body=${encodeURIComponent(body)}` : '';
+
+
+
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&${emailParam}${subjectParam}${bodyParam}`;
+
+      window.open(gmailUrl, '_blank');
+
+      closeMassEmailModal();
+
+      showToast(`Đã mở giao diện Gmail cho ${validEmails.length} người nhận!`, "success");
+
+    }
+
+
+
+    // =========================================================================
+
+    // 10. THAO TÁC THÊM / SỬA / ĐIỀU CHUYỂN CÁN BỘ
+
+    // =========================================================================
+
+    function openAddStaffModal() {
+
+      renderStationSelectOptions();
+
+      document.getElementById('staff-modal-title').innerText = "Thêm Cán Bộ Viên Chức Mới";
+
+      document.getElementById('form-staff-id').value = "";
+
+      document.getElementById('form-staff-name').value = "";
+
+      document.getElementById('form-staff-shortname').value = "";
+
+      document.getElementById('form-staff-dob').value = "";
+
+      document.getElementById('form-staff-position').value = "Viên chức";
+
+      document.getElementById('form-staff-department').value = "Khám bệnh";
+
+      document.getElementById('form-staff-title').value = "";
+
+      document.getElementById('form-staff-rankgrade').value = "";
+
+      document.getElementById('form-staff-hiredate').value = "";
+
+      document.getElementById('form-staff-status').value = "active";
+
+      document.getElementById('form-staff-phone').value = "";
+
+      document.getElementById('form-staff-email').value = "";
+
+      document.getElementById('form-staff-note').value = "";
+
+
+
+      document.getElementById('staff-modal').classList.remove('hidden');
+
+    }
+
+
+
+    function openEditStaffModal(id) {
+
+      const emp = staffList.find(s => s.id === id);
+
+      if (!emp) return;
+
+
+
+      renderStationSelectOptions();
+
+      document.getElementById('staff-modal-title').innerText = `Chỉnh Sửa Hồ Sơ: ${emp.name}`;
+
+      document.getElementById('form-staff-id').value = emp.id;
+
+      document.getElementById('form-staff-name').value = emp.name;
+
+      document.getElementById('form-staff-shortname').value = emp.shortName || "";
+
+      document.getElementById('form-staff-dob').value = emp.dob || "";
+
+      document.getElementById('form-staff-position').value = emp.position || "Viên chức";
+
+      document.getElementById('form-staff-department').value = emp.department || "Khám bệnh";
+
+      document.getElementById('form-staff-title').value = emp.title || "";
+
+      document.getElementById('form-staff-rankgrade').value = emp.rankGrade || "";
+
+      document.getElementById('form-staff-point').value = emp.point || "Điểm trạm chính";
+
+      document.getElementById('form-staff-hiredate').value = emp.hireDate || "";
+
+      document.getElementById('form-staff-status').value = emp.status || "active";
+
+      document.getElementById('form-staff-phone').value = emp.phone || "";
+
+      document.getElementById('form-staff-email').value = emp.email || "";
+
+      document.getElementById('form-staff-note').value = emp.note || "";
+
+
+
+      document.getElementById('staff-modal').classList.remove('hidden');
+
+    }
+
+
+
+    function closeStaffModal() {
+
+      document.getElementById('staff-modal').classList.add('hidden');
+
+    }
+
+
+
+    function autoSuggestShortName(name) {
+
+      if (!name) return;
+
+      const parts = name.trim().split(' ');
+
+      const lastName = parts[parts.length - 1];
+
+      const shortInput = document.getElementById('form-staff-shortname');
+
+      if (shortInput && !shortInput.value) {
+
+        shortInput.value = "CB " + lastName;
+
+      }
+
+    }
+
+
+
+    function handleStaffFormSubmit(event) {
+
+      event.preventDefault();
+
+
+
+      const id = document.getElementById('form-staff-id').value.trim();
+
+      const name = document.getElementById('form-staff-name').value.trim();
+
+      const shortName = document.getElementById('form-staff-shortname').value.trim() || name;
+
+      const dob = formatDateVN(document.getElementById('form-staff-dob').value.trim());
+
+      const position = document.getElementById('form-staff-position').value;
+
+      const department = document.getElementById('form-staff-department').value.trim();
+
+      const title = document.getElementById('form-staff-title').value.trim();
+
+      const rankGrade = document.getElementById('form-staff-rankgrade').value.trim();
+
+      const point = document.getElementById('form-staff-point').value;
+
+      const hireDate = formatDateVN(document.getElementById('form-staff-hiredate').value.trim());
+
+      const status = document.getElementById('form-staff-status').value;
+
+      const phone = document.getElementById('form-staff-phone').value.trim();
+
+      const email = document.getElementById('form-staff-email').value.trim();
+
+      const note = document.getElementById('form-staff-note').value.trim();
+
+
+
+      if (!name || !dob || !point) {
+
+        showToast("Vui lòng điền đầy đủ Họ tên, Ngày sinh và Điểm trạm!", "warning");
+
+        return;
+
+      }
+
+
+
+      if (id) {
+
+        // Cập nhật cán bộ hiện có
+
+        const idx = staffList.findIndex(s => s.id === id);
+
+        if (idx !== -1) {
+
+          staffList[idx] = { ...staffList[idx], name, shortName, dob, position, department, title, rankGrade, point, hireDate, status, phone, email, note };
+
+          showToast(`Đã cập nhật hồ sơ cán bộ: ${name}!`, "success");
+
+        }
+
+      } else {
+
+        // Thêm mới
+
+        const newId = "CB" + (staffList.length + 1);
+
+        staffList.push({ id: newId, name, shortName, dob, position, department, title, rankGrade, point, hireDate, status, phone, email, note });
+
+        showToast(`Đã thêm thành công cán bộ mới: ${name}!`, "success");
+
+      }
+
+
+
+      saveStaffToStorage(true);
+
+      closeStaffModal();
+
+      renderStationFilterButtons();
+
+      renderStaffTable();
+
+    }
+
+
+
+    function toggleStaffStatus(id) {
+
+      const emp = staffList.find(s => s.id === id);
+
+      if (!emp) return;
+
+      emp.status = (emp.status === 'active') ? 'inactive' : 'active';
+
+      saveStaffToStorage(true);
+
+      renderStationFilterButtons();
+
+      renderStaffTable();
+
+      showToast(`Đã đổi trạng thái cán bộ ${emp.name} sang: ${emp.status === 'active' ? 'Đang công tác' : 'Đã nghỉ'}`, "info");
+
+    }
+
+
+
+    function deleteStaff(id) {
+
+      const emp = staffList.find(s => s.id === id);
+
+      if (!emp) return;
+
+
+
+      showConfirmModal(
+
+        'Xác nhận xóa cán bộ',
+
+        `Bạn có chắc chắn muốn xóa vĩnh viễn hồ sơ của cán bộ:\n${emp.name} (${emp.point})?`,
+
+        () => {
+
+          staffList = staffList.filter(s => s.id !== id);
+
+          selectedStaffIds.delete(id);
+
+          saveStaffToStorage(true);
+
+          renderStationFilterButtons();
+
+          renderStaffTable();
+
+          showToast(`Đã xóa vĩnh viễn cán bộ: ${emp.name}`, "info");
+
+        }
+
+      );
+
+    }
+
+
+
+    function openTransferModal(id) {
+
+      const emp = staffList.find(s => s.id === id);
+
+      if (!emp) return;
+
+
+
+      renderStationSelectOptions();
+
+      document.getElementById('transfer-staff-id').value = emp.id;
+
+      document.getElementById('transfer-staff-name').innerText = emp.name;
+
+      document.getElementById('transfer-staff-info').innerText = `${emp.title || emp.position} • Tuyển dụng: ${emp.hireDate || '---'} • SĐT: ${emp.phone || '---'}`;
+
+      document.getElementById('transfer-current-point').value = emp.point;
+
+      document.getElementById('transfer-target-point').value = (emp.point === 'Điểm trạm chính') ? 'Điểm y tế số 1' : 'Điểm trạm chính';
+
+      document.getElementById('transfer-reason').value = "";
+
+
+
+      document.getElementById('transfer-modal').classList.remove('hidden');
+
+    }
+
+
+
+    function closeTransferModal() {
+
+      document.getElementById('transfer-modal').classList.add('hidden');
+
+    }
+
+
+
+    function executeTransfer() {
+
+      const id = document.getElementById('transfer-staff-id').value;
+
+      const targetPoint = document.getElementById('transfer-target-point').value;
+
+      const reason = document.getElementById('transfer-reason').value.trim();
+
+
+
+      const emp = staffList.find(s => s.id === id);
+
+      if (!emp) return;
+
+
+
+      const oldPoint = emp.point;
+
+      if (oldPoint === targetPoint) {
+
+        showToast("Điểm trạm mới trùng với điểm trạm hiện tại!", "warning");
+
+        return;
+
+      }
+
+
+
+      emp.point = targetPoint;
+
+      if (reason) {
+
+        emp.note = (emp.note ? emp.note + "; " : "") + `Chuyển từ ${oldPoint} sang ${targetPoint}: ${reason}`;
+
+      }
+
+
+
+      saveStaffToStorage(true);
+
+      closeTransferModal();
+
+      renderStationFilterButtons();
+
+      renderStaffTable();
+
+      showToast(`Đã điều chuyển cán bộ ${emp.name} sang: ${targetPoint}!`, "success");
+
+    }
+
+
+
+    // =========================================================================
+
+    // 11. QUẢN LÝ & MỞ RỘNG ĐIỂM TRẠM LÊN GOOGLE SHEETS
+
+    // =========================================================================
+
+    function openStationManagerModal() {
+
+      renderStationListItems();
+
+      document.getElementById('station-manager-modal').classList.remove('hidden');
+
+    }
+
+
+
+    function closeStationManagerModal() {
+
+      document.getElementById('station-manager-modal').classList.add('hidden');
+
+      renderStationFilterButtons();
+
+      renderStationSelectOptions();
+
+    }
+
+
+
+    function renderStationListItems() {
+
+      const container = document.getElementById('station-list-container');
+
+      if (!container) return;
+
+
+
+      container.innerHTML = stationsList.map((st, idx) => {
+
+        const staffCount = staffList.filter(s => s.point === st.name && s.status === 'active').length;
+
+        return `
+
+          <div class="p-3 bg-white border border-slate-200 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shadow-xs">
+
+            <div class="space-y-0.5">
+
+              <div class="font-extrabold text-slate-900 text-xs flex items-center gap-2">
+
+                <span>${idx + 1}. ${st.name}</span>
+
+                <span class="px-2 py-0.2 rounded bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 text-[10px]">${st.shortName}</span>
+
+              </div>
+
+              <div class="text-[11px] text-slate-500 font-mono">
+
+                Mật khẩu phân quyền: <b class="text-slate-800">${st.password}</b> • Quân số: <b class="text-indigo-600 font-black">${staffCount} cán bộ</b>
+
+              </div>
+
+            </div>
+
+            <button onclick="removeStation('${st.id}')" ${staffCount > 0 ? 'disabled title="Không thể xóa vì còn cán bộ công tác"' : ''} class="px-2.5 py-1 text-[11px] font-bold rounded-lg border transition ${staffCount > 0 ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'}">
+
+              <i class="fa-solid fa-trash mr-1"></i> Xóa
+
+            </button>
+
+          </div>
+
+        `;
+
+      }).join('');
+
+    }
+
+
+
+    async function sendStationsToGoogleSheet(candidateList) {
+
+      if (!GOOGLE_SHEET_URL) {
+
+        showToast("Chưa cấu hình URL Google Apps Script!", "warning");
+
+        return false;
+
+      }
+
+
+
+      const payload = {
+
+        action: "saveStations",
+
+        stations: candidateList,
+
+        records: staffList.map(s => ({
+
+          ...s,
+
+          dob: formatDateVN(s.dob),
+
+          hireDate: formatDateVN(s.hireDate)
+
+        }))
+
+      };
+
+
+
+      try {
+
+        const response = await fetch(GOOGLE_SHEET_URL, {
+
+          method: "POST",
+
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+
+          body: JSON.stringify(payload),
+
+          redirect: "follow"
+
+        });
+
+
+
+        const res = await response.json();
+
+        if (res && res.status === "success") {
+
+          if (res.stations && Array.isArray(res.stations) && res.stations.length > 0) {
+
+            stationsList = sanitizeStations(res.stations);
+
+          }
+
+          return true;
+
+        } else {
+
+          return await sendStationsViaGet(candidateList);
+
+        }
+
+      } catch (err) {
+
+        return await sendStationsViaGet(candidateList);
+
+      }
+
+    }
+
+
+
+    async function sendStationsViaGet(candidateList) {
+
+      try {
+
+        const url = GOOGLE_SHEET_URL + (GOOGLE_SHEET_URL.includes('?') ? '&' : '?') +
+
+          `action=saveStations&stationsJson=${encodeURIComponent(JSON.stringify(candidateList))}&t=${Date.now()}`;
+
+        // Bỏ cache: "no-store" để tránh chặn chuyển hướng CORS
+
+        const response = await fetch(url, { method: "GET" });
+
+        const text = await response.text();
+
+        let res;
+
+        try { res = JSON.parse(text); } catch (e) { return false; }
+
+        if (res && res.status === "success") {
+
+          if (res.stations && Array.isArray(res.stations) && res.stations.length > 0) {
+
+            stationsList = sanitizeStations(res.stations);
+
+          }
+
+          return true;
+
+        }
+
+      } catch (e) {
+
+        console.error("GET dự phòng không thành công:", e);
+
+      }
+
+      return false;
+
+    }
+
+
+
+    async function addNewStation() {
+
+      const name = document.getElementById('new-station-name').value.trim();
+
+      const shortName = document.getElementById('new-station-short').value.trim();
+
+      const password = document.getElementById('new-station-password').value.trim() || "tyt123";
+
+
+
+      if (!name || !shortName) {
+
+        showToast("Vui lòng nhập đầy đủ tên điểm trạm và tên rút gọn!", "warning");
+
+        return;
+
+      }
+
+
+
+      if (stationsList.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+
+        showToast("Tên điểm trạm này đã tồn tại trong danh sách!", "warning");
+
+        return;
+
+      }
+
+
+
+      const newId = "st_" + Date.now();
+
+      const candidateList = [...stationsList, { id: newId, name, shortName, password }];
+
+
+
+      showLoading("Đang ghi điểm trạm mới trực tiếp vào Google Sheet...");
+
+      const success = await sendStationsToGoogleSheet(candidateList);
+
+      hideLoading();
+
+
+
+      if (success) {
+
+        stationsList = candidateList;
+
+        document.getElementById('new-station-name').value = "";
+
+        document.getElementById('new-station-short').value = "";
+
+        document.getElementById('new-station-password').value = "";
+
+
+
+        renderStationListItems();
+
+        renderStationFilterButtons();
+
+        renderStationSelectOptions();
+
+
+
+        showToast(`Đã lưu thành công điểm trạm "${name}" vào Google Sheet!`, "success");
+
+      } else {
+
+        showToast("Lỗi: Không thể lưu điểm trạm vào Google Sheet!", "error");
+
+      }
+
+    }
+
+
+
+    function removeStation(id) {
+
+      const target = stationsList.find(s => s.id === id);
+
+      if (!target) return;
+
+
+
+      const hasStaff = staffList.some(s => s.point === target.name);
+
+      if (hasStaff) {
+
+        showToast(`Không thể xóa "${target.name}" vì hiện vẫn còn cán bộ đang công tác tại trạm này!`, "error");
+
+        return;
+
+      }
+
+
+
+      showConfirmModal(
+
+        'Xóa điểm trạm',
+
+        `Bạn có chắc chắn muốn xóa vĩnh viễn điểm trạm "${target.name}" trên Google Sheet?`,
+
+        async () => {
+
+          const candidateList = stationsList.filter(s => s.id !== id);
+
+
+
+          showLoading("Đang cập nhật bảng DanhMucDiemTram trên Google Sheet...");
+
+          const success = await sendStationsToGoogleSheet(candidateList);
+
+          hideLoading();
+
+
+
+          if (success) {
+
+            stationsList = candidateList;
+
+            renderStationListItems();
+
+            renderStationFilterButtons();
+
+            renderStationSelectOptions();
+
+            showToast(`Đã xóa điểm trạm "${target.name}" trên Google Sheet thành công!`, "info");
+
+          } else {
+
+            showToast("Lỗi: Không thể xóa điểm trạm trên Google Sheet!", "error");
+
+          }
+
+        }
+
+      );
+
+    }
+
+
+
+    // =========================================================================
+
+    // 12. PHÂN QUYỀN MẬT KHẨU ĐIỂM TRẠM
+
+    // =========================================================================
+
+    function renderAuthStatus() {
+
+      const container = document.getElementById('auth-status-container');
+
+      if (!container) return;
+
+
+
+      if (!authorizedStation) {
+
+        container.innerHTML = `
+
+          <button onclick="openAuthModal()" class="px-3 py-2 bg-amber-50 text-amber-800 border border-amber-300 font-bold rounded-xl hover:bg-amber-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+
+            <i class="fa-solid fa-lock text-amber-600"></i> Mở khóa điểm trạm
+
+          </button>
+
+        `;
+
+      } else {
+
+        const isBGD = (authorizedStation === 'Ban Giám Đốc');
+
+        container.innerHTML = `
+
+          <div class="flex items-center gap-1.5 bg-teal-50 text-teal-900 border border-teal-300 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm">
+
+            <i class="fa-solid fa-lock-open text-teal-600"></i>
+
+            <span>Đang mở: <b class="${isBGD ? 'text-purple-700' : 'text-teal-950'}">${authorizedStation}</b></span>
+
+            <button onclick="logoutStation()" class="ml-1 text-slate-400 hover:text-rose-600 p-0.5" title="Khóa quyền này">
+
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+
+            </button>
+
+          </div>
+
+        `;
+
+      }
+
+    }
+
+
+
+    function openAuthModal(preSelect = null) {
+
+      renderStationSelectOptions();
+
+      const select = document.getElementById('auth-station-select');
+
+      if (preSelect) select.value = preSelect;
+
+      document.getElementById('auth-password-input').value = "";
+
+      document.getElementById('auth-error-msg').classList.add('hidden');
+
+      document.getElementById('auth-modal').classList.remove('hidden');
+
+    }
+
+
+
+    function closeAuthModal() {
+
+      document.getElementById('auth-modal').classList.add('hidden');
+
+    }
+
+
+
+    function togglePasswordVisibility() {
+
+      const input = document.getElementById('auth-password-input');
+
+      const icon = document.getElementById('pwd-eye-icon');
+
+      if (input.type === 'password') {
+
+        input.type = 'text';
+
+        icon.className = 'fa-regular fa-eye-slash';
+
+      } else {
+
+        input.type = 'password';
+
+        icon.className = 'fa-regular fa-eye';
+
+      }
+
+    }
+
+
+
+    function handleAuthSubmit() {
+
+      const station = document.getElementById('auth-station-select').value;
+
+      const pwd = document.getElementById('auth-password-input').value.trim();
+
+
+
+      let expected = "bgd123";
+
+      if (station !== 'Ban Giám Đốc') {
+
+        const found = stationsList.find(s => s.name === station);
+
+        expected = found ? found.password : "tyt123";
+
+      }
+
+
+
+      if (pwd === expected) {
+
+        authorizedStation = station;
+
+        sessionStorage.setItem('TYT_AUTH_STATION', station);
+
+        renderAuthStatus();
+
+        closeAuthModal();
+
+        renderStaffTable();
+
+        showToast(`Đã mở khóa thành công quyền quản lý: ${station}!`, 'success');
+
+      } else {
+
+        const errorEl = document.getElementById('auth-error-msg');
+
+        errorEl.innerText = "Mật khẩu không chính xác! Vui lòng thử lại.";
+
+        errorEl.classList.remove('hidden');
+
+      }
+
+    }
+
+
+
+    function logoutStation() {
+
+      authorizedStation = null;
+
+      sessionStorage.removeItem('TYT_AUTH_STATION');
+
+      renderAuthStatus();
+
+      renderStaffTable();
+
+      showToast("Đã khóa quyền quản lý điểm trạm.", "info");
+
+    }
+
+
+
+    function canEditStation(pointName) {
+
+      if (!authorizedStation) return false;
+
+      if (authorizedStation === 'Ban Giám Đốc') return true;
+
+      return authorizedStation === pointName;
+
+    }
+
+
+
+    // =========================================================================
+
+    // 13. ĐỒNG BỘ GOOGLE SHEETS & XUẤT EXCEL / IN PDF
+
+    // =========================================================================
+
+    async function saveStaffToCloud() {
+
+      if (!GOOGLE_SHEET_URL) {
+
+        showToast("Chưa cấu hình URL Google Apps Script trong mã nguồn!", "warning");
+
+        return;
+
+      }
+
+
+
+      showLoading("Đang lưu trữ 29 cán bộ và toàn bộ điểm trạm vào Google Sheet...");
+
+      try {
+
+        const payload = {
+
+          action: "saveStaffList",
+
+          stations: stationsList,
+
+          records: staffList.map(s => ({
+
+            ...s,
+
+            dob: formatDateVN(s.dob),
+
+            hireDate: formatDateVN(s.hireDate)
+
+          })),
+
+          data: {
+
+            timestamp: Date.now(),
+
+            stations: stationsList,
+
+            records: staffList.map(s => ({
+
+              ...s,
+
+              dob: formatDateVN(s.dob),
+
+              hireDate: formatDateVN(s.hireDate)
+
+            }))
+
+          }
+
+        };
+
+
+
+        const response = await fetch(GOOGLE_SHEET_URL, {
+
+          method: "POST",
+
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+
+          body: JSON.stringify(payload),
+
+          redirect: "follow"
+
+        });
+
+        const res = await response.json();
+
+
+
+        if (res.status === 'success') {
+
+          if (res.stations && Array.isArray(res.stations) && res.stations.length > 0) {
+
+            stationsList = sanitizeStations(res.stations);
+
+            renderStationFilterButtons();
+
+            renderStationSelectOptions();
+
+          }
+
+          showToast("Đã lưu thành công dữ liệu nhân sự & bảng DanhMucDiemTram lên Google Sheet!", "success");
+
+        } else {
+
+          showToast("Lỗi lưu dữ liệu: " + res.message, "error");
+
+        }
+
+      } catch (err) {
+
+        console.error(err);
+
+        showToast("Lỗi kết nối khi gửi dữ liệu lên Google Sheet.", "error");
+
+      } finally {
+
+        hideLoading();
+
+      }
+
+    }
+
+
+
+    async function loadStaffFromCloud(isAuto = false) {
+
+      if (!GOOGLE_SHEET_URL) {
+
+        if (!isAuto) showToast("Chưa cấu hình liên kết Google Sheet!", "warning");
+
+        return;
+
+      }
+
+
+
+      if (!isAuto) showLoading("Đang tải dữ liệu thực tế từ Google Sheet...");
+
+      try {
+
+        const url = GOOGLE_SHEET_URL + (GOOGLE_SHEET_URL.includes('?') ? '&' : '?') + `action=loadStaffList&t=${Date.now()}`;
+
+        // LOẠI BỎ cache: "no-store" để tránh lỗi CORS khi Google Apps Script 302 Redirect
+
+        const response = await fetch(url, { method: "GET" });
+
+        
+
+        const rawText = await response.text();
+
+        let res;
+
+        try {
+
+          res = JSON.parse(rawText);
+
+        } catch (parseError) {
+
+          console.error("Phản hồi từ Google Sheet không phải JSON:", rawText);
+
+          if (!isAuto) {
+
+            showToast("Lỗi: Phản hồi từ Google Sheet không hợp lệ.", "error");
+
+          }
+
+          return;
+
+        }
+
+
+
+        if (res.status === 'success') {
+
+          if (res.stations && Array.isArray(res.stations) && res.stations.length > 0) {
+
+            stationsList = sanitizeStations(res.stations);
+
+            renderStationFilterButtons();
+
+            renderStationSelectOptions();
+
+          }
+
+
+
+          if (res.records && res.records.length > 0) {
+
+            // CƠ CHẾ HỢP NHẤT BẢO VỆ 29 CÁN BỘ:
+
+            // Cập nhật thông tin từ Cloud nhưng KHÔNG BAO GIỜ làm mất các cán bộ trong danh bạ chuẩn 29 người
+
+            const cloudMap = new Map();
+
+            res.records.forEach(r => {
+
+              if (r.name) cloudMap.set(r.name.trim().toLowerCase(), r);
+
+            });
+
+
+
+            // 1. Duyệt qua 29 cán bộ gốc: nếu Cloud có thông tin mới thì cập nhật, nếu không thì giữ nguyên gốc
+
+            const mergedList = DEFAULT_STAFF_29.map(defEmp => {
+
+              const cloudEmp = cloudMap.get(defEmp.name.trim().toLowerCase());
+
+              if (cloudEmp) {
+
+                return sanitizeStaffRecord({
+
+                  ...defEmp,
+
+                  ...cloudEmp,
+
+                  // Đảm bảo không bị trống điểm trạm hoặc chức danh
+
+                  point: cloudEmp.point || defEmp.point,
+
+                  title: cloudEmp.title || defEmp.title
+
+                });
+
+              }
+
+              return sanitizeStaffRecord(defEmp);
+
+            });
+
+
+
+            // 2. Thêm các cán bộ mới (nếu có bổ sung thêm ngoài 29 người gốc)
+
+            res.records.forEach(cloudEmp => {
+
+              const nameLower = (cloudEmp.name || '').trim().toLowerCase();
+
+              if (nameLower && !DEFAULT_STAFF_29.some(d => d.name.trim().toLowerCase() === nameLower)) {
+
+                mergedList.push(sanitizeStaffRecord(cloudEmp));
+
+              }
+
+            });
+
+
+
+            staffList = mergedList;
+
+            saveStaffToStorage(true);
+
+            renderStaffTable();
+
+            renderStationFilterButtons();
+
+            showToast(`Đã đồng bộ bảo toàn ${staffList.length} cán bộ từ Google Sheet!`, "success");
+
+          } else {
+
+            if (!isAuto) showToast("Google Sheet chưa có dữ liệu cán bộ. Đang dùng danh sách chuẩn trên máy.", "info");
+
+          }
+
+        } else if (res.status === 'empty') {
+
+          if (!isAuto) {
+
+            showToast("Google Sheet hiện đang trống. Hãy nhấn 'Lưu Google Sheet' để tải 29 cán bộ lên trước!", "warning");
+
+          }
+
+        } else {
+
+          if (!isAuto) showToast("Lỗi tải dữ liệu: " + (res.message || "Không rõ nguyên nhân"), "error");
+
+        }
+
+      } catch (err) {
+
+        console.error("Lỗi đồng bộ online:", err);
+
+        if (!isAuto) {
+
+          showToast("Không thể kết nối đến Google Sheet. Vui lòng kiểm tra mạng hoặc quyền chia sẻ của Web App.", "warning");
+
+        }
+
+      } finally {
+
+        if (!isAuto) hideLoading();
+
+      }
+
+    }
+
+
+
+    function exportToExcel() {
+
+      const wsData = [
+
+        ['TRẠM Y TẾ XÃ MỘ ĐỨC', '', '', '', '', '', '', '', '', '', '', '', ''],
+
+        ['DANH BẠ CÁN BỘ VIÊN CHỨC Y TẾ NĂM 2026'],
+
+        [`Thời điểm xuất: ${new Date().toLocaleDateString('vi-VN')}`],
+
+        [],
+
+        ['TT', 'Mã Cán Bộ', 'Họ và Tên', 'Tên Viết Tắt', 'Ngày Sinh', 'Chức Vụ', 'Chức Danh Nghề Nghiệp', 'Hạng / Bậc', 'Điểm Trạm', 'Ngày Tuyển Dụng', 'Số ĐT', 'Email Công Vụ', 'Ghi Chú']
+
+      ];
+
+
+
+      staffList.forEach((s, idx) => {
+
+        wsData.push([
+
+          idx + 1, s.id, s.name, s.shortName || '', formatDateVN(s.dob) || '',
+
+          s.position || 'Viên chức', s.title || '', s.rankGrade || '',
+
+          s.point, formatDateVN(s.hireDate) || '', s.phone || '', s.email || '', s.note || ''
+
+        ]);
+
+      });
+
+
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      ws['!cols'] = [
+
+        { wch: 5 }, { wch: 10 }, { wch: 25 }, { wch: 12 }, { wch: 12 },
+
+        { wch: 14 }, { wch: 32 }, { wch: 12 }, { wch: 20 }, { wch: 14 },
+
+        { wch: 15 }, { wch: 28 }, { wch: 20 }
+
+      ];
+
+
+
+      const wb = XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(wb, ws, "DanhBaNhanSu");
+
+      XLSX.writeFile(wb, `DanhBa_NhanSu_TYTMoDuc_${Date.now()}.xlsx`);
+
+    }
+
+
+
+    function printStaffDirectory() {
+
+      const tbody = document.getElementById('print-table-body');
+
+      const filtered = staffList.filter(emp => {
+
+        return (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
+
+      });
+
+
+
+      document.getElementById('print-sub-heading').innerText = (selectedStationFilter === 'all')
+
+        ? `Toàn bộ ${stationsList.length} điểm trạm y tế trực thuộc`
+
+        : `Danh bạ cán bộ thuộc ${selectedStationFilter}`;
+
+
+
+      tbody.innerHTML = filtered.map((emp, idx) => `
+
+        <tr>
+
+          <td>${idx + 1}</td>
+
+          <td style="text-align: left; padding-left: 4px; font-weight: bold;">${emp.name}</td>
+
+          <td style="font-family: monospace;">${formatDateVN(emp.dob) || '---'}</td>
+
+          <td>${emp.position || 'Viên chức'}</td>
+
+          <td style="text-align: left; padding-left: 4px;">${emp.title || '---'}</td>
+
+          <td>${emp.rankGrade || '---'}</td>
+
+          <td style="font-weight: bold;">${emp.point}</td>
+
+          <td style="font-family: monospace;">${formatDateVN(emp.hireDate) || '---'}</td>
+
+          <td style="font-family: monospace;">${emp.phone || '---'}</td>
+
+          <td style="text-align: left; padding-left: 4px; font-family: monospace;">${emp.email || '---'}</td>
+
+        </tr>
+
+      `).join('');
+
+
+
+      const now = new Date();
+
+      document.getElementById('print-footer-date').innerText = `Mộ Đức, ngày ${now.getDate()} tháng ${now.getMonth() + 1} năm ${now.getFullYear()}`;
+
+
 
       setTimeout(() => window.print(), 350);
+
     }
 
+
+
     // =========================================================================
-    // 7. TOAST & MODAL TIỆN ÍCH
+
+    // 14. HỘP THOẠI TIỆN ÍCH & TOAST
+
     // =========================================================================
+
+    function showLoading(text) {
+
+      const overlay = document.getElementById('loading-overlay');
+
+      const textEl = document.getElementById('loading-text');
+
+      if (textEl) textEl.innerText = text;
+
+      if (overlay) overlay.style.display = 'flex';
+
+    }
+
+
+
+    function hideLoading() {
+
+      const overlay = document.getElementById('loading-overlay');
+
+      if (overlay) overlay.style.display = 'none';
+
+    }
+
+
+
     function showToast(msg, type = 'info') {
+
       const container = document.getElementById('toast-container');
+
+      if (!container) return;
+
+
+
       const toast = document.createElement('div');
+
+
+
       const colors = {
+
         success: 'bg-emerald-600 text-white shadow-emerald-600/30',
+
         error: 'bg-rose-600 text-white shadow-rose-600/30',
+
         warning: 'bg-amber-500 text-white shadow-amber-500/30',
+
         info: 'bg-slate-800 text-white shadow-slate-800/30'
+
       };
+
+
+
       const icons = {
+
         success: 'fa-circle-check',
+
         error: 'fa-circle-xmark',
+
         warning: 'fa-triangle-exclamation',
+
         info: 'fa-circle-info'
+
       };
+
+
 
       toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2.5 text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+
       toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i> <span>${msg}</span>`;
 
+
+
       container.appendChild(toast);
+
       requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+
+
+
       setTimeout(() => {
+
         toast.classList.add('translate-y-2', 'opacity-0');
+
         setTimeout(() => toast.remove(), 300);
+
       }, 3500);
+
     }
+
+
 
     function showConfirmModal(title, msg, onConfirm) {
+
       document.getElementById('confirm-modal-title').innerText = title;
+
       document.getElementById('confirm-modal-msg').innerText = msg;
+
       document.getElementById('confirm-modal').classList.remove('hidden');
+
       confirmCallback = onConfirm;
+
     }
 
+
+
     function closeConfirmModal(accepted) {
+
       document.getElementById('confirm-modal').classList.add('hidden');
-      if (accepted && typeof confirmCallback === 'function') confirmCallback();
+
+      if (accepted && typeof confirmCallback === 'function') {
+
+        confirmCallback();
+
+      }
+
       confirmCallback = null;
+
     }
+
   </script>
+
 </body>
-</html>
+
+</html> 
+
