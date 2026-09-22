@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Danh Bạ Liên Lạc Cán Bộ Y Tế - Trạm Y Tế Xã Mộ Đức</title>
+
+  <!-- Tailwind CSS & FontAwesome & SheetJS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Times+New+Roman&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+    }
+
+    /* Thanh cuộn mềm */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    #loading-overlay { display: none; }
+    .loader {
+      border: 4px solid #f1f5f9; border-top: 4px solid #0d9488;
+      border-radius: 50%; width: 42px; height: 42px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Mẫu in chuẩn khổ A4 dọc danh bạ liên lạc */
+    @media print {
+      body {
+        background-color: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body > *:not(#print-container) { display: none !important; }
+
+      @page {
+        size: A4 portrait;
+        margin: 12mm 10mm 12mm 10mm;
+      }
+
+      #print-container {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-family: 'Times New Roman', Times, serif;
+        color: black;
+      }
+
+      #print-container table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+      }
+
+      #print-container table th, 
+      #print-container table td {
+        border: 0.5pt solid black !important;
+        padding: 5px 4px !important;
+        vertical-align: middle !important;
+        font-size: 9pt !important;
+      }
+
+      #print-container table.print-header-table,
+      #print-container table.print-header-table td {
+        border: none !important;
+        padding: 0 !important;
+      }
+    }
+    #print-container { display: none; }
+  </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-teal-100 selection:text-teal-900">
+
+  <!-- OVERLAY LOADING -->
+  <div id="loading-overlay" class="fixed inset-0 bg-white/85 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+    <div class="loader mb-3.5"></div>
+    <p class="text-teal-800 font-extrabold text-sm" id="loading-text">Đang đồng bộ danh bạ từ Google Sheet...</p>
+  </div>
+
+  <!-- TOAST THÔNG BÁO -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- HEADER ĐIỀU HÀNH CHÍNH -->
+  <header class="flex-none p-3 md:p-5 pb-2">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-3 flex flex-col md:flex-row justify-between items-center gap-3 border-l-4 border-l-teal-600">
+      
+      <!-- Thông tin đơn vị & Tiêu đề -->
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-600 hover:text-teal-700 flex items-center justify-center transition" title="Về trang chủ">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center">
+              <i class="fa-solid fa-address-book text-teal-600 mr-2.5"></i>Danh Bạ Cán Bộ Y Tế
+            </h1>
+            <span class="bg-teal-50 text-teal-700 text-xs px-2.5 py-0.5 rounded-full font-bold border border-teal-200">TYT Xã Mộ Đức</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">Tra cứu nhanh Họ và tên • Số điện thoại • Zalo • Email công vụ • Gọi điện & Gửi thư 1 chạm</p>
+        </div>
+      </div>
+
+      <!-- Các nút thao tác chính -->
+      <div class="flex flex-wrap gap-2 justify-end items-center">
+        <!-- Chuyển đổi chế độ Thẻ danh bạ <-> Bảng danh bạ -->
+        <div class="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200 shadow-xs">
+          <button id="view-btn-cards" onclick="switchViewMode('cards')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-800 shadow-xs flex items-center gap-1.5">
+            <i class="fa-solid fa-address-card text-teal-600"></i>
+            <span class="hidden sm:inline">Dạng Thẻ</span>
+          </button>
+          <button id="view-btn-table" onclick="switchViewMode('table')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-table-list text-slate-500"></i>
+            <span class="hidden sm:inline">Dạng Bảng</span>
+          </button>
+        </div>
+
+        <button onclick="downloadAllVCard()" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold rounded-xl transition text-xs flex items-center gap-1.5 shadow-sm" title="Tải file danh bạ .vcf để lưu 29 cán bộ vào điện thoại trong 1 click">
+          <i class="fa-solid fa-file-arrow-down text-indigo-600"></i>
+          <span class="hidden sm:inline">Tải về Máy (.VCF)</span>
+        </button>
+
+        <button onclick="exportToExcel()" class="px-3 py-2 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 font-bold rounded-xl transition text-xs flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-file-excel text-green-600"></i>
+          <span>Xuất Excel</span>
+        </button>
+
+        <button onclick="printContactDirectory()" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold rounded-xl transition text-xs flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-print text-rose-600"></i>
+          <span>In Danh Bạ A4</span>
+        </button>
+
+        <button onclick="loadContactsFromCloud(false)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold rounded-xl transition text-xs flex items-center gap-1.5 shadow-sm" title="Làm mới dữ liệu từ Google Sheets">
+          <i class="fa-solid fa-arrows-rotate text-teal-600"></i>
+          <span class="hidden sm:inline">Đồng bộ Cloud</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- THANH LỌC ĐIỂM TRẠM & TÌM KIẾM NHANH -->
+    <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-2.5 mb-2">
+      
+      <!-- Danh sách nút lọc điểm trạm -->
+      <div class="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 shadow-sm overflow-x-auto custom-scrollbar" id="station-filter-container">
+        <!-- Render động qua JavaScript -->
+      </div>
+
+      <!-- Ô tìm kiếm thông minh (Họ tên, SĐT, Email) -->
+      <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm flex-1 lg:max-w-md">
+        <i class="fa-solid fa-magnifying-glass text-teal-600 text-xs"></i>
+        <input type="text" id="search-input" placeholder="Tìm kiếm theo họ tên, số điện thoại, email..." class="w-full bg-transparent border-none outline-none text-xs text-slate-800 font-semibold focus:ring-0" onkeyup="renderContacts()">
+        <button onclick="clearSearch()" id="clear-search-btn" class="text-slate-400 hover:text-slate-600 text-xs hidden">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Thống kê số lượng kết quả -->
+      <div class="flex items-center gap-2 text-xs font-semibold bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm text-slate-600">
+        <span class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
+        <span>Hiển thị: <b id="stat-showing-count" class="text-teal-700 font-black">29</b> cán bộ</span>
+      </div>
+
+    </div>
+
+    <!-- THANH THAO TÁC GỬI EMAIL & SAO CHÉP HÀNG LOẠT -->
+    <div id="bulk-actions-bar" class="hidden bg-teal-50 border border-teal-200 p-2.5 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs mb-2 transition-all">
+      <div class="flex items-center gap-2 font-bold text-teal-900">
+        <span class="w-6 h-6 rounded-lg bg-teal-600 text-white flex items-center justify-center text-xs">
+          <i class="fa-solid fa-check"></i>
+        </span>
+        <span>Đã chọn: <b id="selected-count-badge" class="text-teal-700 font-black text-sm">0</b> cán bộ</span>
+        <span class="text-slate-400 font-normal">• (<span id="selected-valid-emails">0</span> email hợp lệ)</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="openMassEmailModal()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition text-xs flex items-center gap-1.5 shadow-sm shadow-rose-600/30">
+          <i class="fa-solid fa-paper-plane"></i> Gửi Gmail Hàng Loạt
+        </button>
+        <button onclick="copySelectedEmails()" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition text-xs flex items-center gap-1">
+          <i class="fa-solid fa-copy"></i> Sao chép Email
+        </button>
+        <button onclick="copySelectedPhones()" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition text-xs flex items-center gap-1">
+          <i class="fa-solid fa-phone"></i> Sao chép SĐT
+        </button>
+        <button onclick="clearAllSelections()" class="px-2.5 py-1.5 text-slate-500 hover:text-slate-700 font-bold text-xs">
+          Bỏ chọn
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- NỘI DUNG CHÍNH (GỒM 2 CHẾ ĐỘ: DẠNG THẺ CARDS & DẠNG BẢNG TABLE) -->
+  <main class="flex-1 overflow-y-auto custom-scrollbar p-3 md:p-5 pt-0 flex flex-col space-y-3">
+    
+    <!-- CHẾ ĐỘ 1: DẠNG THẺ DANH THIẾP (CARDS VIEW) -->
+    <div id="view-cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+      <!-- Render sống động qua JavaScript -->
+    </div>
+
+    <!-- CHẾ ĐỘ 2: DẠNG BẢNG (TABLE VIEW) -->
+    <div id="view-table-container" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto custom-scrollbar">
+      <table class="w-full text-xs text-left border-collapse min-w-[780px]">
+        <thead>
+          <tr class="bg-slate-100 text-slate-800 font-extrabold text-[12px] uppercase tracking-wide border-b border-slate-200">
+            <th class="p-3 w-10 text-center">
+              <input type="checkbox" id="check-all-box-table" onchange="toggleSelectAll(this.checked)" class="w-4 h-4 text-teal-600 rounded cursor-pointer">
+            </th>
+            <th class="p-3 w-12 text-center">TT</th>
+            <th class="p-3 w-48">Họ và Tên</th>
+            <th class="p-3 w-36">Điểm Trạm</th>
+            <th class="p-3 w-44">Số Điện Thoại</th>
+            <th class="p-3">Email Công Vụ</th>
+            <th class="p-3 w-28 text-center">Liên Lạc Nhanh</th>
+          </tr>
+        </thead>
+        <tbody id="table-body" class="divide-y divide-slate-100 bg-white">
+          <!-- Render tự động qua JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Chân trang lưu ý -->
+    <div class="mt-2 text-[11px] text-slate-500 flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-slate-200">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-circle-info text-teal-600"></i>
+        <span>Bấm <b>Zalo</b> để gọi/nhắn tin ngay • Bấm biểu tượng <b>Copy</b> để sao chép nhanh SĐT hoặc Email.</span>
+      </div>
+      <div class="font-semibold text-slate-600">
+        Nguồn dữ liệu: Google Apps Script TYT Mộ Đức
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL GỬI GMAIL HÀNG LOẠT -->
+  <div id="mass-email-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 overflow-hidden transform transition-all my-auto">
+      <div class="p-4 bg-rose-700 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-white text-rose-700 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-paper-plane"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base leading-tight">Soạn & Gửi Thông Báo Gmail</h3>
+            <p class="text-[11px] text-rose-200">Gửi thư đồng loạt đến các cán bộ y tế được chọn</p>
+          </div>
+        </div>
+        <button onclick="closeMassEmailModal()" class="w-7 h-7 rounded-lg hover:bg-rose-800 text-rose-200 hover:text-white flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-5 space-y-3.5 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Người nhận (<span id="modal-email-count">0</span> email):</label>
+          <div id="modal-email-pills" class="flex flex-wrap gap-1 max-h-24 overflow-y-auto custom-scrollbar p-2 bg-slate-50 border border-slate-200 rounded-xl">
+            <!-- Render danh sách email được chọn -->
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Chế độ gửi:</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer font-bold hover:bg-rose-50 transition">
+              <input type="radio" name="emailSendMode" value="bcc" checked class="text-rose-600 focus:ring-rose-500">
+              <span>BCC (Bảo mật, ẩn danh sách)</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer font-bold hover:bg-rose-50 transition">
+              <input type="radio" name="emailSendMode" value="to" class="text-rose-600 focus:ring-rose-500">
+              <span>TO (Hiện toàn bộ email)</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Chủ đề thư / Mẫu có sẵn:</label>
+          <div class="flex flex-wrap gap-1 mb-1.5" id="email-subject-presets"></div>
+          <input type="text" id="mass-email-subject" placeholder="Nhập tiêu đề thư..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800 outline-none focus:ring-2 focus:ring-rose-500 text-xs">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Nội dung thư thông báo:</label>
+          <textarea id="mass-email-body" rows="4" placeholder="Nhập nội dung cần gửi..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 outline-none focus:ring-2 focus:ring-rose-500 text-xs"></textarea>
+        </div>
+      </div>
+
+      <div class="p-3.5 bg-slate-50 border-t border-slate-100 flex flex-wrap gap-2 justify-end items-center">
+        <button onclick="closeMassEmailModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+          Hủy
+        </button>
+        <button onclick="launchGmailCompose()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-rose-600/30 flex items-center gap-1.5">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Gmail Soạn Thư
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BẢN IN DANH BẠ A4 DỌC CHUẨN MỰC NGHỊ ĐỊNH 30/2020 -->
+  <div id="print-container" class="w-full text-black">
+    <table class="print-header-table" style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 8px;">
+      <tr>
+        <td style="width: 45%; vertical-align: top; text-align: center; border: none; padding: 0;">
+          <div style="font-size: 10pt; text-transform: uppercase; line-height: 1.3;">UBND XÃ MỘ ĐỨC</div>
+          <div style="font-size: 10.5pt; font-weight: bold; text-transform: uppercase; line-height: 1.3;">TRẠM Y TẾ</div>
+          <div style="width: 70px; height: 1px; background-color: #000; margin: 3px auto 4px auto;"></div>
+          <div style="font-size: 8.5pt; line-height: 1.25;">Mã ĐVQHNS: 1026187</div>
+        </td>
+        <td style="width: 55%; vertical-align: top; text-align: center; border: none; padding: 0;">
+          <div style="font-size: 10.5pt; font-weight: bold; text-transform: uppercase; line-height: 1.3;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+          <div style="font-size: 11pt; font-weight: bold; line-height: 1.3;">Độc lập - Tự do - Hạnh phúc</div>
+          <div style="width: 140px; height: 1px; background-color: #000; margin: 3px auto 6px auto;"></div>
+        </td>
+      </tr>
+    </table>
+
+    <div style="text-align: center; margin-top: 6px; margin-bottom: 12px;">
+      <div style="font-weight: bold; font-size: 14pt; letter-spacing: 0.5px; text-transform: uppercase;">DANH BẠ LIÊN LẠC CÁN BỘ Y TẾ NĂM 2026</div>
+      <div style="font-style: italic; font-size: 9pt;" id="print-sub-heading">Toàn bộ cán bộ y tế thuộc 04 điểm trạm</div>
+    </div>
+
+    <!-- Bảng dữ liệu in (có viền 0.5pt chuẩn xác) -->
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+      <thead>
+        <tr style="background-color: #f1f5f9; font-weight: bold; text-align: center;">
+          <th style="width: 32px;">TT</th>
+          <th style="width: 175px;">Họ và Tên</th>
+          <th style="width: 135px;">Điểm Trạm</th>
+          <th style="width: 110px; text-align: center;">Số Điện Thoại</th>
+          <th>Email Công Vụ</th>
+        </tr>
+      </thead>
+      <tbody id="print-table-body"></tbody>
+    </table>
+
+    <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 9pt;">
+      <div style="width: 45%;"></div>
+      <div style="width: 55%; text-align: right; font-style: italic;" id="print-footer-date">
+        Mộ Đức, ngày ... tháng ... năm 2026
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; margin-top: 8px; text-align: center; font-size: 9.5pt; page-break-inside: avoid;">
+      <div style="width: 45%;">
+        <div style="font-weight: bold;">Người Lập Danh Bạ</div>
+        <div style="font-style: italic; font-size: 8pt; margin-top: 2px; margin-bottom: 45px;">(Ký, ghi rõ họ tên)</div>
+      </div>
+      <div style="width: 45%;">
+        <div style="font-weight: bold;">Giám Đốc Trạm Y Tế</div>
+        <div style="font-style: italic; font-size: 8pt; margin-top: 2px; margin-bottom: 45px;">(Ký, đóng dấu)</div>
+        <div style="font-weight: bold;">BS. Phạm Minh Đức</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT LOGIC XỬ LÝ TOÀN DIỆN -->
+  <script>
+    // =========================================================================
+    // 1. CẤU HÌNH LIÊN KẾT GOOGLE APPS SCRIPT WEB APP
+    // =========================================================================
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbz8rE8UkPQOG-gk_annTiMfKic9qoUQRn-X-qII3Dtme_xPMwecwi0YzbxoSHlLbNZmBg/exec";
+
+    // Kênh truyền tin thời gian thực giữa các tab trên trình duyệt
+    const staffBroadcast = new BroadcastChannel('TYT_STAFF_CHANNEL');
+
+    // =========================================================================
+    // 2. DANH BẠ GỐC 29 CÁN BỘ (HỌ TÊN, SĐT, EMAIL, ĐIỂM TRẠM)
+    // =========================================================================
+    const DEFAULT_CONTACTS_29 = [
+      { id: "CB01", name: "Trịnh Thị Minh Tuệ", point: "Điểm trạm chính", phone: "0949544799", email: "tuetrinh73@gmail.com" },
+      { id: "CB02", name: "Nguyễn Phu", point: "Điểm y tế số 2", phone: "0777401717", email: "nphu2817@quangngai.gov.vn" },
+      { id: "CB03", name: "Phạm Minh Đức", point: "Điểm y tế số 1", phone: "0914158350", email: "ducphammoduc@gmail.com" },
+      { id: "CB04", name: "Nguyễn Thị Như Nguyện", point: "Điểm trạm chính", phone: "0962849485", email: "nhunguyenhealth@gmail.com" },
+      { id: "CB05", name: "Lê Thị Thu Thủy", point: "Điểm trạm chính", phone: "0934083084", email: "han230717@gmail.com" },
+      { id: "CB06", name: "Huỳnh Văn Phương", point: "Điểm y tế số 2", phone: "0976737118", email: "hvphuong@quangngai.gov.vn" },
+      { id: "CB07", name: "Võ Thị Thanh Thuyên", point: "Điểm trạm chính", phone: "0382237018", email: "vttthuyen6392@quangngai.gov.vn" },
+      { id: "CB08", name: "Trần Thị Lài", point: "Điểm y tế số 1", phone: "0767331264", email: "laitran0677@gmail.com" },
+      { id: "CB09", name: "Nguyễn Thị Thu Nguyệt", point: "Điểm y tế số 1", phone: "0394319708", email: "thunguyetbvmd@gmail.com" },
+      { id: "CB10", name: "Nguyễn Thị Ly Va", point: "Điểm y tế số 3", phone: "0915618065", email: "nguyenthilyva@gmail.com" },
+      { id: "CB11", name: "Võ Thị Thanh Việt", point: "Điểm y tế số 1", phone: "0974930431", email: "vothanhviet81@gmail.com" },
+      { id: "CB12", name: "Võ Quang Vinh", point: "Điểm trạm chính", phone: "0985530289", email: "quangvinh.tyt@gmail.com" },
+      { id: "CB13", name: "Trần Thị Kim Thanh", point: "Điểm y tế số 2", phone: "0903700722", email: "ttkthanh2845@quangngai.gov.vn" },
+      { id: "CB14", name: "Cao Thị Ánh Trúc", point: "Điểm y tế số 2", phone: "0944942416", email: "tytduchoa@gmail.com" },
+      { id: "CB15", name: "Nguyễn Thị Ánh Thu", point: "Điểm y tế số 3", phone: "0379949880", email: "anhthuphusan@gmail.com" },
+      { id: "CB16", name: "Nguyễn Thị Bé", point: "Điểm y tế số 3", phone: "0918093101", email: "ntbe4043@quangngai.gov.vn" },
+      { id: "CB17", name: "Phạm Thị Mỹ Trâm", point: "Điểm y tế số 3", phone: "0916702207", email: "phamthimytramqng@gmail.com" },
+      { id: "CB18", name: "Võ Thị Thanh Thùy", point: "Điểm trạm chính", phone: "0914126139", email: "votthuy1987@gmail.com" },
+      { id: "CB19", name: "Huỳnh Thị Anh Tin", point: "Điểm y tế số 1", phone: "0377448814", email: "huynhtin2129@gmail.com" },
+      { id: "CB20", name: "Lê Thị Nương", point: "Điểm trạm chính", phone: "0907201285", email: "ltnuong8033@quangngai.gov.vn" },
+      { id: "CB21", name: "Nguyễn Thị Kiều Thắm", point: "Điểm y tế số 2", phone: "0779487016", email: "ntktham2623@quangngai.gov.vn" },
+      { id: "CB22", name: "Trần Thị Lệ Thy", point: "Điểm trạm chính", phone: "0365208605", email: "ttlthy2975@quangngai.gov.vn" },
+      { id: "CB23", name: "Lê Thị Tố Lan", point: "Điểm y tế số 3", phone: "0985508847", email: "lethitolan23@gmail.com" },
+      { id: "CB24", name: "Phạm Trần Thị Hòa", point: "Điểm y tế số 3", phone: "0942548742", email: "quahoamy@gmail.com" },
+      { id: "CB25", name: "Bùi Đạt Hiếu", point: "Điểm trạm chính", phone: "0984279097", email: "dathieu102@gmail.com" },
+      { id: "CB26", name: "Huỳnh Thị Thùy Yên", point: "Điểm trạm chính", phone: "0931511727", email: "dsthuyyen@gmail.com" },
+      { id: "CB27", name: "Đoàn Thị Diễm", point: "Điểm y tế số 1", phone: "0977013706", email: "diemdoan1189@gmail.com" },
+      { id: "CB28", name: "Nguyễn Thị Phương Thảo", point: "Điểm y tế số 2", phone: "0394376446", email: "ntpthao1516@quangngai.gov.vn" },
+      { id: "CB29", name: "Nguyễn Anh Vũ", point: "Điểm y tế số 3", phone: "0349796028", email: "anhvucuto362@gmail.com" }
+    ];
+
+    const DEFAULT_STATIONS = [
+      { id: "st_chinh", name: "Điểm trạm chính", shortName: "Đức Tân" },
+      { id: "st_1", name: "Điểm y tế số 1", shortName: "Mộ Đức" },
+      { id: "st_2", name: "Điểm y tế số 2", shortName: "Đức Hòa" },
+      { id: "st_3", name: "Điểm y tế số 3", shortName: "Đức Phú" }
+    ];
+
+    let contactList = [];
+    let stationsList = [...DEFAULT_STATIONS];
+    let selectedStationFilter = 'all';
+    let currentViewMode = localStorage.getItem('TYT_CONTACT_VIEW_MODE') || 'cards';
+    let selectedContactIds = new Set();
+
+    // =========================================================================
+    // 3. KHỞI TẠO VÀ LẮNG NGHE TÍN HIỆU ĐỒNG BỘ
+    // =========================================================================
+    window.onload = async function() {
+      initContactData();
+      renderStationFilterButtons();
+      switchViewMode(currentViewMode);
+      initEmailSubjectPresets();
+
+      // Lắng nghe cập nhật tức thời từ trang Quản Lý Nhân Viên
+      staffBroadcast.onmessage = (e) => {
+        if (e.data && e.data.action === 'staff_updated') {
+          initContactData();
+          renderStationFilterButtons();
+          renderContacts();
+          showToast("Danh bạ vừa được cập nhật từ Quản lý nhân sự!", "info");
+        }
+      };
+
+      // Tự động kéo dữ liệu từ Google Sheets
+      if (GOOGLE_SHEET_URL) {
+        await loadContactsFromCloud(true);
+      }
+    };
+
+    function initContactData() {
+      const stored = localStorage.getItem('TYT_STAFF_LIST');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            contactList = parsed.filter(s => s.status !== 'inactive').map((item, idx) => ({
+              id: item.id || `CB${idx + 1}`,
+              name: item.name || '',
+              point: item.point || 'Điểm trạm chính',
+              phone: item.phone ? String(item.phone).trim() : '',
+              email: item.email ? String(item.email).trim() : ''
+            }));
+            return;
+          }
+        } catch(e) {}
+      }
+      contactList = JSON.parse(JSON.stringify(DEFAULT_CONTACTS_29));
+    }
+
+    // =========================================================================
+    // 4. BỘ LỌC ĐIỂM TRẠM & CHẾ ĐỘ XEM
+    // =========================================================================
+    function renderStationFilterButtons() {
+      const container = document.getElementById('station-filter-container');
+      if (!container) return;
+
+      const totalCount = contactList.length;
+      const isAllActive = (selectedStationFilter === 'all');
+
+      let html = `
+        <button onclick="filterByStation('all')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap shadow-xs ${isAllActive ? 'bg-teal-600 text-white' : 'text-slate-600 hover:bg-slate-100'}">
+          Tất cả (${totalCount})
+        </button>
+      `;
+
+      stationsList.forEach(st => {
+        const count = contactList.filter(s => s.point === st.name).length;
+        const isCurrent = (selectedStationFilter === st.name);
+        html += `
+          <button onclick="filterByStation('${st.name.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap shadow-xs ${isCurrent ? 'bg-teal-600 text-white' : 'text-slate-600 hover:bg-slate-100'}">
+            ${st.shortName || st.name} (${count})
+          </button>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function filterByStation(stName) {
+      selectedStationFilter = stName;
+      renderStationFilterButtons();
+      renderContacts();
+    }
+
+    function switchViewMode(mode) {
+      currentViewMode = mode;
+      localStorage.setItem('TYT_CONTACT_VIEW_MODE', mode);
+
+      const btnCards = document.getElementById('view-btn-cards');
+      const btnTable = document.getElementById('view-btn-table');
+      const containerCards = document.getElementById('view-cards-container');
+      const containerTable = document.getElementById('view-table-container');
+
+      if (mode === 'cards') {
+        btnCards.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-800 shadow-xs flex items-center gap-1.5";
+        btnTable.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5";
+        containerCards.classList.remove('hidden');
+        containerTable.classList.add('hidden');
+      } else {
+        btnTable.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-800 shadow-xs flex items-center gap-1.5";
+        btnCards.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5";
+        containerTable.classList.remove('hidden');
+        containerCards.classList.add('hidden');
+      }
+
+      renderContacts();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('search-input');
+      if (input) {
+        input.value = '';
+        renderContacts();
+      }
+    }
+
+    // =========================================================================
+    // 5. HIỂN THỊ DANH BẠ (DẠNG THẺ CARDS & DẠNG BẢNG TABLE)
+    // =========================================================================
+    function getFilteredContacts() {
+      const search = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (clearBtn) {
+        clearBtn.classList.toggle('hidden', search === '');
+      }
+
+      return contactList.filter(c => {
+        const matchStation = (selectedStationFilter === 'all') || (c.point === selectedStationFilter);
+        const matchSearch = !search || 
+          (c.name && c.name.toLowerCase().includes(search)) ||
+          (c.phone && c.phone.includes(search)) ||
+          (c.email && c.email.toLowerCase().includes(search)) ||
+          (c.point && c.point.toLowerCase().includes(search));
+
+        return matchStation && matchSearch;
+      });
+    }
+
+    function getInitials(name) {
+      if (!name) return 'CB';
+      const parts = name.trim().split(' ');
+      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+      return (parts[parts.length - 2][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    function renderContacts() {
+      const filtered = getFilteredContacts();
+      const countEl = document.getElementById('stat-showing-count');
+      if (countEl) countEl.innerText = filtered.length;
+
+      renderCardsView(filtered);
+      renderTableView(filtered);
+      updateBulkActionBar();
+    }
+
+    function renderCardsView(list) {
+      const container = document.getElementById('view-cards-container');
+      if (!container) return;
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full p-12 text-center bg-white rounded-2xl border border-dashed border-slate-300">
+            <div class="text-4xl mb-3">🔍</div>
+            <div class="font-bold text-slate-700 text-sm">Không tìm thấy cán bộ nào</div>
+            <div class="text-xs text-slate-400 mt-1">Vui lòng kiểm tra lại từ khóa tìm kiếm hoặc đổi điểm trạm.</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map((c, idx) => {
+        const isSelected = selectedContactIds.has(c.id);
+        const cleanPhone = (c.phone || '').replace(/[^0-9]/g, '');
+        const initials = getInitials(c.name);
+
+        return `
+          <div class="bg-white rounded-2xl border ${isSelected ? 'border-teal-500 ring-2 ring-teal-500/20 shadow-md' : 'border-slate-200 shadow-xs hover:border-teal-300 hover:shadow-sm'} p-4 transition-all duration-200 flex flex-col justify-between group">
+            
+            <!-- Phần đầu thẻ: Checkbox, Avatar, Họ tên & Điểm trạm -->
+            <div>
+              <div class="flex items-start justify-between gap-2.5 mb-3">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-sm shadow-teal-500/20">
+                    ${initials}
+                  </div>
+                  <div class="min-w-0">
+                    <h3 class="font-extrabold text-slate-900 text-sm leading-tight truncate" title="${c.name}">
+                      ${c.name}
+                    </h3>
+                    <div class="inline-flex items-center gap-1 text-[10.5px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200 mt-1">
+                      <i class="fa-solid fa-location-dot text-[9.5px]"></i>
+                      <span class="truncate">${c.point}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelectContact('${c.id}', this.checked)" class="w-4 h-4 text-teal-600 rounded cursor-pointer mt-1">
+              </div>
+
+              <!-- Chi tiết thông tin liên lạc cốt lõi -->
+              <div class="space-y-2 py-2 border-t border-slate-100 text-xs">
+                <!-- Số điện thoại -->
+                <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-slate-200 transition">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-[11px] shrink-0">
+                      <i class="fa-solid fa-phone"></i>
+                    </div>
+                    <span class="font-mono font-bold text-slate-800 text-xs truncate">
+                      ${c.phone || '<span class="text-slate-400 font-normal italic">Chưa có SĐT</span>'}
+                    </span>
+                  </div>
+                  ${cleanPhone ? `
+                    <button onclick="copyToClipboard('${c.phone}', 'Số điện thoại')" class="text-slate-400 hover:text-teal-700 p-1" title="Sao chép số điện thoại">
+                      <i class="fa-regular fa-copy text-xs"></i>
+                    </button>
+                  ` : ''}
+                </div>
+
+                <!-- Email công vụ -->
+                <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-slate-200 transition">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-6 h-6 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center text-[11px] shrink-0">
+                      <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <span class="font-mono text-[11px] text-slate-700 truncate" title="${c.email}">
+                      ${c.email || '<span class="text-slate-400 italic">Chưa có Email</span>'}
+                    </span>
+                  </div>
+                  ${c.email ? `
+                    <button onclick="copyToClipboard('${c.email}', 'Địa chỉ Email')" class="text-slate-400 hover:text-teal-700 p-1" title="Sao chép địa chỉ Email">
+                      <i class="fa-regular fa-copy text-xs"></i>
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+
+            <!-- Các nút hành động liên lạc tức thời -->
+            <div class="grid grid-cols-3 gap-1.5 pt-3 border-t border-slate-100 mt-2">
+              <!-- Gọi điện -->
+              ${cleanPhone ? `
+                <a href="tel:${cleanPhone}" class="py-2 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white font-bold text-xs flex items-center justify-center gap-1 transition shadow-xs">
+                  <i class="fa-solid fa-phone-volume"></i>
+                  <span>Gọi</span>
+                </a>
+              ` : `
+                <span class="py-2 rounded-xl bg-slate-100 text-slate-400 text-xs flex items-center justify-center cursor-not-allowed">Gọi</span>
+              `}
+
+              <!-- Zalo -->
+              ${cleanPhone ? `
+                <a href="https://zalo.me/${cleanPhone}" target="_blank" class="py-2 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white font-black text-xs flex items-center justify-center gap-1 transition shadow-xs">
+                  <i class="fa-solid fa-comment-dots"></i>
+                  <span>Zalo</span>
+                </a>
+              ` : `
+                <span class="py-2 rounded-xl bg-slate-100 text-slate-400 text-xs flex items-center justify-center cursor-not-allowed">Zalo</span>
+              `}
+
+              <!-- Gmail -->
+              ${c.email ? `
+                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(c.email)}" target="_blank" class="py-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white font-bold text-xs flex items-center justify-center gap-1 transition shadow-xs" title="Soạn thư Gmail">
+                  <i class="fa-solid fa-paper-plane"></i>
+                  <span>Mail</span>
+                </a>
+              ` : `
+                <span class="py-2 rounded-xl bg-slate-100 text-slate-400 text-xs flex items-center justify-center cursor-not-allowed">Mail</span>
+              `}
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTableView(list) {
+      const tbody = document.getElementById('table-body');
+      if (!tbody) return;
+
+      if (list.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="p-8 text-center text-slate-400 italic">
+              Không tìm thấy cán bộ nào trong danh bạ.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = list.map((c, idx) => {
+        const isSelected = selectedContactIds.has(c.id);
+        const cleanPhone = (c.phone || '').replace(/[^0-9]/g, '');
+
+        return `
+          <tr class="hover:bg-slate-50/80 transition border-b border-slate-100">
+            <td class="p-3 text-center">
+              <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelectContact('${c.id}', this.checked)" class="w-4 h-4 text-teal-600 rounded cursor-pointer">
+            </td>
+            <td class="p-3 text-center font-mono font-bold text-slate-400 text-xs">
+              ${idx + 1}
+            </td>
+            <td class="p-3 font-extrabold text-slate-900 text-xs">
+              ${c.name}
+            </td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                ${c.point}
+              </span>
+            </td>
+            <td class="p-3 font-mono font-bold text-slate-800 text-xs">
+              <div class="flex items-center gap-1.5">
+                <span>${c.phone || '---'}</span>
+                ${cleanPhone ? `
+                  <button onclick="copyToClipboard('${c.phone}', 'SĐT')" class="text-slate-400 hover:text-teal-700 p-0.5" title="Sao chép">
+                    <i class="fa-regular fa-copy text-[10px]"></i>
+                  </button>
+                ` : ''}
+              </div>
+            </td>
+            <td class="p-3 font-mono text-slate-700 text-xs">
+              <div class="flex items-center gap-1.5">
+                <span class="truncate max-w-xs">${c.email || '---'}</span>
+                ${c.email ? `
+                  <button onclick="copyToClipboard('${c.email}', 'Email')" class="text-slate-400 hover:text-teal-700 p-0.5" title="Sao chép">
+                    <i class="fa-regular fa-copy text-[10px]"></i>
+                  </button>
+                ` : ''}
+              </div>
+            </td>
+            <td class="p-3 text-center">
+              <div class="flex items-center justify-center gap-1">
+                ${cleanPhone ? `
+                  <a href="tel:${cleanPhone}" class="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white flex items-center justify-center transition" title="Gọi điện">
+                    <i class="fa-solid fa-phone text-[11px]"></i>
+                  </a>
+                  <a href="https://zalo.me/${cleanPhone}" target="_blank" class="w-7 h-7 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white flex items-center justify-center transition font-black text-[10px]" title="Zalo">
+                    Zalo
+                  </a>
+                ` : ''}
+                ${c.email ? `
+                  <a href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(c.email)}" target="_blank" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white flex items-center justify-center transition" title="Gửi Gmail">
+                    <i class="fa-solid fa-envelope text-[11px]"></i>
+                  </a>
+                ` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // 6. THAO TÁC HÀNG LOẠT & GỬI GMAIL
+    // =========================================================================
+    function toggleSelectAll(checked) {
+      const filtered = getFilteredContacts();
+      if (checked) {
+        filtered.forEach(c => selectedContactIds.add(c.id));
+      } else {
+        selectedContactIds.clear();
+      }
+      renderContacts();
+    }
+
+    function toggleSelectContact(id, checked) {
+      if (checked) {
+        selectedContactIds.add(id);
+      } else {
+        selectedContactIds.delete(id);
+      }
+      updateBulkActionBar();
+      renderContacts();
+    }
+
+    function clearAllSelections() {
+      selectedContactIds.clear();
+      renderContacts();
+    }
+
+    function updateBulkActionBar() {
+      const bar = document.getElementById('bulk-actions-bar');
+      const countBadge = document.getElementById('selected-count-badge');
+      const validEmailsSpan = document.getElementById('selected-valid-emails');
+
+      if (!bar) return;
+
+      if (selectedContactIds.size > 0) {
+        bar.classList.remove('hidden');
+        if (countBadge) countBadge.innerText = selectedContactIds.size;
+
+        const validEmails = contactList
+          .filter(c => selectedContactIds.has(c.id) && c.email && c.email.includes('@'))
+          .map(c => c.email.trim());
+
+        if (validEmailsSpan) validEmailsSpan.innerText = validEmails.length;
+      } else {
+        bar.classList.add('hidden');
+      }
+    }
+
+    function copySelectedEmails() {
+      const validEmails = contactList
+        .filter(c => selectedContactIds.has(c.id) && c.email && c.email.includes('@'))
+        .map(c => c.email.trim());
+
+      if (validEmails.length === 0) {
+        showToast("Không có email hợp lệ trong các cán bộ được chọn!", "warning");
+        return;
+      }
+
+      copyToClipboard(validEmails.join(', '), `${validEmails.length} địa chỉ Email`);
+    }
+
+    function copySelectedPhones() {
+      const validPhones = contactList
+        .filter(c => selectedContactIds.has(c.id) && c.phone)
+        .map(c => c.phone.trim());
+
+      if (validPhones.length === 0) {
+        showToast("Không có số điện thoại trong các cán bộ được chọn!", "warning");
+        return;
+      }
+
+      copyToClipboard(validPhones.join(', '), `${validPhones.length} số điện thoại`);
+    }
+
+    function initEmailSubjectPresets() {
+      const presets = [
+        "Lịch trực trạm y tế tuần này",
+        "Thông báo lịch họp giao ban chuyên môn",
+        "Kế hoạch triển khai tiêm chủng mở rộng",
+        "Công tác phòng chống dịch bệnh trên địa bàn"
+      ];
+      const container = document.getElementById('email-subject-presets');
+      if (container) {
+        container.innerHTML = presets.map(p => `
+          <button type="button" onclick="document.getElementById('mass-email-subject').value='${p}'" class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-rose-100 hover:text-rose-800 text-[10.5px] font-semibold text-slate-700 transition">
+            + ${p}
+          </button>
+        `).join('');
+      }
+    }
+
+    function openMassEmailModal() {
+      const validEmails = contactList
+        .filter(c => selectedContactIds.has(c.id) && c.email && c.email.includes('@'))
+        .map(c => c.email.trim());
+
+      if (validEmails.length === 0) {
+        showToast("Không có cán bộ nào được chọn có địa chỉ email hợp lệ!", "warning");
+        return;
+      }
+
+      document.getElementById('modal-email-count').innerText = validEmails.length;
+      const pillsContainer = document.getElementById('modal-email-pills');
+      pillsContainer.innerHTML = validEmails.map(em => `
+        <span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded-md font-mono text-[11px] font-bold">
+          ${em}
+        </span>
+      `).join('');
+
+      document.getElementById('mass-email-modal').classList.remove('hidden');
+    }
+
+    function closeMassEmailModal() {
+      document.getElementById('mass-email-modal').classList.add('hidden');
+    }
+
+    function launchGmailCompose() {
+      const validEmails = contactList
+        .filter(c => selectedContactIds.has(c.id) && c.email && c.email.includes('@'))
+        .map(c => c.email.trim());
+
+      if (validEmails.length === 0) return;
+
+      const subject = document.getElementById('mass-email-subject').value.trim();
+      const body = document.getElementById('mass-email-body').value.trim();
+      const mode = document.querySelector('input[name="emailSendMode"]:checked')?.value || 'bcc';
+
+      const emailParam = (mode === 'bcc') ? `bcc=${encodeURIComponent(validEmails.join(','))}` : `to=${encodeURIComponent(validEmails.join(','))}`;
+      const subjectParam = subject ? `&su=${encodeURIComponent(subject)}` : '';
+      const bodyParam = body ? `&body=${encodeURIComponent(body)}` : '';
+
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&${emailParam}${subjectParam}${bodyParam}`;
+      window.open(gmailUrl, '_blank');
+      closeMassEmailModal();
+      showToast(`Đã mở giao diện Gmail cho ${validEmails.length} người nhận!`, "success");
+    }
+
+    // =========================================================================
+    // 7. XUẤT VCARD (.VCF) CHO ĐIỆN THOẠI & XUẤT EXCEL & IN A4
+    // =========================================================================
+    function downloadAllVCard() {
+      const targetList = selectedContactIds.size > 0 
+        ? contactList.filter(c => selectedContactIds.has(c.id))
+        : contactList;
+
+      if (targetList.length === 0) {
+        showToast("Danh bạ trống!", "warning");
+        return;
+      }
+
+      let vcfContent = '';
+      targetList.forEach(c => {
+        vcfContent += "BEGIN:VCARD\r\n";
+        vcfContent += "VERSION:3.0\r\n";
+        vcfContent += `FN:${c.name}\r\n`;
+        vcfContent += `N:;${c.name};;;\r\n`;
+        vcfContent += `ORG:Trạm Y Tế Xã Mộ Đức;${c.point}\r\n`;
+        if (c.phone) {
+          vcfContent += `TEL;TYPE=CELL,VOICE:${c.phone}\r\n`;
+        }
+        if (c.email) {
+          vcfContent += `EMAIL;TYPE=WORK,INTERNET:${c.email}\r\n`;
+        }
+        vcfContent += "END:VCARD\r\n";
+      });
+
+      const blob = new Blob([vcfContent], { type: 'text/vcard;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `DanhBa_TYT_MoDuc_${Date.now()}.vcf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast(`Đã tải file .VCF chứa ${targetList.length} danh bạ! Mở file để lưu vào điện thoại.`, "success");
+    }
+
+    function exportToExcel() {
+      const filtered = getFilteredContacts();
+      const wsData = [
+        ['TRẠM Y TẾ XÃ MỘ ĐỨC', '', '', ''],
+        ['DANH BẠ LIÊN LẠC CÁN BỘ VIÊN CHỨC Y TẾ'],
+        [`Thời điểm xuất: ${new Date().toLocaleDateString('vi-VN')}`],
+        [],
+        ['TT', 'Họ và Tên', 'Điểm Trạm', 'Số Điện Thoại', 'Email Công Vụ']
+      ];
+
+      filtered.forEach((c, idx) => {
+        wsData.push([
+          idx + 1,
+          c.name,
+          c.point,
+          c.phone || '',
+          c.email || ''
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      ws['!cols'] = [
+        { wch: 5 }, { wch: 26 }, { wch: 20 }, { wch: 16 }, { wch: 30 }
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "DanhBaLienLac");
+      XLSX.writeFile(wb, `DanhBa_LienLac_TYTMoDuc_${Date.now()}.xlsx`);
+      showToast("Đã xuất danh bạ sang file Excel!", "success");
+    }
+
+    function printContactDirectory() {
+      const tbody = document.getElementById('print-table-body');
+      const filtered = getFilteredContacts();
+
+      document.getElementById('print-sub-heading').innerText = (selectedStationFilter === 'all')
+        ? `Toàn bộ ${filtered.length} cán bộ y tế thuộc các điểm trạm`
+        : `Danh bạ cán bộ thuộc ${selectedStationFilter} (${filtered.length} cán bộ)`;
+
+      tbody.innerHTML = filtered.map((c, idx) => `
+        <tr>
+          <td style="text-align: center; font-weight: bold;">${idx + 1}</td>
+          <td style="font-weight: bold; padding-left: 5px;">${c.name}</td>
+          <td style="padding-left: 5px;">${c.point}</td>
+          <td style="font-family: monospace; text-align: center; font-weight: bold;">${c.phone || '---'}</td>
+          <td style="font-family: monospace; padding-left: 5px;">${c.email || '---'}</td>
+        </tr>
+      `).join('');
+
+      const now = new Date();
+      document.getElementById('print-footer-date').innerText = `Mộ Đức, ngày ${now.getDate()} tháng ${now.getMonth() + 1} năm ${now.getFullYear()}`;
+
+      setTimeout(() => window.print(), 300);
+    }
+
+    // =========================================================================
+    // 8. ĐỒNG BỘ GOOGLE SHEETS
+    // =========================================================================
+    async function loadContactsFromCloud(isAuto = false) {
+      if (!GOOGLE_SHEET_URL) return;
+
+      if (!isAuto) showLoading("Đang tải danh bạ từ Google Sheet...");
+      try {
+        const url = GOOGLE_SHEET_URL + (GOOGLE_SHEET_URL.includes('?') ? '&' : '?') + `action=loadStaffList&t=${Date.now()}`;
+        const response = await fetch(url, { method: "GET" });
+        const res = await response.json();
+
+        if (res.status === 'success') {
+          if (res.stations && Array.isArray(res.stations) && res.stations.length > 0) {
+            stationsList = res.stations;
+            renderStationFilterButtons();
+          }
+
+          if (res.records && res.records.length > 0) {
+            contactList = res.records.filter(r => r.status !== 'inactive').map((item, idx) => ({
+              id: item.id || `CB${idx + 1}`,
+              name: item.name || '',
+              point: item.point || 'Điểm trạm chính',
+              phone: item.phone ? String(item.phone).trim() : '',
+              email: item.email ? String(item.email).trim() : ''
+            }));
+            renderContacts();
+            showToast(`Đã đồng bộ thành công ${contactList.length} liên hệ từ Google Sheet!`, "success");
+          }
+        }
+      } catch (err) {
+        console.warn("Lỗi đồng bộ online:", err);
+        if (!isAuto) showToast("Không thể kết nối đến Google Sheet. Đang hiển thị danh bạ trên máy.", "warning");
+      } finally {
+        if (!isAuto) hideLoading();
+      }
+    }
+
+    // =========================================================================
+    // 9. TIỆN ÍCH HỖ TRỢ & TOAST NOTIFICATION
+    // =========================================================================
+    function copyToClipboard(text, label = "thông tin") {
+      if (!text) return;
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      
+      try {
+        const success = document.execCommand('copy');
+        if (success) {
+          showToast(`Đã sao chép ${label} vào Clipboard!`, "success");
+        } else {
+          showToast("Không thể sao chép tự động!", "warning");
+        }
+      } catch (e) {
+        showToast("Lỗi khi sao chép!", "error");
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function showLoading(text) {
+      const overlay = document.getElementById('loading-overlay');
+      const textEl = document.getElementById('loading-text');
+      if (textEl) textEl.innerText = text;
+      if (overlay) overlay.style.display = 'flex';
+    }
+
+    function hideLoading() {
+      const overlay = document.getElementById('loading-overlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-emerald-600 text-white shadow-emerald-600/30',
+        error: 'bg-rose-600 text-white shadow-rose-600/30',
+        warning: 'bg-amber-500 text-white shadow-amber-500/30',
+        info: 'bg-slate-800 text-white shadow-slate-800/30'
+      };
+      const icons = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-xmark',
+        warning: 'fa-triangle-exclamation',
+        info: 'fa-circle-info'
+      };
+
+      toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2.5 text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i> <span>${msg}</span>`;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+  </script>
+</body>
+</html>
