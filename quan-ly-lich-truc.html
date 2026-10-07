@@ -1,0 +1,2328 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Trực Trạm Y Tế Xã Mộ Đức</title>
+    <!-- Tailwind CSS, SheetJS & FontAwesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .draggable { cursor: grab; user-select: none; }
+        .draggable:active { cursor: grabbing; }
+        .cell-highlight { animation: pulse-bg 2s infinite; border: 2px solid #3b82f6 !important; }
+        @keyframes pulse-bg {
+            0% { background-color: #eff6ff; }
+            50% { background-color: #dbeafe; }
+            100% { background-color: #eff6ff; }
+        }
+        #loading-overlay { display: none; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Vùng thả rút ca & toast */
+        .drop-zone-highlight {
+            border-color: #ef4444 !important;
+            background-color: #fee2e2 !important;
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+        }
+        .toast-item { animation: slideIn 0.3s ease-out, fadeOut 0.4s 2.6s forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-8px); } }
+
+        /* Nhãn điều động & trùng ca */
+        .badge-dispatched {
+            background-color: #f3e8ff;
+            color: #7e22ce;
+            border: 1px solid #d8b4fe;
+        }
+        .conflict-cell {
+            border: 2px dashed #dc2626 !important;
+            background-color: #fef2f2 !important;
+        }
+
+        /* Chế độ xem cả tháng & Ghim cột trạm */
+        .sticky-col-station {
+            position: sticky;
+            left: 0;
+            z-index: 20;
+            background-color: white;
+            box-shadow: 2px 0 6px -2px rgba(0,0,0,0.12);
+        }
+        thead th.sticky-col-station {
+            z-index: 30;
+            background-color: #f1f5f9;
+        }
+        .month-weekend-col {
+            background-color: #fff1f2 !important;
+        }
+        .month-weekend-header {
+            color: #e11d48 !important;
+            background-color: #ffe4e6 !important;
+            font-weight: 800 !important;
+        }
+        .month-today-col {
+            background-color: #ecfeff !important;
+            border-left: 2px solid #0891b2 !important;
+            border-right: 2px solid #0891b2 !important;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Định dạng in chuẩn khổ A4 dọc */
+        @media print {
+            body { background-color: white; margin: 0; padding: 0; }
+            #app-container, #setup-modal, #export-modal, #print-modal, #dispatch-modal, #cross-drag-modal, #msg-modal, #loading-overlay { display: none !important; }
+            #print-container { display: block !important; }
+            @page { size: A4 portrait; margin: 12mm 15mm 12mm 15mm; }
+        }
+        #print-container { display: none; font-family: 'Times New Roman', Times, serif; color: black; }
+        #print-container table, #print-container th, #print-container td {
+            border: 1px solid black !important;
+            border-collapse: collapse !important;
+        }
+        @media print {
+            #print-container table { page-break-inside: auto; }
+            #print-container tr { page-break-inside: avoid; page-break-after: auto; }
+            #print-container thead { display: table-header-group; }
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased">
+
+    <!-- OVERLAY LOADING -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+        <div class="loader mb-4"></div>
+        <p class="text-blue-600 font-semibold text-lg" id="loading-text">Đang tải dữ liệu...</p>
+    </div>
+
+    <!-- KHUNG THÔNG BÁO TOAST -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <div id="app-container" class="max-w-7xl mx-auto p-4 md:p-8">
+        
+        <!-- Header chính -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6 flex flex-col md:flex-row justify-between items-center gap-4 border-l-4 border-l-blue-600">
+            <div>
+                <h1 class="text-2xl font-bold text-blue-700 flex items-center">
+                    <i class="fa-solid fa-hospital mr-3 text-blue-600"></i>Lịch Trực Trạm Y Tế Xã Mộ Đức
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">Cấu trúc linh động • Điều động liên trạm • Xoay tua thông minh</p>
+            </div>
+            <div class="flex flex-wrap gap-2 justify-end">
+                <button onclick="openDispatchModal()" class="px-3 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition shadow-sm text-sm flex items-center gap-1.5" title="Mở bảng điều động cán bộ giữa các điểm trạm">
+                    <i class="fa-solid fa-right-left"></i> Điều Động Liên Trạm
+                </button>
+                <button onclick="toggleSetupModal()" class="px-3 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition text-sm">
+                    <i class="fa-solid fa-gear mr-1"></i> API
+                </button>
+                <button onclick="toggleExportModal()" class="px-3 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 font-medium rounded-lg hover:bg-indigo-100 transition shadow-sm text-sm">
+                    <i class="fa-solid fa-file-excel mr-1"></i> Xuất Excel
+                </button>
+                <button onclick="togglePrintModal()" class="px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 font-medium rounded-lg hover:bg-rose-100 transition shadow-sm text-sm font-semibold">
+                    <i class="fa-solid fa-print mr-1"></i> In PDF / Xuất Word
+                </button>
+                <button onclick="loadFromGoogleSheets()" class="px-3 py-2 bg-blue-50 text-blue-700 border border-blue-200 font-medium rounded-lg hover:bg-blue-100 transition shadow-sm text-sm">
+                    <i class="fa-solid fa-cloud-arrow-down mr-1"></i> Tải dữ liệu
+                </button>
+                <button onclick="saveToGoogleSheets()" class="px-3 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition shadow-sm text-sm">
+                    <i class="fa-solid fa-cloud-arrow-up mr-1"></i> Lưu lên Cloud
+                </button>
+            </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-6">
+            
+            <!-- Sidebar: Danh sách nhân sự & Điều động -->
+            <div id="staff-sidebar" class="w-full lg:w-1/4 bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col">
+                <div>
+                    <div class="flex items-center justify-between mb-2.5 border-b pb-2">
+                        <h2 class="font-bold text-gray-700 flex items-center text-sm">
+                            <i class="fa-solid fa-user-doctor mr-2 text-blue-600"></i>Cán bộ các điểm trạm
+                        </h2>
+                        <span class="text-xs bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full" id="staff-count-badge">29</span>
+                    </div>
+
+                    <!-- VÙNG THẢ: RÚT CA & TỰ ĐỘNG DỒN CA THAY THẾ -->
+                    <div id="drop-remove-zone" class="mb-3 p-2.5 border-2 border-dashed border-rose-300 bg-rose-50/70 rounded-xl text-center transition-all duration-200 hover:bg-rose-100/80 hover:border-rose-400 group cursor-pointer" title="Kéo cán bộ từ bảng trực bên phải thả vào đây để rút ca và tự động dồn ca thay thế">
+                        <div class="flex items-center justify-center gap-1.5 text-rose-700 font-bold text-xs">
+                            <i class="fa-solid fa-user-minus text-rose-500 text-sm group-hover:scale-110 transition-transform"></i>
+                            <span>Thả vào đây để rút ca</span>
+                        </div>
+                        <p class="text-[10px] text-rose-500 mt-0.5">Tự động đôn ca cuốn chiếu thay thế</p>
+                    </div>
+
+                    <!-- Bộ lọc điểm trạm cho danh mục cán bộ bên trái -->
+                    <div class="flex items-center gap-1 mb-2 overflow-x-auto pb-1 text-[11px]" id="sidebar-station-filter">
+                        <button onclick="filterSidebarStaff('all')" id="sb-btn-all" class="px-2 py-1 rounded bg-blue-600 text-white font-bold whitespace-nowrap">Tất cả</button>
+                        <button onclick="filterSidebarStaff(0)" id="sb-btn-0" class="px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 font-semibold whitespace-nowrap">Đức Tân</button>
+                        <button onclick="filterSidebarStaff(1)" id="sb-btn-1" class="px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 font-semibold whitespace-nowrap">Mộ Đức</button>
+                        <button onclick="filterSidebarStaff(2)" id="sb-btn-2" class="px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 font-semibold whitespace-nowrap">Đức Hòa</button>
+                        <button onclick="filterSidebarStaff(3)" id="sb-btn-3" class="px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 font-semibold whitespace-nowrap">Đức Phú</button>
+                    </div>
+
+                    <p class="text-[11px] text-gray-500 mb-2">Kéo thả tên vào bất kỳ điểm trạm nào để phân công linh động.</p>
+                    
+                    <div class="space-y-1.5 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar" id="staff-list">
+                        <!-- Sinh bằng JS -->
+                    </div>
+                </div>
+
+                <!-- Lịch sử đổi ca & điều động -->
+                <div class="mt-4 border-t pt-3 flex-1 flex flex-col min-h-[150px]">
+                    <h2 class="font-bold text-gray-700 mb-2 flex items-center justify-between text-xs uppercase tracking-wide">
+                        <span><i class="fa-solid fa-clock-rotate-left mr-1.5 text-blue-500"></i>Lịch sử điều chỉnh</span>
+                        <button onclick="clearHistory()" class="text-red-500 hover:underline font-normal text-xs">Xóa</button>
+                    </h2>
+                    <div id="history-list" class="space-y-1.5 overflow-y-auto flex-1 text-xs text-gray-600 pr-1 custom-scrollbar">
+                        <p class="text-gray-400 italic">Chưa có điều chỉnh nào trong tuần này.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng Lịch Trực -->
+            <div class="w-full lg:w-3/4 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+                
+                <!-- Thanh chọn Chế độ Xem (Tuần / Tháng) & Tiện ích Điều hướng -->
+                <div class="p-4 border-b border-gray-200 bg-blue-50/50 flex flex-wrap items-center justify-between gap-4">
+                    
+                    <!-- BỘ CHUYỂN ĐỔI CHẾ ĐỘ XEM: THEO TUẦN <-> CẢ THÁNG -->
+                    <div class="flex items-center gap-2">
+                        <div class="bg-white p-1 rounded-xl border border-gray-300 shadow-sm flex items-center gap-1">
+                            <button id="view-mode-week-btn" onclick="switchScheduleViewMode('week')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-calendar-week"></i>
+                                <span>Xem Theo Tuần</span>
+                            </button>
+                            <button id="view-mode-month-btn" onclick="switchScheduleViewMode('month')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-gray-600 hover:text-gray-900 flex items-center gap-1.5">
+                                <i class="fa-solid fa-calendar-days text-purple-600"></i>
+                                <span>Xem Cả Tháng</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ĐIỀU HƯỚNG THEO TUẦN -->
+                    <div id="week-view-nav" class="flex items-center gap-3">
+                        <button onclick="changeWeek(-1)" class="px-3 py-1.5 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-blue-50 hover:text-blue-600 text-gray-700 font-semibold transition text-xs flex items-center">
+                            <i class="fa-solid fa-chevron-left mr-1.5"></i> Tuần trước
+                        </button>
+                        
+                        <div class="flex items-center gap-2 bg-white px-3 py-1 border border-gray-300 rounded-lg shadow-sm">
+                            <label class="text-[11px] font-bold text-gray-500 uppercase">Từ:</label>
+                            <input type="date" id="week-start" onchange="updateWeekDates(this.value)" class="border-none p-0 text-xs font-semibold outline-none bg-transparent">
+                            <span class="text-gray-300">|</span>
+                            <label class="text-[11px] font-bold text-gray-500 uppercase">Đến:</label>
+                            <input type="date" id="week-end" readonly class="border-none p-0 text-xs text-gray-500 font-semibold bg-transparent outline-none pointer-events-none w-[95px]">
+                        </div>
+
+                        <button onclick="changeWeek(1)" class="px-3 py-1.5 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-blue-50 hover:text-blue-600 text-gray-700 font-semibold transition text-xs flex items-center">
+                            Tuần sau <i class="fa-solid fa-chevron-right ml-1.5"></i>
+                        </button>
+                    </div>
+
+                    <!-- ĐIỀU HƯỚNG THEO CẢ THÁNG -->
+                    <div id="month-view-nav" class="hidden flex items-center gap-2">
+                        <button onclick="changeMonthOffset(-1)" class="px-3 py-1.5 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-purple-50 hover:text-purple-600 text-gray-700 font-semibold transition text-xs flex items-center">
+                            <i class="fa-solid fa-chevron-left mr-1"></i> Tháng trước
+                        </button>
+
+                        <div class="flex items-center gap-2 bg-white px-3 py-1 border border-gray-300 rounded-lg shadow-sm">
+                            <label class="text-[11px] font-bold text-gray-500 uppercase">Tháng:</label>
+                            <select id="month-view-select" onchange="onMonthViewChanged()" class="border-none p-0 text-xs font-bold text-purple-700 outline-none bg-transparent cursor-pointer">
+                                <option value="1">Tháng 1</option>
+                                <option value="2">Tháng 2</option>
+                                <option value="3">Tháng 3</option>
+                                <option value="4">Tháng 4</option>
+                                <option value="5">Tháng 5</option>
+                                <option value="6">Tháng 6</option>
+                                <option value="7">Tháng 7</option>
+                                <option value="8">Tháng 8</option>
+                                <option value="9">Tháng 9</option>
+                                <option value="10">Tháng 10</option>
+                                <option value="11">Tháng 11</option>
+                                <option value="12">Tháng 12</option>
+                            </select>
+                            <span class="text-gray-300">/</span>
+                            <input type="number" id="year-view-input" min="2024" max="2035" value="2026" onchange="onMonthViewChanged()" class="w-16 border-none p-0 text-xs font-bold text-gray-800 outline-none bg-transparent text-center">
+                        </div>
+
+                        <button onclick="changeMonthOffset(1)" class="px-3 py-1.5 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-purple-50 hover:text-purple-600 text-gray-700 font-semibold transition text-xs flex items-center">
+                            Tháng sau <i class="fa-solid fa-chevron-right ml-1"></i>
+                        </button>
+
+                        <button onclick="goToCurrentMonth()" class="px-2.5 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-100 transition text-xs font-bold" title="Về tháng hiện tại">
+                            Hôm nay
+                        </button>
+                    </div>
+
+                    <!-- TIỆN ÍCH ĐIỀU ĐỘNG & TẢI LẠI XOAY TUA -->
+                    <div class="flex items-center gap-2">
+                        <button onclick="openDispatchModal()" class="px-3 py-1.5 bg-purple-100 text-purple-700 border border-purple-300 rounded-lg hover:bg-purple-200 transition text-xs font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-shuffle"></i> Điều động nhanh
+                        </button>
+                        <button onclick="resetToAutoRotation()" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition text-xs font-semibold" title="Khôi phục lại lịch xoay tua tự động chuẩn">
+                            <i class="fa-solid fa-rotate-right mr-1"></i> Xoay tua chuẩn
+                        </button>
+                    </div>
+                </div>
+
+                <!-- BẢNG LỊCH TRỰC -->
+                <div class="overflow-x-auto p-4 custom-scrollbar" id="table-scroll-container">
+                    <table class="w-full text-sm text-left border-collapse table-auto" id="main-schedule-table">
+                        <thead>
+                            <tr id="table-header"></tr>
+                        </thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                </div>
+
+                <!-- BẢNG TỔNG HỢP THỐNG KÊ CA TRỰC THÁNG CỦA 29 CÁN BỘ -->
+                <div class="p-4 border-t border-gray-200 bg-slate-50/70" id="monthly-stats-panel">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
+                                <i class="fa-solid fa-chart-pie"></i>
+                            </span>
+                            <div>
+                                <h3 class="font-bold text-xs sm:text-sm text-gray-800 leading-tight">
+                                    Thống Kê Ca Trực Tháng <span id="stats-current-month-label" class="text-blue-700">8/2026</span>
+                                </h3>
+                                <p class="text-[11px] text-gray-500">Tổng hợp ca trực thường, ca trực Thứ 7 & Chủ Nhật của từng cán bộ</p>
+                            </div>
+                        </div>
+                        <button onclick="toggleStatsPanelDetails()" id="btn-toggle-stats-details" class="px-3 py-1 text-xs font-bold rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 transition flex items-center gap-1">
+                            <i class="fa-solid fa-list-ol"></i>
+                            <span id="btn-toggle-stats-text">Thu gọn bảng</span>
+                        </button>
+                    </div>
+
+                    <!-- BẢNG CHI TIẾT 29 CÁN BỘ -->
+                    <div id="stats-details-table-box" class="overflow-x-auto custom-scrollbar max-h-60 bg-white rounded-xl border border-gray-200 shadow-xs">
+                        <table class="w-full text-xs text-left border-collapse">
+                            <thead class="bg-gray-100 text-gray-700 font-bold border-b sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-2 text-center w-10">TT</th>
+                                    <th class="p-2 w-44">Họ và Tên Cán Bộ</th>
+                                    <th class="p-2 w-32">Điểm Trạm Gốc</th>
+                                    <th class="p-2 text-center w-28 bg-blue-50 text-blue-900 font-extrabold">Tổng Ca Trực</th>
+                                    <th class="p-2 text-center w-28">Ca Ngày Thường</th>
+                                    <th class="p-2 text-center w-32 bg-rose-50 text-rose-900 font-extrabold">Ca T7 & Chủ Nhật</th>
+                                    <th class="p-2 text-center">Tỷ Lệ Đảm Nhận</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stats-details-tbody" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Thanh chú thích cấu trúc linh động & xung đột -->
+                <div class="bg-gray-50 p-3 text-xs border-t flex flex-wrap justify-between items-center gap-2">
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex items-center gap-1 text-purple-700 font-semibold">
+                            <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Huy hiệu tím: Điều động từ trạm khác
+                        </span>
+                        <span class="inline-flex items-center gap-1 text-rose-700 font-semibold" id="conflict-indicator">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Viền đỏ: Trùng ca cùng ngày
+                        </span>
+                        <span class="inline-flex items-center gap-1 text-rose-600 font-semibold">
+                            <span class="w-2.5 h-2.5 rounded-md bg-rose-200"></span> Cột hồng: Thứ 7 & Chủ Nhật
+                        </span>
+                    </div>
+                    <span id="last-sync-time" class="font-medium text-gray-500">Chưa đồng bộ Cloud</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 1: ĐIỀU ĐỘNG CÁN BỘ LIÊN ĐIỂM TRẠM -->
+    <div id="dispatch-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100">
+            <div class="p-4 bg-purple-700 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-right-left"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base">Điều Động Cán Bộ Liên Điểm Trạm</h3>
+                        <p class="text-[11px] text-purple-200">Linh động phân công cán bộ từ trạm này sang trực tại trạm khác</p>
+                    </div>
+                </div>
+                <button onclick="closeDispatchModal()" class="text-purple-200 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div class="p-5 space-y-4 text-xs">
+                <div>
+                    <label class="block font-bold text-gray-700 mb-1">1. Chọn cán bộ điều động:</label>
+                    <select id="dispatch-staff-select" onchange="onDispatchStaffChanged()" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-xl font-bold text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 text-xs"></select>
+                    <div class="mt-1 text-[11px] text-gray-500 font-medium" id="dispatch-home-info">
+                        Trạm phân công gốc: <b class="text-blue-700" id="dispatch-home-name">Điểm trạm chính (Đức Tân)</b>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1">2. Ngày điều động:</label>
+                        <select id="dispatch-day-select" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-xl font-bold text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 text-xs"></select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1">3. Điều đến điểm trạm:</label>
+                        <select id="dispatch-target-station" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-xl font-bold text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 text-xs"></select>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-purple-50/70 border border-purple-200 rounded-xl space-y-2">
+                    <label class="block font-bold text-purple-900">4. Phương án bù ca tại điểm trạm gốc:</label>
+                    <div class="space-y-1.5">
+                        <label class="flex items-center gap-2 cursor-pointer font-medium text-gray-800">
+                            <input type="radio" name="dispatchOriginMode" value="cascade" checked class="text-purple-600 focus:ring-purple-500">
+                            <span><b>Tự động dồn ca cuốn chiếu</b> (Cán bộ kế tiếp tự đôn lên bù vào trạm gốc)</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer font-medium text-gray-800">
+                            <input type="radio" name="dispatchOriginMode" value="swap" class="text-purple-600 focus:ring-purple-500">
+                            <span><b>Hoán đổi chéo</b> (Người đang ở trạm đích sẽ sang trạm gốc trực thế)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-gray-50 border-t flex justify-end gap-2">
+                <button onclick="closeDispatchModal()" class="px-4 py-2 bg-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-300 text-xs">Hủy</button>
+                <button onclick="executeDispatchModalSubmit()" class="px-5 py-2 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 text-xs shadow flex items-center gap-1.5">
+                    <i class="fa-solid fa-check"></i> Xác Nhận Điều Động
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: HỘP THOẠI XỬ LÝ KÉO THẢ GIỮA 2 ĐIỂM TRẠM -->
+    <div id="cross-drag-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
+            <div class="p-4 bg-indigo-700 text-white flex justify-between items-center">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-arrows-split-up-and-left"></i> Xác Nhận Điều Động Liên Trạm
+                </h3>
+                <button onclick="closeCrossDragModal()" class="text-indigo-200 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-5 space-y-3 text-xs">
+                <p class="text-gray-700 leading-relaxed" id="cross-drag-desc">
+                    Bạn đang kéo cán bộ sang một điểm trạm khác. Vui lòng chọn cách thức thực hiện:
+                </p>
+
+                <div class="space-y-2">
+                    <button onclick="resolveCrossDrag('cascade')" class="w-full p-3 text-left border-2 border-purple-200 hover:border-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition group">
+                        <div class="font-bold text-purple-900 flex items-center justify-between">
+                            <span>1. Điều động sang trạm mới & Đôn ca tại trạm cũ</span>
+                            <i class="fa-solid fa-arrow-right text-purple-500 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                        <p class="text-[11px] text-purple-700 mt-1">Cán bộ này trực tại trạm mới. Trạm cũ tự động cuốn chiếu người tiếp theo lên thay thế, không bỏ trống ca.</p>
+                    </button>
+
+                    <button onclick="resolveCrossDrag('swap')" class="w-full p-3 text-left border-2 border-blue-200 hover:border-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition group">
+                        <div class="font-bold text-blue-900 flex items-center justify-between">
+                            <span>2. Hoán đổi chéo ca trực giữa 2 trạm</span>
+                            <i class="fa-solid fa-right-left text-blue-500 group-hover:scale-110 transition-transform"></i>
+                        </div>
+                        <p class="text-[11px] text-blue-700 mt-1">Hai cán bộ đổi vị trí trực cho nhau vào ngày đó giữa hai điểm trạm.</p>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-3 bg-gray-50 border-t flex justify-end">
+                <button onclick="closeCrossDragModal()" class="px-4 py-2 bg-gray-200 rounded-xl font-bold text-gray-700 text-xs">Hủy Thao Tác</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL THIẾT LẬP API -->
+    <div id="setup-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-5">
+            <h3 class="font-bold text-lg mb-4 text-blue-800"><i class="fa-solid fa-link mr-2"></i>Cấu hình API Google Sheets</h3>
+            <p class="text-sm text-gray-600 mb-3">Dán đường link Google Apps Script để lưu trữ lịch trực lên Cloud.</p>
+            <input type="text" id="api-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-3 border border-gray-300 rounded-lg outline-none focus:border-blue-500 mb-4 text-sm">
+            <div class="flex justify-end gap-2">
+                <button onclick="toggleSetupModal()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium text-xs">Hủy</button>
+                <button onclick="saveApiUrl()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-xs">Lưu kết nối</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL XUẤT LỊCH THÁNG -->
+    <div id="export-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-purple-50 rounded-t-xl">
+                <h3 class="font-bold text-base text-purple-800"><i class="fa-solid fa-calendar-alt mr-2"></i>Xuất lịch theo tháng</h3>
+                <button onclick="toggleExportModal()" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-5 text-xs">
+                <p class="text-gray-600 mb-4">Hệ thống sẽ tổng hợp dữ liệu từ Cloud và xuất ra file Excel báo cáo tháng.</p>
+                <div class="flex gap-4">
+                    <div class="w-1/2">
+                        <label class="block font-medium text-gray-700 mb-1">Tháng</label>
+                        <input type="number" id="export-month" min="1" max="12" value="8" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-purple-500 text-xs font-bold">
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block font-medium text-gray-700 mb-1">Năm</label>
+                        <input type="number" id="export-year" min="2020" max="2035" value="2026" class="w-full border border-gray-300 rounded-md p-2 outline-none focus:border-purple-500 text-xs font-bold">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-end gap-2 text-xs">
+                <button onclick="toggleExportModal()" class="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">Hủy</button>
+                <button onclick="executeExportMonthly()" class="px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition flex items-center font-bold">
+                    <i class="fa-solid fa-download mr-1.5"></i> Xuất File .xls
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL IN LỊCH TRỰC & XUẤT FILE WORD (.DOC) -->
+    <div id="print-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-rose-50 rounded-t-xl">
+                <h3 class="font-bold text-base text-rose-800"><i class="fa-solid fa-print mr-2"></i>In Lịch Trực & Xuất File Word</h3>
+                <button onclick="togglePrintModal()" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-5 text-xs">
+                <p class="text-gray-600 mb-3">Vui lòng chọn khoảng thời gian cần tạo bản in:</p>
+                <div class="flex gap-4 p-3 bg-red-50/50 rounded-lg border border-red-100">
+                    <div class="w-1/2">
+                        <label class="block font-bold text-gray-600 uppercase mb-1 text-[11px]">Từ ngày</label>
+                        <input type="date" id="print-start-date" class="w-full border border-gray-300 rounded-md p-1.5 outline-none focus:border-red-500 bg-white font-semibold text-xs">
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block font-bold text-gray-600 uppercase mb-1 text-[11px]">Đến ngày</label>
+                        <input type="date" id="print-end-date" class="w-full border border-gray-300 rounded-md p-1.5 outline-none focus:border-red-500 bg-white font-semibold text-xs">
+                    </div>
+                </div>
+                <div class="mt-3 p-2.5 bg-blue-50 border border-blue-200 rounded-lg text-[11px] text-blue-800 space-y-1">
+                    <div class="font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-shield-check text-blue-600"></i> Bảo toàn lịch điều động:
+                    </div>
+                    <p>Bản in và file Word tự động cập nhật mọi ca điều động liên trạm và các ca trực bạn đã đổi.</p>
+                </div>
+            </div>
+            
+            <div class="p-4 border-t bg-gray-50 rounded-b-xl flex flex-wrap justify-end gap-2 text-xs">
+                <button onclick="togglePrintModal()" class="px-3.5 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">Hủy</button>
+                <button onclick="executeExportWord()" class="px-3.5 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition flex items-center font-bold shadow-sm" title="Tải về file Microsoft Word (.doc) chuẩn văn bản hành chính">
+                    <i class="fa-solid fa-file-word mr-1.5"></i> Xuất File Word (.doc)
+                </button>
+                <button onclick="executePrint()" class="px-3.5 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition flex items-center font-bold shadow-sm">
+                    <i class="fa-solid fa-print mr-1.5"></i> Tạo bản in PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL THÔNG BÁO CUSTOM -->
+    <div id="msg-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-5 text-center flex flex-col items-center">
+            <div id="msg-icon" class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl mb-3">
+                <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <h3 id="msg-title" class="font-bold text-base text-gray-800 mb-2">Thông báo</h3>
+            <p id="msg-text" class="text-xs text-gray-600 mb-4 leading-relaxed"></p>
+            <div class="flex justify-center gap-3 w-full" id="msg-buttons">
+                <button onclick="closeMsgModal()" class="px-5 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition text-xs w-full">Đã hiểu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHUNG BẢN IN PDF (HÀNH CHÍNH QUY ĐỊNH) -->
+    <div id="print-container" class="text-[12pt] leading-tight">
+        <div id="print-header" style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+            <div style="text-align: center; line-height: 1.2;">
+                <div style="font-size: 11pt;">UBND XÃ MỘ ĐỨC</div>
+                <div style="font-weight: bold; font-size: 11pt;">TRẠM Y TẾ</div>
+                <div style="border-top: 1px solid black; width: 40%; margin: 3px auto;"></div>
+                <div style="font-size: 10pt; margin-top: 4px;">Số: ....../LT-TYT</div>
+            </div>
+            <div style="text-align: center; line-height: 1.2;">
+                <div style="font-weight: bold; font-size: 11pt;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                <div style="font-weight: bold; font-size: 11pt;">Độc lập - Tự do - Hạnh phúc</div>
+                <div style="border-top: 1px solid black; width: 50%; margin: 3px auto;"></div>
+                <div style="font-style: italic; font-size: 11pt; margin-top: 4px;" id="print-date">Mộ Đức, ngày ... tháng ... năm 2026</div>
+            </div>
+        </div>
+
+        <div id="print-title" style="text-align: center; margin-bottom: 14px; line-height: 1.3;">
+            <div style="font-weight: bold; font-size: 15pt; letter-spacing: 0.5px;">LỊCH TRỰC TRẠM Y TẾ XÃ MỘ ĐỨC</div>
+            <div style="font-style: italic; font-size: 11pt;" id="print-subtitle">(Từ ngày ... đến ngày ...)</div>
+        </div>
+
+        <table id="print-table" style="width: 100%; border-collapse: collapse; margin-bottom: 14px; text-align: center;">
+            <thead>
+                <tr>
+                    <th style="padding: 6px 4px; font-weight: bold; width: 8%;">Thứ</th>
+                    <th style="padding: 6px 4px; font-weight: bold; width: 8%;">Ngày</th>
+                    <th style="padding: 6px 4px; font-weight: bold; width: 21%;">Điểm trạm chính<br>(Đức Tân)</th>
+                    <th style="padding: 6px 4px; font-weight: bold; width: 21%;">Điểm y tế số 1<br>(Mộ Đức)</th>
+                    <th style="padding: 6px 4px; font-weight: bold; width: 21%;">Điểm y tế số 2<br>(Đức Hòa)</th>
+                    <th style="padding: 6px 4px; font-weight: bold; width: 21%;">Điểm y tế số 3<br>(Đức Phú)</th>
+                </tr>
+            </thead>
+            <tbody id="print-tbody"></tbody>
+        </table>
+
+        <div id="print-note" style="margin-bottom: 20px; line-height: 1.3; font-size: 11pt;">
+            <span style="font-weight: bold;">Ghi chú:</span> - Thời gian trực: Từ 07 giờ ngày hôm nay đến 07 giờ ngày hôm sau.<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Lịch trực có thể điều động thay đổi theo yêu cầu nhiệm vụ.
+        </div>
+
+        <!-- Chữ ký người lập & Giám đốc -->
+        <div style="display: flex; justify-content: space-between; font-size: 11pt; page-break-inside: avoid;">
+            <div style="line-height: 1.3; width: 40%;">
+                <div style="font-weight: bold; font-style: italic; margin-bottom: 4px;">Nơi nhận:</div>
+                <div style="font-size: 10pt;">
+                    - Bí thư, chi ủy chi bộ (c/đ);<br>
+                    - GĐ, PGĐ TYT xã (b/c);<br>
+                    - Các tổ, khoa, điểm y tế (t/h);<br>
+                    - Lưu: Hc-Ts-Ns.
+                </div>
+            </div>
+            <div style="text-align: center; width: 30%;">
+                <div style="font-weight: bold; margin-bottom: 60px;">NGƯỜI LẬP</div>
+                <div style="font-weight: bold;">Võ Quang Vinh</div>
+            </div>
+            <div style="text-align: center; width: 30%;">
+                <div id="print-footer-space" style="font-weight: bold; margin-bottom: 60px;">GIÁM ĐỐC</div>
+                <div style="font-weight: bold;">Phạm Minh Đức</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Bắt lỗi toàn cục ngăn sập ứng dụng
+        window.onerror = function(msg, url, line) {
+            console.error("Lỗi ứng dụng lịch trực:", msg, line);
+            hideLoading();
+            return false;
+        };
+
+        // CẤU HÌNH API GOOGLE APPS SCRIPT LỊCH TRỰC & QUẢN LÝ NHÂN SỰ
+        const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxcFk7LYV7MIouy9hSeTSQ12yTflnFmrAnbmvqnsj4zrghSsIAOVNfgbyVtle0XaDA8yA/exec"; 
+        const GOOGLE_SHEET_STAFF_URL = "https://script.google.com/macros/s/AKfycbz8rE8UkPQOG-gk_annTiMfKic9qoUQRn-X-qII3Dtme_xPMwecwi0YzbxoSHlLbNZmBg/exec";
+
+        const DAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
+        const ROLES = [
+            'Điểm trạm chính (Đức Tân)', 
+            'Điểm y tế số 1 (Mộ Đức)', 
+            'Điểm y tế số 2 (Đức Hòa)', 
+            'Điểm y tế số 3 (Đức Phú)'
+        ];
+
+        // DANH BẠ 29 CÁN BỘ TYT XÃ MỘ ĐỨC (CHUẨN HÓA ĐD VIỆT)
+        const DEFAULT_STAFF_29_ROSTER = [
+            // Điểm trạm chính (Đức Tân) - index 0
+            { name: 'Bs Thuyên', fullName: 'Võ Thị Thanh Thuyên', homeStation: 0 },
+            { name: 'Ys Tuệ', fullName: 'Trịnh Thị Minh Tuệ', homeStation: 0 },
+            { name: 'NHS Thuỳ', fullName: 'Võ Thị Thanh Thùy', homeStation: 0 },
+            { name: 'Ys Thủy', fullName: 'Lê Thị Thu Thủy', homeStation: 0 },
+            { name: 'ĐD Vinh', fullName: 'Võ Quang Vinh', homeStation: 0 },
+            { name: 'BS Nguyện', fullName: 'Nguyễn Thị Như Nguyện', homeStation: 0 },
+            { name: 'NHS Thy', fullName: 'Trần Thị Lệ Thy', homeStation: 0 },
+            { name: 'NHS Nương', fullName: 'Lê Thị Nương', homeStation: 0 },
+            { name: 'DS Hiếu', fullName: 'Bùi Đạt Hiếu', homeStation: 0 },
+            { name: 'DS Yên', fullName: 'Huỳnh Thị Thùy Yên', homeStation: 0 },
+
+            // Điểm y tế số 1 (Mộ Đức) - index 1
+            { name: 'BS Đức', fullName: 'Phạm Minh Đức', homeStation: 1 },
+            { name: 'ĐD Lài', fullName: 'Trần Thị Lài', homeStation: 1 },
+            { name: 'ĐD Nguyệt', fullName: 'Nguyễn Thị Thu Nguyệt', homeStation: 1 },
+            { name: 'ĐD Việt', fullName: 'Võ Thị Thanh Việt', homeStation: 1 },
+            { name: 'NHS Tin', fullName: 'Huỳnh Thị Anh Tin', homeStation: 1 },
+            { name: 'DS Diễm', fullName: 'Đoàn Thị Diễm', homeStation: 1 },
+
+            // Điểm y tế số 2 (Đức Hòa) - index 2
+            { name: 'BS Phu', fullName: 'Nguyễn Phu', homeStation: 2 },
+            { name: 'Ys Phương', fullName: 'Huỳnh Văn Phương', homeStation: 2 },
+            { name: 'ĐD Thanh', fullName: 'Trần Thị Kim Thanh', homeStation: 2 },
+            { name: 'NHS Thắm', fullName: 'Nguyễn Thị Kiều Thắm', homeStation: 2 },
+            { name: 'ĐD Trúc', fullName: 'Cao Thị Ánh Trúc', homeStation: 2 },
+            { name: 'DS Thảo', fullName: 'Nguyễn Thị Phương Thảo', homeStation: 2 },
+
+            // Điểm y tế số 3 (Đức Phú) - index 3
+            { name: 'NHS Lan', fullName: 'Lê Thị Tố Lan', homeStation: 3 },
+            { name: 'Ys Vũ', fullName: 'Nguyễn Anh Vũ', homeStation: 3 },
+            { name: 'CN Thu', fullName: 'Nguyễn Thị Ánh Thu', homeStation: 3 },
+            { name: 'ĐD Ly Va', fullName: 'Nguyễn Thị Ly Va', homeStation: 3 },
+            { name: 'NHS Bé', fullName: 'Nguyễn Thị Bé', homeStation: 3 },
+            { name: 'NHS Trâm', fullName: 'Phạm Thị Mỹ Trâm', homeStation: 3 },
+            { name: 'DS Hoà', fullName: 'Phạm Trần Thị Hòa', homeStation: 3 }
+        ];
+
+        function getActiveStaffRoster() {
+            try {
+                const raw = localStorage.getItem('TYT_STAFF_LIST');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        return parsed.filter(s => s.status !== 'inactive').map(item => {
+                            let homeSt = 0;
+                            const pt = (item.point || '').toLowerCase();
+                            if (pt.includes('số 1') || pt.includes('mộ đức')) homeSt = 1;
+                            else if (pt.includes('số 2') || pt.includes('đức hòa') || pt.includes('đức hoà')) homeSt = 2;
+                            else if (pt.includes('số 3') || pt.includes('đức phú')) homeSt = 3;
+                            
+                            let shortN = item.shortName || item.name;
+                            if (item.name && item.name.includes('Thanh Việt')) {
+                                shortN = 'ĐD Việt';
+                            }
+
+                            return {
+                                name: shortN,
+                                fullName: item.name,
+                                homeStation: homeSt
+                            };
+                        });
+                    }
+                }
+            } catch(e) {}
+            return DEFAULT_STAFF_29_ROSTER;
+        }
+
+        function getHomeStationMap() {
+            const roster = getActiveStaffRoster();
+            const map = {};
+            roster.forEach(s => { map[s.name] = s.homeStation; });
+            return map;
+        }
+
+        function getStaffList() {
+            return getActiveStaffRoster().map(s => s.name);
+        }
+
+        // Lắng nghe thay đổi tức thời từ trang Quản Lý Nhân Viên
+        try {
+            const staffBroadcast = new BroadcastChannel('TYT_STAFF_CHANNEL');
+            staffBroadcast.onmessage = (e) => {
+                if (e.data && e.data.action === 'staff_updated') {
+                    renderStaffList();
+                    renderSchedule();
+                }
+            };
+        } catch(e) {}
+
+        // LỊCH CHÍNH THỨC BAN HÀNH (THỰC TẾ TRẠM Y TẾ MỘ ĐỨC)
+        const OFFICIAL_SCHEDULE_MAP = {
+            "2026-08-16": ["Bs Thuyên", "ĐD Lài", "Ys Phương", "NHS Lan"],
+            "2026-08-17": ["Ys Tuệ", "ĐD Nguyệt", "BS Phu", "Ys Vũ"],
+            "2026-08-18": ["NHS Thuỳ", "ĐD Việt", "ĐD Thanh", "CN Thu"],
+            "2026-08-19": ["Ys Thủy", "BS Đức", "NHS Thắm", "ĐD Ly Va"],
+            "2026-08-20": ["ĐD Vinh", "NHS Tin", "ĐD Trúc", "NHS Bé"],
+            "2026-08-21": ["BS Nguyện", "ĐD Lài", "Ys Phương", "NHS Trâm"],
+            "2026-08-22": ["NHS Thy", "ĐD Nguyệt", "BS Phu", "NHS Lan"],
+            "2026-08-23": ["Bs Thuyên", "ĐD Việt", "ĐD Thanh", "Ys Vũ"],
+            "2026-08-24": ["NHS Thuỳ", "BS Đức", "NHS Thắm", "CN Thu"],
+            "2026-08-25": ["Ys Thủy", "NHS Tin", "ĐD Trúc", "ĐD Ly Va"],
+            "2026-08-26": ["ĐD Vinh", "ĐD Lài", "Ys Phương", "NHS Bé"],
+            "2026-08-27": ["BS Nguyện", "ĐD Nguyệt", "BS Phu", "NHS Trâm"],
+            "2026-08-28": ["NHS Thy", "ĐD Việt", "ĐD Thanh", "NHS Lan"],
+            "2026-08-29": ["Bs Thuyên", "BS Đức", "NHS Thắm", "Ys Vũ"],
+            "2026-08-30": ["Ys Tuệ", "NHS Tin", "ĐD Trúc", "CN Thu"],
+            "2026-08-31": ["Ys Thủy", "ĐD Lài", "Ys Phương", "ĐD Ly Va"]
+        };
+
+        const ANCHOR_MONDAY = new Date(2026, 7, 17); // 17/08/2026
+
+        // CẤU TRÚC XOAY TUA NỀN TẢNG CỦA 4 ĐIỂM TRẠM
+        const STATIONS = [
+            {
+                name: 'Điểm trạm chính (Đức Tân)',
+                staff: ['Bs Thuyên', 'Ys Tuệ', 'NHS Thuỳ', 'Ys Thủy', 'ĐD Vinh', 'BS Nguyện', 'NHS Thy'],
+                getStaff: function(dayDiff, weekIndex, dayInWeek) {
+                    const idx = (dayInWeek + weekIndex + 1) % 7;
+                    return this.staff[((idx % 7) + 7) % 7];
+                }
+            },
+            {
+                name: 'Điểm y tế số 1 (Mộ Đức)',
+                staff: ['ĐD Lài', 'ĐD Nguyệt', 'ĐD Việt', 'BS Đức', 'NHS Tin'],
+                getStaff: function(dayDiff) {
+                    const idx = ((dayDiff % 5) + 1 + 5000) % 5;
+                    return this.staff[idx];
+                }
+            },
+            {
+                name: 'Điểm y tế số 2 (Đức Hòa)',
+                staff: ['Ys Phương', 'BS Phu', 'ĐD Thanh', 'NHS Thắm', 'ĐD Trúc'],
+                getStaff: function(dayDiff) {
+                    const idx = ((dayDiff % 5) + 1 + 5000) % 5;
+                    return this.staff[idx];
+                }
+            },
+            {
+                name: 'Điểm y tế số 3 (Đức Phú)',
+                staff: ['NHS Lan', 'Ys Vũ', 'CN Thu', 'ĐD Ly Va', 'NHS Bé', 'NHS Trâm'],
+                getStaff: function(dayDiff) {
+                    const idx = ((dayDiff % 6) + 1 + 6000) % 6;
+                    return this.staff[idx];
+                }
+            }
+        ];
+
+        let scheduleGrid = [];
+        let highlightedCells = {};
+        let weekStart = '';
+        let weekEnd = '';
+        let weekDates = [];
+        let historyLogs = [];
+        let currentSidebarStationFilter = 'all';
+
+        // Biến kiểm soát Chế độ xem: 'week' (Tuần) hoặc 'month' (Cả tháng)
+        let scheduleViewMode = 'week';
+        let currentScheduleMonth = 8;
+        let currentScheduleYear = 2026;
+
+        let pendingCrossDrag = null;
+        const LOCAL_STORAGE_CACHE_KEY = 'TYT_LICH_TRUC_SAVED_WEEKS_V3';
+
+        function getSavedWeeksMap() {
+            try {
+                const raw = localStorage.getItem(LOCAL_STORAGE_CACHE_KEY);
+                return raw ? JSON.parse(raw) : {};
+            } catch(e) {
+                return {};
+            }
+        }
+
+        function saveWeekToLocalCache(wStart, grid, logs = [], overwrite = true) {
+            if (!wStart || !grid || grid.length < 4) return;
+            try {
+                const map = getSavedWeeksMap();
+                if (!overwrite && map[wStart]) return;
+                map[wStart] = {
+                    grid: JSON.parse(JSON.stringify(grid)),
+                    logs: logs ? [...logs] : [],
+                    updatedAt: Date.now()
+                };
+                localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(map));
+            } catch(e) {
+                console.warn("Lỗi lưu cache lịch trực:", e);
+            }
+        }
+
+        function getWeekFromLocalCache(wStart) {
+            if (!wStart) return null;
+            const map = getSavedWeeksMap();
+            return map[wStart] || null;
+        }
+
+        function getLocalISODate(d) {
+            const dateObj = new Date(d);
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function generateRotatedGrid(startDateStr) {
+            const parts = startDateStr.split('-');
+            const MondayDate = new Date(parts[0], parts[1] - 1, parts[2]);
+
+            const diffTime = MondayDate.getTime() - ANCHOR_MONDAY.getTime();
+            const diffDaysMon = Math.round(diffTime / (1000 * 3600 * 24));
+            const weekIndex = Math.floor(diffDaysMon / 7);
+
+            const grid = [];
+            STATIONS.forEach((station) => {
+                const row = [station.name];
+                for (let dayInWeek = 0; dayInWeek < 7; dayInWeek++) {
+                    const currentDayDiff = diffDaysMon + dayInWeek;
+                    const staffName = station.getStaff(currentDayDiff, weekIndex, dayInWeek);
+                    row.push(staffName);
+                }
+                grid.push(row);
+            });
+            return grid;
+        }
+
+        function hasOfficialDataForWeek(mondayStr) {
+            const parts = mondayStr.split('-');
+            const mDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            for(let i = 0; i < 7; i++) {
+                const d = new Date(mDate);
+                d.setDate(mDate.getDate() + i);
+                if (OFFICIAL_SCHEDULE_MAP[getLocalISODate(d)]) return true;
+            }
+            return false;
+        }
+
+        function getOfficialGridForWeek(mondayStr) {
+            const parts = mondayStr.split('-');
+            const mDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            const rotGrid = generateRotatedGrid(mondayStr);
+            
+            return ROLES.map((roleName, rIdx) => {
+                const row = [roleName];
+                for(let i = 0; i < 7; i++) {
+                    const d = new Date(mDate);
+                    d.setDate(mDate.getDate() + i);
+                    const iso = getLocalISODate(d);
+                    if (OFFICIAL_SCHEDULE_MAP[iso] && OFFICIAL_SCHEDULE_MAP[iso][rIdx]) {
+                        row.push(OFFICIAL_SCHEDULE_MAP[iso][rIdx]);
+                    } else {
+                        row.push(rotGrid[rIdx][i + 1] || '-');
+                    }
+                }
+                return row;
+            });
+        }
+
+        function getStaffForDate(d, roleIdx) {
+            const dateStr = getLocalISODate(d);
+            const dayOfWeek = d.getDay();
+            const dayInWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            const colIndex = dayInWeek + 1;
+
+            const mondayDate = new Date(d);
+            mondayDate.setDate(d.getDate() - dayInWeek);
+            const mondayStr = getLocalISODate(mondayDate);
+
+            // 1. Kiểm tra trong tuần hiện tại đang thao tác trên giao diện
+            if (mondayStr === weekStart && scheduleGrid && scheduleGrid.length >= 4 && scheduleGrid[roleIdx]) {
+                const cellVal = scheduleGrid[roleIdx][colIndex];
+                if (cellVal && cellVal !== '-') return cellVal;
+            }
+
+            // 2. Kiểm tra bộ nhớ đệm cache của tuần
+            const cachedWeek = getWeekFromLocalCache(mondayStr);
+            if (cachedWeek && cachedWeek.grid && cachedWeek.grid.length >= 4 && cachedWeek.grid[roleIdx]) {
+                const cachedVal = cachedWeek.grid[roleIdx][colIndex];
+                if (cachedVal && cachedVal !== '-') return cachedVal;
+            }
+
+            // 3. Kiểm tra bảng lịch chính thức ban hành
+            if (OFFICIAL_SCHEDULE_MAP[dateStr] && OFFICIAL_SCHEDULE_MAP[dateStr][roleIdx]) {
+                return OFFICIAL_SCHEDULE_MAP[dateStr][roleIdx];
+            }
+
+            // 4. Thuật toán xoay tua công bằng nền tảng
+            const weekGrid = generateRotatedGrid(mondayStr);
+            return (weekGrid[roleIdx] && weekGrid[roleIdx][colIndex]) ? weekGrid[roleIdx][colIndex] : '-';
+        }
+
+        function calcMonthlyStaffShiftStats(targetMonth, targetYear) {
+            const stats = {};
+            const roster = getActiveStaffRoster();
+            
+            roster.forEach(s => {
+                stats[s.name] = { total: 0, weekend: 0, weekday: 0, fullName: s.fullName, homeStation: s.homeStation };
+            });
+
+            const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const curDate = new Date(targetYear, targetMonth - 1, d);
+                const isWeekend = (curDate.getDay() === 0 || curDate.getDay() === 6);
+
+                for (let r = 0; r < 4; r++) {
+                    const staffName = getStaffForDate(curDate, r);
+                    if (staffName && staffName !== '-' && stats[staffName]) {
+                        stats[staffName].total += 1;
+                        if (isWeekend) {
+                            stats[staffName].weekend += 1;
+                        } else {
+                            stats[staffName].weekday += 1;
+                        }
+                    }
+                }
+            }
+
+            return stats;
+        }
+
+        function switchScheduleViewMode(mode) {
+            scheduleViewMode = mode;
+            const weekBtn = document.getElementById('view-mode-week-btn');
+            const monthBtn = document.getElementById('view-mode-month-btn');
+            const weekNav = document.getElementById('week-view-nav');
+            const monthNav = document.getElementById('month-view-nav');
+
+            if (mode === 'week') {
+                weekBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs flex items-center gap-1.5";
+                monthBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-gray-600 hover:text-gray-900 flex items-center gap-1.5";
+                weekNav.classList.remove('hidden');
+                monthNav.classList.add('hidden');
+            } else {
+                monthBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-purple-600 text-white shadow-xs flex items-center gap-1.5";
+                weekBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-gray-600 hover:text-gray-900 flex items-center gap-1.5";
+                monthNav.classList.remove('hidden');
+                weekNav.classList.add('hidden');
+
+                if (weekStart) {
+                    const p = weekStart.split('-');
+                    currentScheduleMonth = parseInt(p[1]);
+                    currentScheduleYear = parseInt(p[0]);
+                }
+                document.getElementById('month-view-select').value = currentScheduleMonth;
+                document.getElementById('year-view-input').value = currentScheduleYear;
+            }
+
+            renderStaffList();
+            renderSchedule();
+        }
+
+        function changeMonthOffset(offset) {
+            currentScheduleMonth += offset;
+            if (currentScheduleMonth > 12) {
+                currentScheduleMonth = 1;
+                currentScheduleYear += 1;
+            } else if (currentScheduleMonth < 1) {
+                currentScheduleMonth = 12;
+                currentScheduleYear -= 1;
+            }
+            document.getElementById('month-view-select').value = currentScheduleMonth;
+            document.getElementById('year-view-input').value = currentScheduleYear;
+            onMonthViewChanged();
+        }
+
+        function onMonthViewChanged() {
+            currentScheduleMonth = parseInt(document.getElementById('month-view-select').value);
+            currentScheduleYear = parseInt(document.getElementById('year-view-input').value);
+
+            const firstDayOfMonth = new Date(currentScheduleYear, currentScheduleMonth - 1, 1);
+            const dayOfWeek = firstDayOfMonth.getDay();
+            const diffToMonday = firstDayOfMonth.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+            const firstMonday = new Date(firstDayOfMonth.setDate(diffToMonday));
+            
+            updateWeekDates(getLocalISODate(firstMonday), false);
+            renderStaffList();
+            renderSchedule();
+        }
+
+        function goToCurrentMonth() {
+            const today = new Date();
+            currentScheduleMonth = today.getMonth() + 1;
+            currentScheduleYear = today.getFullYear();
+            document.getElementById('month-view-select').value = currentScheduleMonth;
+            document.getElementById('year-view-input').value = currentScheduleYear;
+            onMonthViewChanged();
+        }
+
+        function renderSchedule() {
+            if (scheduleViewMode === 'week') {
+                renderTable();
+            } else {
+                renderMonthTable();
+            }
+            renderMonthlyStatsSummary();
+        }
+
+        async function initApp() {
+            const anchorMondayStr = "2026-08-17";
+            currentScheduleMonth = 8;
+            currentScheduleYear = 2026;
+
+            renderStaffList();
+            initSidebarDropEvents();
+            fetchLiveStaffList();
+            
+            const savedUrl = localStorage.getItem('lichTrucApiUrl') || GOOGLE_SHEETS_API_URL;
+            if (savedUrl) document.getElementById('api-url').value = savedUrl;
+
+            await updateWeekDates(anchorMondayStr);
+        }
+
+        async function fetchLiveStaffList() {
+            if (!GOOGLE_SHEET_STAFF_URL) return;
+            try {
+                const url = GOOGLE_SHEET_STAFF_URL + (GOOGLE_SHEET_STAFF_URL.includes('?') ? '&' : '?') + `action=loadStaffList&t=${Date.now()}`;
+                const res = await fetch(url, { method: 'GET' });
+                const text = await res.text();
+                let result;
+                try { result = JSON.parse(text); } catch(e) { return; }
+                
+                if (result && result.status === 'success' && result.records && result.records.length > 0) {
+                    localStorage.setItem('TYT_STAFF_LIST', JSON.stringify(result.records));
+                    renderStaffList();
+                    renderSchedule();
+                }
+            } catch(e) {}
+        }
+
+        async function updateWeekDates(dateString = null, autoRender = true) {
+            if (weekStart && scheduleGrid && scheduleGrid.length >= 4) {
+                saveWeekToLocalCache(weekStart, scheduleGrid, historyLogs);
+            }
+
+            const inputStart = document.getElementById('week-start');
+            if (dateString) {
+                inputStart.value = dateString.substring(0, 10);
+            }
+            if (!inputStart.value) return;
+
+            const parts = inputStart.value.split('-');
+            const start = new Date(parts[0], parts[1] - 1, parts[2]);
+            weekStart = inputStart.value;
+            weekDates = [];
+
+            for(let i = 0; i < 7; i++) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                weekDates.push(d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }));
+            }
+
+            const end = new Date(start);
+            end.setDate(start.getDate() + 6);
+            weekEnd = getLocalISODate(end);
+            document.getElementById('week-end').value = weekEnd;
+
+            highlightedCells = {};
+            
+            const cached = getWeekFromLocalCache(weekStart);
+            if (cached && cached.grid && cached.grid.length >= 4) {
+                scheduleGrid = cached.grid;
+                historyLogs = cached.logs || [];
+                renderHistory();
+                if (autoRender) renderSchedule();
+            } else if (hasOfficialDataForWeek(weekStart)) {
+                scheduleGrid = getOfficialGridForWeek(weekStart);
+                historyLogs = [];
+                renderHistory();
+                if (autoRender) renderSchedule();
+            } else {
+                scheduleGrid = generateRotatedGrid(weekStart);
+                historyLogs = [];
+                renderHistory();
+                if (autoRender) renderSchedule();
+            }
+            
+            if (getApiUrl(true)) {
+                await loadFromGoogleSheets(weekStart);
+            }
+        }
+
+        function changeWeek(offset) {
+            const inputStart = document.getElementById('week-start');
+            if (!inputStart.value) return;
+
+            if (weekStart && scheduleGrid && scheduleGrid.length >= 4) {
+                saveWeekToLocalCache(weekStart, scheduleGrid, historyLogs);
+            }
+
+            const parts = inputStart.value.split('-');
+            const currentStart = new Date(parts[0], parts[1] - 1, parts[2]);
+            currentStart.setDate(currentStart.getDate() + (offset * 7));
+            
+            const newDateString = getLocalISODate(currentStart);
+            updateWeekDates(newDateString);
+        }
+
+        function resetToAutoRotation() {
+            showConfirm("Bạn có chắc muốn khôi phục lại lịch xoay tua tự động chuẩn cho tuần này?", () => {
+                const map = getSavedWeeksMap();
+                delete map[weekStart];
+                try { localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(map)); } catch(e) {}
+
+                if (hasOfficialDataForWeek(weekStart)) {
+                    scheduleGrid = getOfficialGridForWeek(weekStart);
+                } else {
+                    scheduleGrid = generateRotatedGrid(weekStart);
+                }
+                highlightedCells = {};
+                historyLogs = [];
+                renderHistory();
+                renderSchedule();
+                renderStaffList();
+                showToast("Đã tải lại lịch xoay tua chuẩn!", "info");
+            });
+        }
+
+        function addLog(message) {
+            historyLogs.unshift(message);
+            if(historyLogs.length > 20) historyLogs.pop();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-list');
+            if(!container) return;
+            if(historyLogs.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 italic">Chưa có điều chỉnh nào trong tuần này.</p>';
+                return;
+            }
+            container.innerHTML = historyLogs.map(log => 
+                `<div class="bg-gray-50 border border-gray-100 p-1.5 rounded relative pl-2.5 text-[11px]">
+                    <span class="absolute left-0 top-0 bottom-0 w-1 bg-blue-400 rounded-l"></span>
+                    ${log}
+                </div>`
+            ).join('');
+        }
+
+        function clearHistory() { historyLogs = []; renderHistory(); }
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-emerald-600 text-white shadow-emerald-600/30' : 
+                           (type === 'rose' ? 'bg-rose-600 text-white shadow-rose-600/30' : 
+                           (type === 'purple' ? 'bg-purple-600 text-white shadow-purple-600/30' : 'bg-slate-800 text-white shadow-slate-800/30'));
+            toast.className = `toast-item pointer-events-auto px-3.5 py-2 rounded-xl text-xs font-bold shadow-lg flex items-center gap-2 ${bgClass}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : (type === 'rose' ? 'fa-user-xmark' : (type === 'purple' ? 'fa-right-left' : 'fa-circle-info'))}"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3200);
+        }
+
+        function removeAndCascadeShift(rowIndex, colIndex, staffName, silent = false) {
+            if (!scheduleGrid || !scheduleGrid[rowIndex]) return;
+            
+            const timeStr = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+            const station = STATIONS[rowIndex];
+            const stationPool = station ? station.staff : getStaffList();
+            const removedName = staffName || scheduleGrid[rowIndex][colIndex];
+            const dateLabel = weekDates[colIndex - 1] ? ` (${weekDates[colIndex - 1]})` : '';
+            const stationName = scheduleGrid[rowIndex][0];
+
+            highlightedCells = {};
+
+            // 1. Dồn ca cuốn chiếu từ vị trí colIndex đến ngày Chủ nhật (cột 7)
+            for (let c = colIndex; c < 7; c++) {
+                scheduleGrid[rowIndex][c] = scheduleGrid[rowIndex][c + 1];
+                highlightedCells[`${rowIndex}-${c}`] = true;
+            }
+
+            // 2. Vị trí Chủ nhật (cột 7): Tự động lấy người kế tiếp trong chu kỳ
+            const lastPlacedStaff = scheduleGrid[rowIndex][6];
+            let nextStaff = '';
+            
+            if (stationPool && stationPool.length > 0) {
+                let pIdx = stationPool.indexOf(lastPlacedStaff);
+                if (pIdx === -1) pIdx = 0;
+                let candidateIdx = (pIdx + 1) % stationPool.length;
+                if (stationPool[candidateIdx] === removedName && stationPool.length > 1) {
+                    candidateIdx = (candidateIdx + 1) % stationPool.length;
+                }
+                nextStaff = stationPool[candidateIdx];
+            } else {
+                nextStaff = getStaffList()[0];
+            }
+
+            scheduleGrid[rowIndex][7] = nextStaff;
+            highlightedCells[`${rowIndex}-7`] = true;
+
+            if (!silent) {
+                addLog(`[${timeStr}] <b>Rút ca ${removedName}</b>${dateLabel} tại <i>${stationName}</i>: Các ca tiếp theo tự động dồn lên thay thế (CN: <b>${nextStaff}</b>)`);
+                showToast(`Đã rút ca ${removedName}${dateLabel}. Các vị trí tiếp theo đã tự động dồn lên thay thế!`, 'rose');
+            }
+
+            saveWeekToLocalCache(weekStart, scheduleGrid, historyLogs);
+            renderSchedule();
+            renderStaffList();
+        }
+
+        function getDayConflicts() {
+            const conflicts = {};
+            if (!scheduleGrid || scheduleGrid.length < 4) return conflicts;
+
+            for (let col = 1; col <= 7; col++) {
+                const seenInCol = {};
+                for (let r = 0; r < 4; r++) {
+                    const name = scheduleGrid[r][col];
+                    if (name && name !== '-') {
+                        if (seenInCol[name] !== undefined) {
+                            conflicts[`${col}_${name}`] = true;
+                        }
+                        seenInCol[name] = r;
+                    }
+                }
+            }
+            return conflicts;
+        }
+
+        function dispatchStaffToStation(staffName, targetRowIndex, colIndex, originRowIndex = null, mode = 'cascade') {
+            const timeStr = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+            const targetStationName = ROLES[targetRowIndex];
+            const dateLabel = weekDates[colIndex - 1] ? ` (${DAYS[colIndex - 1]} ${weekDates[colIndex - 1]})` : '';
+            const oldTargetStaff = scheduleGrid[targetRowIndex][colIndex];
+
+            if (originRowIndex !== null && originRowIndex !== targetRowIndex) {
+                const originStationName = ROLES[originRowIndex];
+
+                if (mode === 'swap') {
+                    scheduleGrid[originRowIndex][colIndex] = oldTargetStaff;
+                    scheduleGrid[targetRowIndex][colIndex] = staffName;
+                    highlightedCells[`${originRowIndex}-${colIndex}`] = true;
+                    highlightedCells[`${targetRowIndex}-${colIndex}`] = true;
+
+                    addLog(`[${timeStr}] <b>Hoán đổi ca liên trạm</b>${dateLabel}: <b>${staffName}</b> (sang <i>${targetStationName}</i>) ↔ <b>${oldTargetStaff}</b> (sang <i>${originStationName}</i>)`);
+                    showToast(`Đã hoán đổi ca giữa ${staffName} và ${oldTargetStaff}!`, 'purple');
+                } else {
+                    removeAndCascadeShift(originRowIndex, colIndex, staffName, true);
+                    scheduleGrid[targetRowIndex][colIndex] = staffName;
+                    highlightedCells[`${targetRowIndex}-${colIndex}`] = true;
+
+                    addLog(`[${timeStr}] <b>Điều động cán bộ</b>${dateLabel}: <b>${staffName}</b> từ <i>${originStationName}</i> sang trực tại <i>${targetStationName}</i>`);
+                    showToast(`Đã điều động ${staffName} sang trực tại ${targetStationName}!`, 'purple');
+                }
+            } else {
+                scheduleGrid[targetRowIndex][colIndex] = staffName;
+                highlightedCells[`${targetRowIndex}-${colIndex}`] = true;
+
+                addLog(`[${timeStr}] <b>Phân công điều động</b>${dateLabel}: <b>${staffName}</b> trực tại <i>${targetStationName}</i> (thay ${oldTargetStaff})`);
+                showToast(`Đã phân công ${staffName} trực tại ${targetStationName}!`, 'purple');
+            }
+
+            saveWeekToLocalCache(weekStart, scheduleGrid, historyLogs);
+            renderSchedule();
+            renderStaffList();
+        }
+
+        function promptCrossDragAction(dragData, targetRowIndex, targetColIndex) {
+            pendingCrossDrag = { dragData, targetRowIndex, targetColIndex };
+            
+            const staffName = dragData.name;
+            const fromStation = ROLES[dragData.r];
+            const toStation = ROLES[targetRowIndex];
+            const dateStr = weekDates[targetColIndex - 1] ? `${DAYS[targetColIndex - 1]} (${weekDates[targetColIndex - 1]})` : '';
+            const targetOldStaff = scheduleGrid[targetRowIndex][targetColIndex];
+
+            document.getElementById('cross-drag-desc').innerHTML = `
+                Bạn đang điều động <b>${staffName}</b> từ <i>${fromStation}</i> sang <i>${toStation}</i> vào ngày <b>${dateStr}</b> (vị trí hiện tại: <b>${targetOldStaff}</b>):
+            `;
+            document.getElementById('cross-drag-modal').classList.remove('hidden');
+        }
+
+        function resolveCrossDrag(mode) {
+            if (!pendingCrossDrag) return;
+            const { dragData, targetRowIndex, targetColIndex } = pendingCrossDrag;
+            closeCrossDragModal();
+            dispatchStaffToStation(dragData.name, targetRowIndex, targetColIndex, dragData.r, mode);
+            pendingCrossDrag = null;
+        }
+
+        function closeCrossDragModal() {
+            document.getElementById('cross-drag-modal').classList.add('hidden');
+            pendingCrossDrag = null;
+        }
+
+        function openDispatchModal() {
+            const roster = getActiveStaffRoster();
+            const staffSelect = document.getElementById('dispatch-staff-select');
+            staffSelect.innerHTML = roster.map(s => `<option value="${s.name}">${s.name} - ${s.fullName} (${ROLES[s.homeStation]})</option>`).join('');
+
+            const daySelect = document.getElementById('dispatch-day-select');
+            daySelect.innerHTML = DAYS.map((d, i) => `<option value="${i + 1}">${d} (${weekDates[i] || ''})</option>`).join('');
+
+            const stationSelect = document.getElementById('dispatch-target-station');
+            stationSelect.innerHTML = ROLES.map((r, i) => `<option value="${i}">${r}</option>`).join('');
+
+            onDispatchStaffChanged();
+            document.getElementById('dispatch-modal').classList.remove('hidden');
+        }
+
+        function closeDispatchModal() {
+            document.getElementById('dispatch-modal').classList.add('hidden');
+        }
+
+        function onDispatchStaffChanged() {
+            const staffName = document.getElementById('dispatch-staff-select').value;
+            const homeMap = getHomeStationMap();
+            const homeStationIdx = homeMap[staffName] !== undefined ? homeMap[staffName] : 0;
+            
+            document.getElementById('dispatch-home-name').innerText = ROLES[homeStationIdx];
+
+            const stationSelect = document.getElementById('dispatch-target-station');
+            const candidate = (homeStationIdx + 1) % 4;
+            stationSelect.value = candidate;
+        }
+
+        function executeDispatchModalSubmit() {
+            const staffName = document.getElementById('dispatch-staff-select').value;
+            const targetRowIndex = parseInt(document.getElementById('dispatch-target-station').value);
+            const colIndex = parseInt(document.getElementById('dispatch-day-select').value);
+            const mode = document.querySelector('input[name="dispatchOriginMode"]:checked')?.value || 'cascade';
+
+            let currentStationIdxOnDay = null;
+            for (let r = 0; r < 4; r++) {
+                if (scheduleGrid[r] && scheduleGrid[r][colIndex] === staffName) {
+                    currentStationIdxOnDay = r;
+                    break;
+                }
+            }
+
+            closeDispatchModal();
+            dispatchStaffToStation(staffName, targetRowIndex, colIndex, currentStationIdxOnDay, mode);
+        }
+
+        function filterSidebarStaff(stationFilter) {
+            currentSidebarStationFilter = stationFilter;
+            const btns = ['all', 0, 1, 2, 3];
+            btns.forEach(b => {
+                const el = document.getElementById(`sb-btn-${b}`);
+                if (!el) return;
+                if (b === stationFilter) {
+                    el.className = "px-2 py-1 rounded bg-blue-600 text-white font-bold whitespace-nowrap";
+                } else {
+                    el.className = "px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 font-semibold whitespace-nowrap";
+                }
+            });
+            renderStaffList();
+        }
+
+        function initSidebarDropEvents() {
+            const dropZone = document.getElementById('drop-remove-zone');
+            const sidebar = document.getElementById('staff-sidebar');
+
+            [dropZone, sidebar].forEach(el => {
+                if (!el) return;
+                el.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    dropZone?.classList.add('drop-zone-highlight');
+                });
+                el.addEventListener('dragleave', function() {
+                    dropZone?.classList.remove('drop-zone-highlight');
+                });
+                el.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    dropZone?.classList.remove('drop-zone-highlight');
+                    const dragDataRaw = e.dataTransfer.getData('text/plain');
+                    try {
+                        const dragData = JSON.parse(dragDataRaw);
+                        if (dragData.source === 'table') {
+                            removeAndCascadeShift(dragData.r, dragData.c, dragData.name);
+                        }
+                    } catch(err) {}
+                });
+            });
+        }
+
+        function renderStaffList() {
+            const container = document.getElementById('staff-list');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const roster = getActiveStaffRoster();
+
+            const filteredRoster = roster.filter(s => {
+                if (currentSidebarStationFilter === 'all') return true;
+                return s.homeStation === currentSidebarStationFilter;
+            });
+
+            document.getElementById('staff-count-badge').innerText = filteredRoster.length;
+
+            const activeMonth = (scheduleViewMode === 'month') ? currentScheduleMonth : (weekStart ? parseInt(weekStart.split('-')[1]) : 8);
+            const activeYear = (scheduleViewMode === 'month') ? currentScheduleYear : (weekStart ? parseInt(weekStart.split('-')[0]) : 2026);
+            const shiftStats = calcMonthlyStaffShiftStats(activeMonth, activeYear);
+
+            filteredRoster.forEach(s => {
+                const name = s.name;
+                const homeIdx = s.homeStation;
+                const homeTag = ['Đức Tân', 'Mộ Đức', 'Đức Hòa', 'Đức Phú'][homeIdx] || '';
+                const stat = shiftStats[name] || { total: 0, weekend: 0, weekday: 0 };
+
+                const div = document.createElement('div');
+                div.className = 'draggable p-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-gray-700 hover:bg-blue-50 hover:border-blue-300 transition flex flex-col shadow-xs group';
+                div.draggable = true;
+                
+                div.innerHTML = `
+                    <div class="flex items-center justify-between min-w-0">
+                        <span class="flex items-center min-w-0">
+                            <i class="fa-solid fa-grip-vertical text-gray-300 group-hover:text-blue-500 mr-2 shrink-0 transition-colors"></i> 
+                            <span class="font-extrabold text-gray-900 truncate">${name}</span>
+                        </span>
+                        <span class="text-[10px] text-gray-500 bg-white px-1.5 py-0.5 rounded border ml-1 shrink-0 font-semibold">${homeTag}</span>
+                    </div>
+
+                    <div class="mt-1.5 pt-1.5 border-t border-gray-100 flex items-center justify-between text-[10px]">
+                        <span class="text-blue-700 font-bold flex items-center gap-1" title="Tổng số ca trực trong Tháng ${activeMonth}/${activeYear}">
+                            <i class="fa-solid fa-calendar-check text-[9.5px] text-blue-500"></i>
+                            <span>Tháng: <b>${stat.total}</b> ca</span>
+                        </span>
+                        <span class="${stat.weekend > 0 ? 'text-rose-600 font-extrabold' : 'text-gray-400 font-medium'} flex items-center gap-0.5" title="Số ca trực rơi vào Thứ 7 hoặc Chủ Nhật">
+                            <i class="fa-solid fa-star text-[9px] text-amber-500"></i>
+                            <span>T7/CN: <b>${stat.weekend}</b> ca</span>
+                        </span>
+                    </div>
+                `;
+                
+                div.addEventListener('dragstart', function(e) {
+                    e.dataTransfer.setData('text/plain', name);
+                    e.target.style.opacity = '0.5';
+                });
+                div.addEventListener('dragend', function(e) {
+                    e.target.style.opacity = '1';
+                });
+
+                container.appendChild(div);
+            });
+        }
+
+        function renderTable() {
+            const headerRow = document.getElementById('table-header');
+            headerRow.innerHTML = `<th class="border-b-2 border-gray-300 p-3 bg-gray-100 text-gray-700 font-bold w-44">Vị trí trực</th>`;
+            DAYS.forEach((day, index) => {
+                const dateHtml = weekDates[index] ? `<div class="text-[11px] text-blue-600 font-semibold mt-0.5">${weekDates[index]}</div>` : '';
+                headerRow.innerHTML += `<th class="border-b-2 border-gray-300 p-2.5 bg-gray-100 text-center text-gray-700 font-bold min-w-[95px]">${day} ${dateHtml}</th>`;
+            });
+
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            const homeMap = getHomeStationMap();
+            const conflicts = getDayConflicts();
+            const hasAnyConflict = Object.keys(conflicts).length > 0;
+
+            const conflictIndicator = document.getElementById('conflict-indicator');
+            if (conflictIndicator) {
+                conflictIndicator.classList.toggle('hidden', !hasAnyConflict);
+            }
+
+            const activeMonth = weekStart ? parseInt(weekStart.split('-')[1]) : 8;
+            const activeYear = weekStart ? parseInt(weekStart.split('-')[0]) : 2026;
+            const shiftStats = calcMonthlyStaffShiftStats(activeMonth, activeYear);
+            const staffListMaster = getStaffList();
+
+            scheduleGrid.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 border-b border-gray-200 transition-colors";
+                
+                const tdRole = document.createElement('td');
+                tdRole.className = "p-3 font-bold text-gray-800 bg-white border-r border-gray-200 text-xs";
+                tdRole.innerText = row[0];
+                tr.appendChild(tdRole);
+
+                for(let colIndex = 1; colIndex <= DAYS.length; colIndex++) {
+                    const td = document.createElement('td');
+                    td.className = "p-1.5 text-center relative border-r border-gray-100";
+                    
+                    const cellKey = `${rowIndex}-${colIndex}`;
+                    const isHighlighted = highlightedCells[cellKey];
+                    const cellStaff = row[colIndex] || '-';
+
+                    const homeStIdx = homeMap[cellStaff];
+                    const isDispatched = (cellStaff !== '-' && homeStIdx !== undefined && homeStIdx !== rowIndex);
+                    const homeStationTitle = isDispatched ? ['Đức Tân', 'Mộ Đức', 'Đức Hòa', 'Đức Phú'][homeStIdx] : '';
+                    const isConflict = conflicts[`${colIndex}_${cellStaff}`] === true;
+                    const stat = shiftStats[cellStaff] || { total: 0, weekend: 0 };
+
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = `p-2 rounded-xl border transition-all cursor-grab active:cursor-grabbing font-medium text-xs relative group flex flex-col items-center justify-center min-h-[52px]
+                        ${isConflict ? 'conflict-cell font-bold text-rose-800' : 
+                         (isDispatched ? 'badge-dispatched font-bold shadow-xs' : 
+                         (isHighlighted ? 'bg-blue-100 border-blue-500 text-blue-800 font-bold shadow-sm' : 'bg-white border-gray-200 hover:border-blue-300 text-gray-800'))}`;
+                    contentDiv.draggable = true;
+                    
+                    let htmlContent = `<span class="truncate w-full font-bold text-slate-800">${cellStaff}</span>`;
+
+                    if (cellStaff && cellStaff !== '-') {
+                        htmlContent += `
+                            <div class="mt-1 flex items-center justify-center gap-1 text-[9.5px]">
+                                <span class="bg-blue-50 text-blue-700 font-bold px-1 py-0.2 rounded" title="Tổng số ca trực trong Tháng ${activeMonth}">T${activeMonth}: <b>${stat.total}</b></span>
+                                <span class="${stat.weekend > 0 ? 'bg-rose-50 text-rose-700 font-extrabold' : 'bg-gray-100 text-gray-500 font-medium'} px-1 py-0.2 rounded" title="Ca trực vào T7, CN">T7/CN: <b>${stat.weekend}</b></span>
+                            </div>
+                        `;
+                    }
+
+                    if (isConflict) {
+                        htmlContent += `<span class="text-[9px] bg-rose-600 text-white font-extrabold px-1 rounded mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i> Trùng ca</span>`;
+                    } else if (isDispatched) {
+                        htmlContent += `<span class="text-[9px] text-purple-700 bg-purple-100/90 font-bold px-1 rounded mt-0.5 truncate max-w-full" title="Điều động từ ${homeStationTitle}"><i class="fa-solid fa-right-left text-[8px]"></i> Tăng cường</span>`;
+                    }
+
+                    contentDiv.innerHTML = htmlContent;
+
+                    if (cellStaff && cellStaff !== '-') {
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'absolute -top-1.5 -right-1.5 w-4 h-4 bg-rose-500 hover:bg-rose-600 text-white rounded-full text-[9px] flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity z-10';
+                        removeBtn.title = `Rút ca ${cellStaff} & Tự động dồn ca thay thế`;
+                        removeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                        removeBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            removeAndCascadeShift(rowIndex, colIndex, cellStaff);
+                        });
+                        contentDiv.appendChild(removeBtn);
+                    }
+
+                    contentDiv.addEventListener('dragstart', function(e) {
+                        e.dataTransfer.setData('text/plain', JSON.stringify({
+                            source: 'table', name: row[colIndex], r: rowIndex, c: colIndex
+                        }));
+                        setTimeout(() => contentDiv.classList.add('opacity-50'), 0);
+                        document.getElementById('drop-remove-zone')?.classList.add('drop-zone-highlight');
+                    });
+                    contentDiv.addEventListener('dragend', function() { 
+                        contentDiv.classList.remove('opacity-50'); 
+                        document.getElementById('drop-remove-zone')?.classList.remove('drop-zone-highlight');
+                    });
+
+                    td.addEventListener('dragover', function(e) {
+                        e.preventDefault();
+                        contentDiv.classList.add('border-green-500', 'bg-green-50');
+                    });
+                    td.addEventListener('dragleave', function() {
+                        contentDiv.classList.remove('border-green-500', 'bg-green-50');
+                    });
+                    
+                    td.addEventListener('drop', function(e) {
+                        e.preventDefault();
+                        contentDiv.classList.remove('border-green-500', 'bg-green-50');
+                        
+                        const dragDataRaw = e.dataTransfer.getData('text/plain');
+                        const timeStr = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                        
+                        try {
+                            const dragData = JSON.parse(dragDataRaw);
+                            if(dragData.source === 'table') {
+                                if(dragData.r === rowIndex && dragData.c === colIndex) return;
+                                
+                                if (dragData.r !== rowIndex) {
+                                    promptCrossDragAction(dragData, rowIndex, colIndex);
+                                    return;
+                                }
+
+                                const targetName = scheduleGrid[rowIndex][colIndex];
+                                scheduleGrid[rowIndex][colIndex] = dragData.name;
+                                scheduleGrid[dragData.r][dragData.c] = targetName;
+                                
+                                highlightedCells[`${rowIndex}-${colIndex}`] = true;
+                                highlightedCells[`${dragData.r}-${dragData.c}`] = true;
+
+                                const date1 = weekDates[dragData.c-1] || '';
+                                const date2 = weekDates[colIndex-1] || '';
+                                addLog(`[${timeStr}] Đổi ca (${date1} ↔ ${date2}): <b>${dragData.name}</b> ↔ <b>${targetName}</b>`);
+                                showToast(`Đã đổi ca giữa <b>${dragData.name}</b> và <b>${targetName}</b>!`, 'success');
+
+                                saveWeekToLocalCache(weekStart, scheduleGrid, historyLogs);
+                                renderSchedule();
+                                renderStaffList();
+                            }
+                        } catch(err) {
+                            const newName = dragDataRaw;
+                            const oldName = scheduleGrid[rowIndex][colIndex];
+                            if(newName && staffListMaster.includes(newName)) {
+                                scheduleGrid[rowIndex][colIndex] = newName;
+                                highlightedCells[`${rowIndex}-${colIndex}`] = true;
+                                const date = weekDates[colIndex-1] || '';
+                                addLog(`[${timeStr}] <b>${newName}</b> thay <b>${oldName !== '-' ? oldName : 'Trống'}</b> (${date})`);
+                                showToast(`Đã xếp <b>${newName}</b> trực ngày ${date}!`, 'success');
+
+                                saveWeekToLocalCache(weekStart, scheduleGrid, historyLogs);
+                                renderSchedule();
+                                renderStaffList();
+                            }
+                        }
+                    });
+
+                    td.appendChild(contentDiv);
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderMonthTable() {
+            const daysInMonth = new Date(currentScheduleYear, currentScheduleMonth, 0).getDate();
+            const today = new Date();
+            const isThisMonth = (today.getMonth() + 1 === currentScheduleMonth && today.getFullYear() === currentYearSafe());
+            const todayDate = today.getDate();
+
+            function currentYearSafe() {
+                return currentScheduleYear;
+            }
+
+            const headerRow = document.getElementById('table-header');
+            let headerHtml = `<th class="border-b-2 border-gray-300 p-2.5 bg-gray-100 text-gray-800 font-bold sticky-col-station w-44">Điểm Trạm</th>`;
+            
+            const dayNamesShort = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateObj = new Date(currentScheduleYear, currentScheduleMonth - 1, d);
+                const dayOfWeek = dateObj.getDay();
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                const isToday = isThisMonth && (d === todayDate);
+
+                let extraHeaderCls = isToday ? 'month-today-col text-teal-800 font-black' : (isWeekend ? 'month-weekend-header' : 'bg-gray-100 text-gray-700');
+
+                headerHtml += `
+                    <th class="border-b-2 border-gray-300 p-1.5 text-center min-w-[76px] ${extraHeaderCls}">
+                        <div class="text-[10px] uppercase font-bold">${dayNamesShort[dayOfWeek]}</div>
+                        <div class="text-xs font-black mt-0.5">${d < 10 ? '0' + d : d}</div>
+                    </th>
+                `;
+            }
+            headerRow.innerHTML = headerHtml;
+
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            const homeMap = getHomeStationMap();
+            const shiftStats = calcMonthlyStaffShiftStats(currentScheduleMonth, currentScheduleYear);
+            const staffListMaster = getStaffList();
+
+            const monthConflicts = {};
+            for (let d = 1; d <= daysInMonth; d++) {
+                const curDate = new Date(currentScheduleYear, currentScheduleMonth - 1, d);
+                const seenInDay = {};
+                for (let r = 0; r < 4; r++) {
+                    const staff = getStaffForDate(curDate, r);
+                    if (staff && staff !== '-') {
+                        if (seenInDay[staff] !== undefined) {
+                            monthConflicts[`${d}_${staff}`] = true;
+                        }
+                        seenInDay[staff] = r;
+                    }
+                }
+            }
+
+            const hasAnyConflict = Object.keys(monthConflicts).length > 0;
+            const conflictIndicator = document.getElementById('conflict-indicator');
+            if (conflictIndicator) conflictIndicator.classList.toggle('hidden', !hasAnyConflict);
+
+            ROLES.forEach((roleName, rIdx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50/70 border-b border-gray-200 transition-colors";
+
+                const tdRole = document.createElement('td');
+                tdRole.className = "p-2.5 font-bold text-gray-800 bg-white border-r border-gray-300 sticky-col-station text-xs shadow-xs";
+                tdRole.innerHTML = `<span>${roleName}</span>`;
+                tr.appendChild(tdRole);
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const curDate = new Date(currentScheduleYear, currentScheduleMonth - 1, d);
+                    const dayOfWeek = curDate.getDay();
+                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                    const isToday = isThisMonth && (d === todayDate);
+
+                    const staffName = getStaffForDate(curDate, rIdx);
+                    const homeStIdx = homeMap[staffName];
+                    const isDispatched = (staffName !== '-' && homeStIdx !== undefined && homeStIdx !== rIdx);
+                    const homeStationTitle = isDispatched ? ['Đức Tân', 'Mộ Đức', 'Đức Hòa', 'Đức Phú'][homeStIdx] : '';
+
+                    const isConflict = monthConflicts[`${d}_${staffName}`] === true;
+                    const stat = shiftStats[staffName] || { total: 0, weekend: 0 };
+
+                    const td = document.createElement('td');
+                    td.className = `p-1 text-center border-r border-gray-100 ${isToday ? 'month-today-col' : (isWeekend ? 'month-weekend-col' : '')}`;
+
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = `p-1.5 rounded-xl border transition-all cursor-grab active:cursor-grabbing text-xs relative group flex flex-col items-center justify-center min-h-[50px]
+                        ${isConflict ? 'conflict-cell font-bold text-rose-800' : 
+                         (isDispatched ? 'badge-dispatched font-bold shadow-xs' : 
+                         'bg-white border-gray-200 hover:border-blue-400 text-gray-800 shadow-2xs')}`;
+                    cellDiv.draggable = true;
+
+                    let cellHtml = `<span class="truncate w-full font-bold text-[11px] text-slate-800">${staffName}</span>`;
+
+                    if (staffName && staffName !== '-') {
+                        cellHtml += `
+                            <div class="mt-1 flex items-center justify-center gap-0.5 text-[9px]">
+                                <span class="bg-blue-50 text-blue-700 font-bold px-1 py-0.2 rounded" title="Tổng ca trực Tháng ${currentScheduleMonth}">T${currentScheduleMonth}: <b>${stat.total}</b></span>
+                                <span class="${stat.weekend > 0 ? 'bg-rose-100 text-rose-700 font-black' : 'bg-gray-100 text-gray-400 font-semibold'} px-1 py-0.2 rounded" title="Ca trực Thứ 7, CN">T7/CN: <b>${stat.weekend}</b></span>
+                            </div>
+                        `;
+                    }
+
+                    if (isConflict) {
+                        cellHtml += `<span class="text-[8.5px] bg-rose-600 text-white font-black px-1 rounded mt-0.5">Trùng ca</span>`;
+                    } else if (isDispatched) {
+                        cellHtml += `<span class="text-[8.5px] text-purple-700 bg-purple-100/90 font-bold px-1 rounded mt-0.5 truncate max-w-full" title="Điều động từ ${homeStationTitle}">Tăng cường</span>`;
+                    }
+
+                    cellDiv.innerHTML = cellHtml;
+
+                    cellDiv.addEventListener('dragstart', function(e) {
+                        e.dataTransfer.setData('text/plain', JSON.stringify({
+                            source: 'monthTable', name: staffName, day: d, roleIdx: rIdx
+                        }));
+                        setTimeout(() => cellDiv.classList.add('opacity-50'), 0);
+                        document.getElementById('drop-remove-zone')?.classList.add('drop-zone-highlight');
+                    });
+                    cellDiv.addEventListener('dragend', function() {
+                        cellDiv.classList.remove('opacity-50');
+                        document.getElementById('drop-remove-zone')?.classList.remove('drop-zone-highlight');
+                    });
+
+                    td.addEventListener('dragover', function(e) {
+                        e.preventDefault();
+                        cellDiv.classList.add('border-green-500', 'bg-green-50');
+                    });
+                    td.addEventListener('dragleave', function() {
+                        cellDiv.classList.remove('border-green-500', 'bg-green-50');
+                    });
+
+                    td.addEventListener('drop', function(e) {
+                        e.preventDefault();
+                        cellDiv.classList.remove('border-green-500', 'bg-green-50');
+                        const dragDataRaw = e.dataTransfer.getData('text/plain');
+                        handleMonthTableDrop(dragDataRaw, d, rIdx, curDate, staffListMaster);
+                    });
+
+                    td.appendChild(cellDiv);
+                    tr.appendChild(td);
+                }
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function handleMonthTableDrop(dragDataRaw, targetDay, targetRoleIdx, targetDateObj, staffListMaster) {
+            const timeStr = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+            try {
+                const dragData = JSON.parse(dragDataRaw);
+                if (dragData.source === 'monthTable') {
+                    if (dragData.day === targetDay && dragData.roleIdx === targetRoleIdx) return;
+
+                    const sourceDateObj = new Date(currentScheduleYear, currentScheduleMonth - 1, dragData.day);
+                    const oldTargetStaff = getStaffForDate(targetDateObj, targetRoleIdx);
+
+                    setShiftForDateDirectly(sourceDateObj, dragData.roleIdx, oldTargetStaff);
+                    setShiftForDateDirectly(targetDateObj, targetRoleIdx, dragData.name);
+
+                    addLog(`[${timeStr}] Đổi ca tháng ${currentScheduleMonth} (Ngày ${dragData.day} ↔ Ngày ${targetDay}): <b>${dragData.name}</b> ↔ <b>${oldTargetStaff}</b>`);
+                    showToast(`Đã đổi ca giữa <b>${dragData.name}</b> và <b>${oldTargetStaff}</b>!`, 'success');
+
+                    renderSchedule();
+                    renderStaffList();
+                }
+            } catch(e) {
+                const newStaffName = dragDataRaw;
+                if (newStaffName && staffListMaster.includes(newStaffName)) {
+                    const oldStaff = getStaffForDate(targetDateObj, targetRoleIdx);
+                    setShiftForDateDirectly(targetDateObj, targetRoleIdx, newStaffName);
+
+                    addLog(`[${timeStr}] Phân công <b>${newStaffName}</b> trực ngày ${targetDay}/${currentScheduleMonth} (thay ${oldStaff !== '-' ? oldStaff : 'Trống'})`);
+                    showToast(`Đã xếp <b>${newStaffName}</b> trực ngày ${targetDay}/${currentScheduleMonth}!`, 'success');
+
+                    renderSchedule();
+                    renderStaffList();
+                }
+            }
+        }
+
+        function setShiftForDateDirectly(dObj, roleIdx, newStaffName) {
+            const dayOfWeek = dObj.getDay();
+            const dayInWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            const colIndex = dayInWeek + 1;
+
+            const mondayDate = new Date(dObj);
+            mondayDate.setDate(dObj.getDate() - dayInWeek);
+            const mondayStr = getLocalISODate(mondayDate);
+
+            let gridToUpdate;
+            let logsToUpdate = [];
+
+            if (mondayStr === weekStart && scheduleGrid && scheduleGrid.length >= 4) {
+                gridToUpdate = scheduleGrid;
+                logsToUpdate = historyLogs;
+            } else {
+                const cached = getWeekFromLocalCache(mondayStr);
+                if (cached && cached.grid && cached.grid.length >= 4) {
+                    gridToUpdate = cached.grid;
+                    logsToUpdate = cached.logs || [];
+                } else if (hasOfficialDataForWeek(mondayStr)) {
+                    gridToUpdate = getOfficialGridForWeek(mondayStr);
+                } else {
+                    gridToUpdate = generateRotatedGrid(mondayStr);
+                }
+            }
+
+            if (gridToUpdate && gridToUpdate[roleIdx]) {
+                gridToUpdate[roleIdx][colIndex] = newStaffName;
+                saveWeekToLocalCache(mondayStr, gridToUpdate, logsToUpdate);
+
+                if (mondayStr === weekStart) {
+                    scheduleGrid = gridToUpdate;
+                }
+            }
+        }
+
+        function renderMonthlyStatsSummary() {
+            const activeMonth = (scheduleViewMode === 'month') ? currentScheduleMonth : (weekStart ? parseInt(weekStart.split('-')[1]) : 8);
+            const activeYear = (scheduleViewMode === 'month') ? currentScheduleYear : (weekStart ? parseInt(weekStart.split('-')[0]) : 2026);
+            
+            const labelEl = document.getElementById('stats-current-month-label');
+            if (labelEl) labelEl.innerText = `${activeMonth}/${activeYear}`;
+
+            const tbody = document.getElementById('stats-details-tbody');
+            if (!tbody) return;
+
+            const roster = getActiveStaffRoster();
+            const stats = calcMonthlyStaffShiftStats(activeMonth, activeYear);
+            const daysInMonth = new Date(activeYear, activeMonth, 0).getDate();
+            const totalStationShiftsInMonth = daysInMonth * 4;
+
+            let html = '';
+            let tt = 1;
+
+            roster.forEach(s => {
+                const stat = stats[s.name] || { total: 0, weekend: 0, weekday: 0 };
+                const stationName = ['Đức Tân', 'Mộ Đức', 'Đức Hòa', 'Đức Phú'][s.homeStation] || 'Đức Tân';
+                const percent = totalStationShiftsInMonth > 0 ? ((stat.total / totalStationShiftsInMonth) * 100).toFixed(1) : '0.0';
+
+                html += `
+                    <tr class="hover:bg-blue-50/50 transition">
+                        <td class="p-2 text-center font-bold text-gray-500">${tt++}</td>
+                        <td class="p-2 font-bold text-gray-800">
+                            <div>${s.fullName}</div>
+                            <div class="text-[10px] text-blue-700 font-semibold font-mono">${s.name}</div>
+                        </td>
+                        <td class="p-2 text-gray-600 font-medium">${stationName}</td>
+                        <td class="p-2 text-center bg-blue-50/50 font-black text-blue-800 text-xs">${stat.total} ca</td>
+                        <td class="p-2 text-center text-gray-700 font-semibold">${stat.weekday} ca</td>
+                        <td class="p-2 text-center bg-rose-50/50 font-black ${stat.weekend > 0 ? 'text-rose-700' : 'text-gray-400'} text-xs">${stat.weekend} ca</td>
+                        <td class="p-2 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <div class="w-16 bg-gray-200 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: ${Math.min(parseFloat(percent) * 6, 100)}%;"></div>
+                                </div>
+                                <span class="text-[10px] font-bold text-gray-500">${percent}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function toggleStatsPanelDetails() {
+            const tableBox = document.getElementById('stats-details-table-box');
+            const btnText = document.getElementById('btn-toggle-stats-text');
+            if (tableBox.classList.contains('hidden')) {
+                tableBox.classList.remove('hidden');
+                btnText.innerText = "Thu gọn bảng";
+            } else {
+                tableBox.classList.add('hidden');
+                btnText.innerText = "Xem chi tiết 29 cán bộ";
+            }
+        }
+
+        function getApiUrl(silent = false) {
+            const url = document.getElementById('api-url').value.trim() || GOOGLE_SHEETS_API_URL;
+            if(!url && !silent) { 
+                showAlert("Vui lòng thiết lập API Google Sheets trong mục cài đặt!"); 
+                toggleSetupModal(); 
+            }
+            return url || null;
+        }
+
+        function showLoading(text) {
+            document.getElementById('loading-text').innerText = text;
+            document.getElementById('loading-overlay').style.display = 'flex';
+        }
+        function hideLoading() { 
+            document.getElementById('loading-overlay').style.display = 'none'; 
+        }
+
+        async function saveToGoogleSheets() {
+            const url = getApiUrl(); if(!url) return;
+            showLoading("Đang lưu lịch trực lên Cloud...");
+            const payload = { weekStart: weekStart, weekEnd: weekEnd, days: DAYS, grid: scheduleGrid, logs: historyLogs };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'save', data: payload })
+                });
+                const result = await response.json();
+                if(result.status === 'success') {
+                    showAlert(`Đã lưu thành công vào Tab "${result.sheet}" trên Google Sheets!`);
+                    document.getElementById('last-sync-time').innerText = "Đã đồng bộ: " + new Date().toLocaleTimeString('vi-VN');
+                    highlightedCells = {};
+                    renderSchedule();
+                } else showAlert("Lỗi: " + result.message);
+            } catch(e) { 
+                showAlert("Đã gửi lệnh lưu tới Google Sheets."); 
+            } finally { 
+                hideLoading(); 
+            }
+        }
+
+        async function loadFromGoogleSheets(targetWeek = weekStart) {
+            const url = getApiUrl(true); if(!url) return;
+            showLoading("Đang tải dữ liệu Cloud...");
+            try {
+                const response = await fetch(url, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+                    body: JSON.stringify({ action: 'load', weekStart: targetWeek })
+                });
+                const result = await response.json();
+                if(result.status === 'success' && result.grid && result.grid.length > 0) {
+                    scheduleGrid = result.grid;
+                    historyLogs = result.logs || [];
+                    document.getElementById('last-sync-time').innerText = "Đã tải: " + new Date().toLocaleTimeString('vi-VN');
+                    renderHistory();
+                    renderSchedule();
+                }
+            } catch (e) { 
+                console.log("Chưa có bản lưu riêng trên Cloud cho tuần này."); 
+            } finally { 
+                hideLoading(); 
+            }
+        }
+
+        function toggleSetupModal() { 
+            document.getElementById('setup-modal').classList.toggle('hidden'); 
+        }
+        function saveApiUrl() { 
+            localStorage.setItem('lichTrucApiUrl', document.getElementById('api-url').value.trim()); 
+            toggleSetupModal(); 
+            loadFromGoogleSheets();
+        }
+
+        function toggleExportModal() { 
+            document.getElementById('export-modal').classList.toggle('hidden'); 
+        }
+        
+        async function executeExportMonthly() {
+            const url = getApiUrl(); if(!url) return;
+            const month = parseInt(document.getElementById('export-month').value);
+            const year = parseInt(document.getElementById('export-year').value);
+            showLoading(`Đang tổng hợp lịch Tháng ${month}/${year}...`);
+            
+            try {
+                const response = await fetch(url, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+                    body: JSON.stringify({ action: 'exportMonth', month: month, year: year })
+                });
+                const result = await response.json();
+                if(result.status === 'success') {
+                    processAndDownloadExcel(result.data, month, year);
+                    toggleExportModal();
+                }
+            } catch(e) { 
+                showAlert("Không thể tải file Excel. Vui lòng kiểm tra lại kết nối API."); 
+            } finally { 
+                hideLoading(); 
+            }
+        }
+
+        function processAndDownloadExcel(allWeeksData, targetMonth, targetYear) {
+            const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
+            const headerRow = ['Vị trí / Vai trò'];
+            for(let d = 1; d <= daysInMonth; d++) headerRow.push(d);
+            
+            const dataRows = ROLES.map(role => {
+                const row = new Array(daysInMonth + 1).fill('');
+                row[0] = role; return row;
+            });
+
+            if (allWeeksData && Array.isArray(allWeeksData)) {
+                allWeeksData.forEach(week => {
+                    const parts = week.weekStart.split('-');
+                    const wStart = new Date(parts[0], parts[1] - 1, parts[2]);
+                    for (let i = 0; i < 7; i++) {
+                        const currentDate = new Date(wStart);
+                        currentDate.setDate(wStart.getDate() + i);
+                        if (currentDate.getMonth() + 1 === targetMonth && currentDate.getFullYear() === targetYear) {
+                            const dayOfMonth = currentDate.getDate();
+                            for (let r = 0; r < ROLES.length; r++) {
+                                if (week.grid[r] && week.grid[r][i + 1]) dataRows[r][dayOfMonth] = week.grid[r][i + 1];
+                            }
+                        }
+                    }
+                });
+            }
+
+            const ws = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows]);
+            const wscols = [{wch: 24}]; for(let i = 0; i < daysInMonth; i++) wscols.push({wch: 10});
+            ws['!cols'] = wscols;
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, `Tháng ${targetMonth}`);
+            XLSX.writeFile(wb, `TRỰC T${targetMonth}_${targetYear}.xls`);
+        }
+
+        function togglePrintModal() {
+            const modal = document.getElementById('print-modal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                if (scheduleViewMode === 'month') {
+                    const daysInMonth = new Date(currentScheduleYear, currentScheduleMonth, 0).getDate();
+                    const sDate = `${currentScheduleYear}-${String(currentScheduleMonth).padStart(2, '0')}-01`;
+                    const eDate = `${currentScheduleYear}-${String(currentScheduleMonth).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+                    document.getElementById('print-start-date').value = sDate;
+                    document.getElementById('print-end-date').value = eDate;
+                } else {
+                    document.getElementById('print-start-date').value = weekStart;
+                    document.getElementById('print-end-date').value = weekEnd;
+                }
+            }
+        }
+
+        async function preparePrintDateMap() {
+            const printStartVal = document.getElementById('print-start-date').value;
+            const printEndVal = document.getElementById('print-end-date').value;
+            if (!printStartVal || !printEndVal) { showAlert("Vui lòng chọn Từ ngày và Đến ngày."); return null; }
+
+            const partsS = printStartVal.split('-'); const pStart = new Date(partsS[0], partsS[1] - 1, partsS[2]);
+            const partsE = printEndVal.split('-'); const pEnd = new Date(partsE[0], partsE[1] - 1, partsE[2]);
+            if (pStart > pEnd) { showAlert("Ngày bắt đầu không được lớn hơn ngày kết thúc."); return null; }
+
+            if (weekStart && scheduleGrid && scheduleGrid.length >= 4) {
+                saveWeekToLocalCache(weekStart, scheduleGrid, historyLogs);
+            }
+
+            const diffDays = Math.round((pEnd - pStart) / (1000 * 3600 * 24)) + 1;
+            showLoading("Đang chuẩn bị dữ liệu lịch trực...");
+
+            const dateMap = {};
+            const datesToPrint = [];
+
+            for(let i = 0; i < diffDays; i++) {
+                const d = new Date(pStart);
+                d.setDate(pStart.getDate() + i);
+                datesToPrint.push(d);
+                
+                const dateStr = getLocalISODate(d);
+                dateMap[dateStr] = [
+                    getStaffForDate(d, 0) || '-',
+                    getStaffForDate(d, 1) || '-',
+                    getStaffForDate(d, 2) || '-',
+                    getStaffForDate(d, 3) || '-'
+                ];
+            }
+
+            hideLoading();
+            return { datesToPrint, dateMap };
+        }
+
+        async function executePrint() {
+            const result = await preparePrintDateMap();
+            if (!result) return;
+            togglePrintModal();
+
+            const { datesToPrint, dateMap } = result;
+            const formatDateVn = (dObj) => `${dObj.getDate().toString().padStart(2, '0')}/${(dObj.getMonth()+1).toString().padStart(2, '0')}/${dObj.getFullYear()}`;
+            const subtitleStr = `(Từ ngày ${formatDateVn(datesToPrint[0])} đến ngày ${formatDateVn(datesToPrint[datesToPrint.length - 1])})`;
+
+            renderPrintTable(datesToPrint, dateMap, subtitleStr);
+        }
+
+        function renderPrintTable(datesToPrint, dateMap, subtitleStr) {
+            const today = new Date();
+            document.getElementById('print-date').innerText = `Mộ Đức, ngày ${today.getDate().toString().padStart(2, '0')} tháng ${(today.getMonth() + 1).toString().padStart(2, '0')} năm ${today.getFullYear()}`;
+            document.getElementById('print-subtitle').innerText = subtitleStr;
+
+            const tbody = document.getElementById('print-tbody');
+            tbody.innerHTML = '';
+            const inDays = ['CN', 'Hai', 'Ba', 'Tư', 'Năm', 'Sáu', 'Bảy']; 
+
+            const count = datesToPrint.length;
+            const cellPadding = count > 20 ? '2.5px' : (count > 10 ? '4px' : '7px');
+            const fontSize = count > 20 ? '9.5pt' : (count > 10 ? '11pt' : '12pt');
+
+            document.getElementById('print-table').style.fontSize = fontSize;
+            document.getElementById('print-footer-space').style.marginBottom = count > 15 ? '40px' : '65px';
+
+            datesToPrint.forEach(d => {
+                const tr = document.createElement('tr');
+                const dateStr = getLocalISODate(d);
+                
+                const tdThu = document.createElement('td'); 
+                tdThu.style.padding = cellPadding; 
+                tdThu.style.fontWeight = (d.getDay() === 0 || d.getDay() === 6) ? 'bold' : 'normal';
+                tdThu.innerText = inDays[d.getDay()]; 
+                tr.appendChild(tdThu);
+
+                const tdNgay = document.createElement('td'); 
+                tdNgay.style.padding = cellPadding; 
+                tdNgay.style.fontWeight = 'bold';
+                tdNgay.innerText = String(d.getDate()).padStart(2, '0'); 
+                tr.appendChild(tdNgay);
+
+                const rowData = dateMap[dateStr] || ['', '', '', ''];
+                for (let r = 0; r < 4; r++) {
+                    const tdName = document.createElement('td');
+                    tdName.style.padding = cellPadding;
+                    tdName.style.fontWeight = 'bold';
+                    tdName.innerText = rowData[r] || '-';
+                    tr.appendChild(tdName);
+                }
+                tbody.appendChild(tr);
+            });
+
+            setTimeout(() => { window.print(); }, 350);
+        }
+
+        async function executeExportWord() {
+            const result = await preparePrintDateMap();
+            if (!result) return;
+            togglePrintModal();
+
+            const { datesToPrint, dateMap } = result;
+            const today = new Date();
+            const formatDateVn = (dObj) => `${dObj.getDate().toString().padStart(2, '0')}/${(dObj.getMonth()+1).toString().padStart(2, '0')}/${dObj.getFullYear()}`;
+            const subtitleStr = `(Từ ngày ${formatDateVn(datesToPrint[0])} đến ngày ${formatDateVn(datesToPrint[datesToPrint.length - 1])})`;
+            const inDays = ['CN', 'Hai', 'Ba', 'Tư', 'Năm', 'Sáu', 'Bảy'];
+
+            let tableRowsHtml = '';
+            datesToPrint.forEach(d => {
+                const dateStr = getLocalISODate(d);
+                const rowData = dateMap[dateStr] || ['', '', '', ''];
+                const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
+                const boldStyle = isWeekend ? 'font-weight: bold; background-color: #f9fafb;' : '';
+
+                tableRowsHtml += `
+                    <tr style="${boldStyle}">
+                        <td style="border: 1px solid black; padding: 5px; text-align: center;">${inDays[d.getDay()]}</td>
+                        <td style="border: 1px solid black; padding: 5px; text-align: center; font-weight: bold;">${String(d.getDate()).padStart(2, '0')}</td>
+                        <td style="border: 1px solid black; padding: 5px; text-align: center; font-weight: bold;">${rowData[0] || '-'}</td>
+                        <td style="border: 1px solid black; padding: 5px; text-align: center; font-weight: bold;">${rowData[1] || '-'}</td>
+                        <td style="border: 1px solid black; padding: 5px; text-align: center; font-weight: bold;">${rowData[2] || '-'}</td>
+                        <td style="border: 1px solid black; padding: 5px; text-align: center; font-weight: bold;">${rowData[3] || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            const wordTemplate = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset='utf-8'>
+                    <title>Lich_Truc_TYT_MoDuc</title>
+                    <style>
+                        @page {
+                            size: 21.0cm 29.7cm;
+                            margin: 1.5cm 1.5cm 1.5cm 2.0cm;
+                            mso-page-orientation: portrait;
+                        }
+                        body {
+                            font-family: 'Times New Roman', Times, serif;
+                            font-size: 11pt;
+                            line-height: 1.25;
+                            color: #000000;
+                        }
+                        table { border-collapse: collapse; width: 100%; }
+                        th, td { border: 1px solid black; }
+                        p { margin: 0; padding: 0; }
+                    </style>
+                </head>
+                <body>
+                    <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 15px;">
+                        <tr>
+                            <td style="border: none; width: 40%; text-align: center; vertical-align: top; line-height: 1.3;">
+                                <div style="font-size: 11pt;">UBND XÃ MỘ ĐỨC</div>
+                                <div style="font-weight: bold; font-size: 11pt;">TRẠM Y TẾ</div>
+                                <div style="border-top: 1px solid black; width: 40%; margin: 3px auto;"></div>
+                                <div style="font-size: 10pt; margin-top: 4px;">Số: ....../LT-TYT</div>
+                            </td>
+                            <td style="border: none; width: 60%; text-align: center; vertical-align: top; line-height: 1.3;">
+                                <div style="font-weight: bold; font-size: 11pt;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                                <div style="font-weight: bold; font-size: 11pt;">Độc lập - Tự do - Hạnh phúc</div>
+                                <div style="border-top: 1px solid black; width: 50%; margin: 3px auto;"></div>
+                                <div style="font-style: italic; font-size: 11pt; margin-top: 4px;">
+                                    Mộ Đức, ngày ${today.getDate().toString().padStart(2, '0')} tháng ${(today.getMonth() + 1).toString().padStart(2, '0')} năm ${today.getFullYear()}
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <div style="font-weight: bold; font-size: 14pt; letter-spacing: 0.5px;">LỊCH TRỰC TRẠM Y TẾ XÃ MỘ ĐỨC</div>
+                        <div style="font-style: italic; font-size: 11pt; margin-top: 3px;">${subtitleStr}</div>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 10pt;">
+                        <thead>
+                            <tr style="background-color: #f3f4f6;">
+                                <th style="border: 1px solid black; padding: 6px 3px; font-weight: bold; width: 8%; text-align: center;">Thứ</th>
+                                <th style="border: 1px solid black; padding: 6px 3px; font-weight: bold; width: 8%; text-align: center;">Ngày</th>
+                                <th style="border: 1px solid black; padding: 6px 3px; font-weight: bold; width: 21%; text-align: center;">Điểm trạm chính<br>(Đức Tân)</th>
+                                <th style="border: 1px solid black; padding: 6px 3px; font-weight: bold; width: 21%; text-align: center;">Điểm y tế số 1<br>(Mộ Đức)</th>
+                                <th style="border: 1px solid black; padding: 6px 3px; font-weight: bold; width: 21%; text-align: center;">Điểm y tế số 2<br>(Đức Hòa)</th>
+                                <th style="border: 1px solid black; padding: 6px 3px; font-weight: bold; width: 21%; text-align: center;">Điểm y tế số 3<br>(Đức Phú)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRowsHtml}
+                        </tbody>
+                    </table>
+
+                    <div style="margin-bottom: 18px; line-height: 1.35; font-size: 10pt;">
+                        <b>Ghi chú:</b> - Thời gian trực: Từ 07 giờ ngày hôm nay đến 07 giờ ngày hôm sau.<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Lịch trực có thể điều động thay đổi theo yêu cầu nhiệm vụ.
+                    </div>
+
+                    <table style="width: 100%; border: none; border-collapse: collapse; page-break-inside: avoid; font-size: 11pt;">
+                        <tr>
+                            <td style="border: none; width: 40%; vertical-align: top; line-height: 1.35;">
+                                <div style="font-weight: bold; font-style: italic; margin-bottom: 3px;">Nơi nhận:</div>
+                                <div style="font-size: 9.5pt;">
+                                    - Bí thư, chi ủy chi bộ (c/đ);<br>
+                                    - GĐ, PGĐ TYT xã (b/c);<br>
+                                    - Các tổ, khoa, điểm y tế (t/h);<br>
+                                    - Lưu: Hc-Ts-Ns.
+                                </div>
+                            </td>
+                            <td style="border: none; width: 30%; text-align: center; vertical-align: top;">
+                                <div style="font-weight: bold; margin-bottom: 60px;">NGƯỜI LẬP</div>
+                                <div style="font-weight: bold;">Võ Quang Vinh</div>
+                            </td>
+                            <td style="border: none; width: 30%; text-align: center; vertical-align: top;">
+                                <div style="font-weight: bold; margin-bottom: 60px;">GIÁM ĐỐC</div>
+                                <div style="font-weight: bold;">Phạm Minh Đức</div>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob(['\ufeff', wordTemplate], { type: 'application/msword;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Lich_Truc_TYT_MoDuc_${datesToPrint[0].getDate()}_${datesToPrint[0].getMonth()+1}_${datesToPrint[0].getFullYear()}.doc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast("Đã xuất file Word (.doc) lịch trực thành công!", "success");
+        }
+
+        function showAlert(text, title = "Thông báo") {
+            document.getElementById('msg-title').innerText = title;
+            document.getElementById('msg-text').innerHTML = text;
+            document.getElementById('msg-icon').className = "w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl mb-3";
+            document.getElementById('msg-icon').innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+            document.getElementById('msg-buttons').innerHTML = `<button onclick="closeMsgModal()" class="px-5 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition text-xs w-full">Đã hiểu</button>`;
+            document.getElementById('msg-modal').classList.remove('hidden');
+        }
+
+        function showConfirm(text, callback, title = "Xác nhận") {
+            document.getElementById('msg-title').innerText = title;
+            document.getElementById('msg-text').innerHTML = text;
+            document.getElementById('msg-icon').className = "w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xl mb-3";
+            document.getElementById('msg-icon').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            document.getElementById('msg-buttons').innerHTML = `
+                <button onclick="closeMsgModal()" class="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition text-xs w-1/2">Hủy</button>
+                <button id="msg-btn-confirm" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition text-xs w-1/2">Đồng ý</button>
+            `;
+            document.getElementById('msg-btn-confirm').onclick = () => {
+                closeMsgModal();
+                if (callback) callback();
+            };
+            document.getElementById('msg-modal').classList.remove('hidden');
+        }
+
+        function closeMsgModal() {
+            document.getElementById('msg-modal').classList.add('hidden');
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
