@@ -22,7 +22,7 @@
     }
     .sticky-col-2 { 
       position: sticky; left: 34px; z-index: 20; 
-      background-color: white; min-width: 145px; 
+      background-color: white; min-width: 175px; 
       border-right: 2px solid #cbd5e1; 
     }
     
@@ -61,7 +61,7 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* Mẫu in chuẩn A4 ngang */
+    /* Mẫu in chuẩn A4 ngang: Khóa cứng tỷ lệ, không hiển thị cột Ngày tuyển dụng */
     @media print {
       body {
         background-color: white !important;
@@ -109,7 +109,7 @@
         vertical-align: middle !important;
         overflow: hidden !important;
         word-break: break-word !important;
-        font-size: 7pt !important;
+        font-size: 7.5pt !important;
       }
     }
     #print-container { display: none; font-family: 'Times New Roman', Times, serif; color: black; }
@@ -127,7 +127,7 @@
   <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- THANH TIÊU ĐỀ CHÍNH -->
-  <div class="flex-none p-3 md:p-5 pb-2">
+  <header class="flex-none p-3 md:p-5 pb-2">
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-3 flex flex-col md:flex-row justify-between items-center gap-3 border-l-4 border-l-indigo-600">
       <div class="flex items-center gap-3">
         <a href="index.html" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 flex items-center justify-center transition" title="Về trang chủ">
@@ -140,7 +140,6 @@
             </h1>
             <span class="bg-indigo-50 text-indigo-700 text-xs px-2.5 py-0.5 rounded-full font-bold border border-indigo-200">TYT Xã Mộ Đức</span>
           </div>
-          <p class="text-xs text-slate-500 mt-0.5">Theo dõi quỹ ngày nghỉ bù ca trực, T7/CN, trực ngày lễ và ngày phép năm cho 29 cán bộ</p>
         </div>
       </div>
 
@@ -186,19 +185,19 @@
         <!-- Bộ lọc xem theo điểm trạm -->
         <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
           <button onclick="filterByStation('all')" id="btn-station-all" class="px-2.5 py-1 rounded-lg text-xs font-bold transition bg-indigo-600 text-white shadow-sm">
-            Tất cả (29)
+            Tất cả (<span id="count-all-staff">0</span>)
           </button>
           <button onclick="filterByStation('Điểm trạm chính')" id="btn-station-chinh" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
-            Đức Tân (10)
+            Đức Tân (<span id="count-st-chinh">0</span>)
           </button>
           <button onclick="filterByStation('Điểm y tế số 1')" id="btn-station-1" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
-            Mộ Đức (6)
+            Mộ Đức (<span id="count-st-1">0</span>)
           </button>
           <button onclick="filterByStation('Điểm y tế số 2')" id="btn-station-2" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
-            Đức Hòa (6)
+            Đức Hòa (<span id="count-st-2">0</span>)
           </button>
           <button onclick="filterByStation('Điểm y tế số 3')" id="btn-station-3" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
-            Đức Phú (7)
+            Đức Phú (<span id="count-st-3">0</span>)
           </button>
         </div>
       </div>
@@ -209,36 +208,34 @@
         <input type="text" id="search-emp" placeholder="Tìm họ và tên cán bộ..." class="w-full bg-transparent border-none outline-none text-xs text-slate-700 focus:ring-0" onkeyup="renderBody()">
       </div>
 
-      <!-- Chú thích quy ước -->
+      <!-- Chú thích công thức tính thời gian công tác -->
       <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-semibold bg-white p-2 rounded-xl border border-slate-200 shadow-sm text-slate-600">
-        <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-blue-500 mr-1.5"></span> Cột màu xanh: Tự tính toán ngày Bù</div>
-        <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-1.5"></span> Cột màu cam: Tự tính toán ngày Phép</div>
-        <div class="flex items-center text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-300">
-          <span class="bg-amber-200 text-amber-900 font-black px-1.5 py-0.2 rounded border border-amber-400 mr-1.5">+</span> Trực ngày Lễ (+ vàng): Tự động tính 2 ngày bù/ca
+        <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-blue-500 mr-1.5"></span> Cột màu xanh: Quỹ ngày Nghỉ Bù</div>
+        <div class="flex items-center text-amber-950 font-bold bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-300">
+          <i class="fa-solid fa-calculator mr-1 text-amber-600"></i> Công thức phép năm: <b>12 ngày + 1 ngày cho mỗi tròn 5 năm thâm niên</b>
         </div>
       </div>
     </div>
-  </div>
+  </header>
 
   <!-- BẢNG THEO DÕI CHÍNH -->
-  <div class="flex-1 overflow-hidden p-2.5 md:p-4 pt-0 flex flex-col">
+  <main class="flex-1 overflow-hidden p-2.5 md:p-4 pt-0 flex flex-col">
     <div class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-auto no-scrollbar relative" id="table-container">
-      <table class="w-full text-[11px] text-center border-collapse table-fixed min-w-[900px]">
+      <table class="w-full text-[11px] text-center border-collapse table-fixed min-w-[940px]">
         <colgroup>
-          <col style="width: 3.2%;">  <!-- TT -->
-          <col style="width: 15.8%;"> <!-- Họ và tên -->
-          <col style="width: 6.5%;">  <!-- Bù tồn cũ -->
-          <col style="width: 6.2%;">  <!-- Trực đêm -->
-          <col style="width: 6.2%;">  <!-- T7/CN -->
-          <col style="width: 6.8%;">  <!-- Tổng bù -->
-          <col style="width: 6.2%;">  <!-- Bù đã nghỉ -->
-          <col style="width: 6.8%;">  <!-- Bù chuyển -->
-          <col style="width: 6.8%;">  <!-- TG công tác -->
-          <col style="width: 6.1%;">  <!-- Phép tồn cũ -->
-          <col style="width: 6.1%;">  <!-- Phép năm nay -->
-          <col style="width: 6.7%;">  <!-- Phép còn lại -->
-          <col style="width: 6.1%;">  <!-- Phép đã nghỉ -->
-          <col style="width: 6.8%;">  <!-- Phép chuyển -->
+          <col style="width: 3.5%;">  <!-- TT -->
+          <col style="width: 17.5%;"> <!-- Họ và tên -->
+          <col style="width: 7.2%;">  <!-- Bù tồn cũ -->
+          <col style="width: 7.0%;">  <!-- Trực đêm -->
+          <col style="width: 7.0%;">  <!-- T7/CN -->
+          <col style="width: 7.6%;">  <!-- Tổng bù -->
+          <col style="width: 7.0%;">  <!-- Bù đã nghỉ -->
+          <col style="width: 7.6%;">  <!-- Bù chuyển -->
+          <col style="width: 7.0%;">  <!-- Phép tồn cũ -->
+          <col style="width: 7.4%;">  <!-- Phép năm nay -->
+          <col style="width: 7.5%;">  <!-- Phép còn lại -->
+          <col style="width: 7.0%;">  <!-- Phép đã nghỉ -->
+          <col style="width: 7.7%;">  <!-- Phép chuyển -->
         </colgroup>
         <thead id="grid-header" class="bg-slate-100 text-slate-700">
           <!-- Render tự động bằng JavaScript -->
@@ -250,14 +247,13 @@
     </div>
     <div class="mt-1.5 text-[10.5px] text-slate-500 flex flex-wrap justify-between items-center gap-2">
       <div class="flex items-center gap-3">
-        <span><i class="fa-solid fa-pen text-indigo-500 mr-1"></i> Nhấp trực tiếp vào ô để nhập số.</span>
-        <span><i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i> Phân quyền sửa theo điểm trạm.</span>
+        
       </div>
       <div class="italic text-slate-600 font-medium">
-        * Số ngày bù tính từ 01/01/2026 • Ca trực ngày Lễ (+ vàng) tự động tính <b>02 ngày bù/ca</b>
+        * Quy tắc thâm niên Điều 114 BLLĐ: Thời gian công tác = <b>Hiện tại trừ Ngày tuyển dụng</b> • Đủ 05 năm công tác được cộng thêm 01 ngày phép.
       </div>
     </div>
-  </div>
+  </main>
 
   <!-- MODAL XÁC THỰC MẬT KHẨU ĐIỂM TRẠM -->
   <div id="auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -296,18 +292,6 @@
           </div>
           <p id="auth-error-msg" class="text-rose-600 text-[11px] font-bold mt-1.5 hidden"></p>
         </div>
-
-        <!-- Bảng mật khẩu mặc định -->
-        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 space-y-1">
-          <div class="font-bold flex items-center gap-1"><i class="fa-solid fa-key text-amber-600"></i> Mật khẩu mặc định hệ thống:</div>
-          <div class="grid grid-cols-2 gap-1 text-[10.5px] pt-1 text-slate-700">
-            <div>• Đức Tân: <code class="font-mono font-bold text-amber-900">ductan123</code></div>
-            <div>• Mộ Đức: <code class="font-mono font-bold text-amber-900">moduc123</code></div>
-            <div>• Đức Hòa: <code class="font-mono font-bold text-amber-900">duchoa123</code></div>
-            <div>• Đức Phú: <code class="font-mono font-bold text-amber-900">ducphu123</code></div>
-            <div class="col-span-2 pt-0.5">• Ban Giám Đốc: <code class="font-mono font-bold text-amber-900">bgd123</code></div>
-          </div>
-        </div>
       </div>
 
       <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2 justify-end">
@@ -340,21 +324,23 @@
     </div>
   </div>
 
-  <!-- KHUNG BẢN IN PDF CHUẨN A4 NGANG -->
+  <!-- KHUNG BẢN IN PDF CHUẨN A4 NGANG (KHÔNG CÓ CỘT NGÀY TUYỂN DỤNG) -->
   <div id="print-container" class="w-full text-black">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-      <div style="text-align: left; line-height: 1.25;">
-        <div style="display: flex; flex-direction: column; align-items: center; width: fit-content;">
-          <div style="font-size: 9.5pt; font-weight: normal;">UBND XÃ MỘ ĐỨC</div>
-          <div style="font-weight: bold; font-size: 9.5pt;">TRẠM Y TẾ</div>
-        </div>
-        <div style="font-size: 8.5pt; margin-top: 2px;">Mã đơn vị có quan hệ với ngân sách : 1026187</div>
-      </div>
-      <div style="text-align: right; line-height: 1.25;">
-        <div style="font-weight: bold; font-size: 9.5pt;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
-        <div style="font-weight: bold; font-size: 8.5pt;">Độc lập - Tự do - Hạnh phúc</div>
-      </div>
-    </div>
+    <table class="print-header-table" style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
+      <tr>
+        <td style="width: 45%; vertical-align: top; text-align: center; border: none; padding: 0;">
+          <div style="font-size: 9.5pt; text-transform: uppercase;">UBND XÃ MỘ ĐỨC</div>
+          <div style="font-size: 10pt; font-weight: bold; text-transform: uppercase;">TRẠM Y TẾ</div>
+          <div style="width: 70px; height: 1px; background-color: #000; margin: 3px auto 4px auto;"></div>
+          <div style="font-size: 8pt;">Mã ĐVQHNS: 1026187</div>
+        </td>
+        <td style="width: 55%; vertical-align: top; text-align: center; border: none; padding: 0;">
+          <div style="font-size: 10pt; font-weight: bold; text-transform: uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+          <div style="font-size: 10.5pt; font-weight: bold;">Độc lập - Tự do - Hạnh phúc</div>
+          <div style="width: 140px; height: 1px; background-color: #000; margin: 3px auto 6px auto;"></div>
+        </td>
+      </tr>
+    </table>
 
     <div style="text-align: center; margin-top: 2px; margin-bottom: 8px;">
       <div style="font-weight: bold; font-size: 13pt; letter-spacing: 0.5px;" id="print-heading-title">
@@ -371,10 +357,10 @@
     </table>
 
     <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 8pt;">
-      <div style="width: 60%; font-style: italic;">
-        <b>Ghi chú:</b> Số ngày bù bắt đầu tính từ ngày 01/01/2026. Ca trực vào các ngày Lễ theo quy định của Nhà nước được tính <b>02 ngày bù</b>/ca trực 24/24.
+      <div style="width: 65%; font-style: italic;">
+        <b>Ghi chú:</b> Số ngày bù tính từ 01/01/2026. Ca trực ngày Lễ Nhà nước tính <b>02 ngày bù/ca</b>. Phép năm theo Điều 114 BLLĐ: <b>12 ngày cơ bản + 01 ngày phép cho mỗi tròn 05 năm công tác</b> tính bằng thời gian hiện tại trừ ngày tuyển dụng từ Quản Lý Nhân Viên.
       </div>
-      <div style="width: 40%; text-align: right; font-style: italic;" id="print-footer-date">
+      <div style="width: 35%; text-align: right; font-style: italic;" id="print-footer-date">
         Mộ Đức, ngày ... tháng ... năm 2026
       </div>
     </div>
@@ -399,8 +385,18 @@
 
   <script>
     // =========================================================================
-    // 1. CẤU HÌNH BẢNG MẬT KHẨU PHÂN QUYỀN ĐIỂM TRẠM
+    // HỆ THỐNG BẢO VỆ CHỐNG TREO GIAO DIỆN (BULLETPROOF ERROR HANDLING)
     // =========================================================================
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+      hideLoading();
+      console.error("Global error caught:", msg, error);
+      return false;
+    };
+    window.onunhandledrejection = function(event) {
+      hideLoading();
+      console.error("Unhandled promise rejection:", event.reason);
+    };
+
     const STATION_PASSWORDS = {
       "Điểm trạm chính": "ductan123",
       "Điểm y tế số 1": "moduc123",
@@ -409,70 +405,169 @@
       "Ban Giám Đốc": "bgd123"
     };
 
-    // Google Apps Script URLs
     const GOOGLE_SHEET_PHEP_BU_URL = "https://script.google.com/macros/s/AKfycbx92KG3erh_dfFT94IThq8CMPcBApMwKpulUmPORfWv7eHYVEtlA-nx0_6IyD9ljJZM/exec";
     const GOOGLE_SHEET_CHAM_CONG_URL = "https://script.google.com/macros/s/AKfycbwjYcU1KIGtTBQHmUnrdrNZD6nS1DTVGImvKCP1PbRtweAqLe0KMIUNc8YsZrL-28Ss8A/exec";
-    const GOOGLE_SHEET_STAFF_URL = "https://script.google.com/macros/s/AKfycbxtHm89HEoyWzivmq2vuu5uUAX4mejLfR2hWU3W1x0Hy9LdhRI-aFuGRsXkSz_Id0Hl/exec";
+    
+    // Đường dẫn "Xương sống" Quản Lý Nhân Viên:
+    const GOOGLE_SHEET_STAFF_URL = "https://script.google.com/macros/s/AKfycbz8rE8UkPQOG-gk_annTiMfKic9qoUQRn-X-qII3Dtme_xPMwecwi0YzbxoSHlLbNZmBg/exec";
 
-    // =========================================================================
-    // 2. DANH SÁCH CHUẨN 29 CÁN BỘ Y TẾ THEO 04 ĐIỂM TRẠM
-    // =========================================================================
-    const STAFF_LIST_FULL = [
-      // 1. Điểm trạm chính (Đức Tân) - 10 cán bộ
-      { name: "Trần Thị Lệ Thy", point: "Điểm trạm chính", shortName: "NHS Thy" },
-      { name: "Trịnh Thị Minh Tuệ", point: "Điểm trạm chính", shortName: "Ys Tuệ" },
-      { name: "Huỳnh Thị Thuỳ Yên", point: "Điểm trạm chính", shortName: "DS Yên" },
-      { name: "Võ Thị Thanh Thùy", point: "Điểm trạm chính", shortName: "NHS Thuỳ" },
-      { name: "Bùi Đạt Hiếu", point: "Điểm trạm chính", shortName: "DS Hiếu" },
-      { name: "Nguyễn Thị Như Nguyện", point: "Điểm trạm chính", shortName: "BS Nguyện" },
-      { name: "Võ Thị Thanh Thuyên", point: "Điểm trạm chính", shortName: "Bs Thuyên" },
-      { name: "Lê Thị Thủy", point: "Điểm trạm chính", shortName: "Ys Thủy" },
-      { name: "Trần Thị Việt Châu", point: "Điểm trạm chính", shortName: "CN Châu" },
-      { name: "Võ Quang Vinh", point: "Điểm trạm chính", shortName: "ĐD Vinh" },
-
-      // 2. Điểm y tế số 1 (Mộ Đức) - 6 cán bộ
-      { name: "Phạm Minh Đức", point: "Điểm y tế số 1", shortName: "BS Đức" },
-      { name: "Đoàn Thị Diễm", point: "Điểm y tế số 1", shortName: "DS Diễm" },
-      { name: "Võ Thị Thanh Việt", point: "Điểm y tế số 1", shortName: "NHS Việt" },
-      { name: "Huỳnh Thị Anh Tin", point: "Điểm y tế số 1", shortName: "NHS Tin" },
-      { name: "Nguyễn Thị Thu Nguyệt", point: "Điểm y tế số 1", shortName: "ĐD Nguyệt" },
-      { name: "Trần Thị Lài", point: "Điểm y tế số 1", shortName: "ĐD Lài" },
-
-      // 3. Điểm y tế số 2 (Đức Hòa) - 6 cán bộ
-      { name: "Trần Thị Kim Thanh", point: "Điểm y tế số 2", shortName: "ĐD Thanh" },
-      { name: "Nguyễn Thị Phương Thảo", point: "Điểm y tế số 2", shortName: "DS Thảo" },
-      { name: "Cao Thị Ánh Trúc", point: "Điểm y tế số 2", shortName: "ĐD Trúc" },
-      { name: "Huỳnh Văn Phương", point: "Điểm y tế số 2", shortName: "Ys Phương" },
-      { name: "Nguyễn Thị Kiều Thắm", point: "Điểm y tế số 2", shortName: "NHS Thắm" },
-      { name: "Nguyễn Phu", point: "Điểm y tế số 2", shortName: "BS Phu" },
-
-      // 4. Điểm y tế số 3 (Đức Phú) - 7 cán bộ
-      { name: "Phạm Trần Thị Hoà", point: "Điểm y tế số 3", shortName: "DS Hoà" },
-      { name: "Nguyễn Thị Ánh Thu", point: "Điểm y tế số 3", shortName: "CN Thu" },
-      { name: "Nguyễn Thị Bé", point: "Điểm y tế số 3", shortName: "NHS Bé" },
-      { name: "Nguyễn Anh Vũ", point: "Điểm y tế số 3", shortName: "Ys Vũ" },
-      { name: "Phạm Thị Mỹ Trâm", point: "Điểm y tế số 3", shortName: "NHS Trâm" },
-      { name: "Lê Thị Tố Lan", point: "Điểm y tế số 3", shortName: "NHS Lan" },
-      { name: "Nguyễn Thị Ly Va", point: "Điểm y tế số 3", shortName: "ĐD Ly Va" }
+    const DEFAULT_STAFF_29 = [
+      { id: "CB01", name: "Trịnh Thị Minh Tuệ", point: "Điểm trạm chính", shortName: "Ys Tuệ", hireDate: "01/07/1996" },
+      { id: "CB02", name: "Nguyễn Phu", point: "Điểm y tế số 2", shortName: "BS Phu", hireDate: "01/04/1997" },
+      { id: "CB03", name: "Phạm Minh Đức", point: "Điểm y tế số 1", shortName: "BS Đức", hireDate: "27/06/1991" },
+      { id: "CB04", name: "Nguyễn Thị Như Nguyện", point: "Điểm trạm chính", shortName: "BS Nguyện", hireDate: "02/06/2008" },
+      { id: "CB05", name: "Lê Thị Thu Thủy", point: "Điểm trạm chính", shortName: "Ys Thủy", hireDate: "30/08/2022" },
+      { id: "CB06", name: "Huỳnh Văn Phương", point: "Điểm y tế số 2", shortName: "Ys Phương", hireDate: "05/10/2010" },
+      { id: "CB07", name: "Võ Thị Thanh Thuyên", point: "Điểm trạm chính", shortName: "Bs Thuyên", hireDate: "15/12/2008" },
+      { id: "CB08", name: "Trần Thị Lài", point: "Điểm y tế số 1", shortName: "ĐD Lài", hireDate: "15/12/2005" },
+      { id: "CB09", name: "Nguyễn Thị Thu Nguyệt", point: "Điểm y tế số 1", shortName: "ĐD Nguyệt", hireDate: "10/05/1995" },
+      { id: "CB10", name: "Nguyễn Thị Ly Va", point: "Điểm y tế số 3", shortName: "ĐD Ly Va", hireDate: "01/04/2011" },
+      { id: "CB11", name: "Võ Thị Thanh Việt", point: "Điểm y tế số 1", shortName: "NHS Việt", hireDate: "01/09/2002" },
+      { id: "CB12", name: "Võ Quang Vinh", point: "Điểm trạm chính", shortName: "ĐD Vinh", hireDate: "06/02/2008" },
+      { id: "CB13", name: "Trần Thị Kim Thanh", point: "Điểm y tế số 2", shortName: "ĐD Thanh", hireDate: "15/12/2005" },
+      { id: "CB14", name: "Cao Thị Ánh Trúc", point: "Điểm y tế số 2", shortName: "ĐD Trúc", hireDate: "30/01/2015" },
+      { id: "CB15", name: "Nguyễn Thị Ánh Thu", point: "Điểm y tế số 3", shortName: "CN Thu", hireDate: "10/05/1996" },
+      { id: "CB16", name: "Nguyễn Thị Bé", point: "Điểm y tế số 3", shortName: "NHS Bé", hireDate: "02/06/2008" },
+      { id: "CB17", name: "Phạm Thị Mỹ Trâm", point: "Điểm y tế số 3", shortName: "NHS Trâm", hireDate: "02/06/2008" },
+      { id: "CB18", name: "Võ Thị Thanh Thùy", point: "Điểm trạm chính", shortName: "NHS Thuỳ", hireDate: "02/03/2009" },
+      { id: "CB19", name: "Huỳnh Thị Anh Tin", point: "Điểm y tế số 1", shortName: "NHS Tin", hireDate: "17/08/2009" },
+      { id: "CB20", name: "Lê Thị Nương", point: "Điểm trạm chính", shortName: "NHS Nương", hireDate: "07/12/2020" },
+      { id: "CB21", name: "Nguyễn Thị Kiều Thắm", point: "Điểm y tế số 2", shortName: "NHS Thắm", hireDate: "17/07/2001" },
+      { id: "CB22", name: "Trần Thị Lệ Thy", point: "Điểm trạm chính", shortName: "NHS Thy", hireDate: "01/11/2001" },
+      { id: "CB23", name: "Lê Thị Tố Lan", point: "Điểm y tế số 3", shortName: "NHS Lan", hireDate: "07/12/2020" },
+      { id: "CB24", name: "Phạm Trần Thị Hòa", point: "Điểm y tế số 3", shortName: "DS Hoà", hireDate: "15/09/2022" },
+      { id: "CB25", name: "Bùi Đạt Hiếu", point: "Điểm trạm chính", shortName: "DS Hiếu", hireDate: "03/09/2013" },
+      { id: "CB26", name: "Huỳnh Thị Thùy Yên", point: "Điểm trạm chính", shortName: "DS Yên", hireDate: "20/10/2015" },
+      { id: "CB27", name: "Đoàn Thị Diễm", point: "Điểm y tế số 1", shortName: "DS Diễm", hireDate: "15/01/2013" },
+      { id: "CB28", name: "Nguyễn Thị Phương Thảo", point: "Điểm y tế số 2", shortName: "DS Thảo", hireDate: "02/06/2008" },
+      { id: "CB29", name: "Nguyễn Anh Vũ", point: "Điểm y tế số 3", shortName: "Ys Vũ", hireDate: "30/05/2025" }
     ];
 
-    // LẤY DANH SÁCH NHÂN SỰ TẬP TRUNG TỪ BỘ NHỚ TRUNG TÂM
+    /**
+     * TÍNH THỜI GIAN CÔNG TÁC CHÍNH XÁC:
+     * Thời gian công tác = Thời gian hiện tại trừ đi Ngày tuyển dụng (trong Google Sheet Quản lý nhân viên)
+     * Quy tắc Điều 114 BLLĐ: 12 ngày phép cơ bản + cứ đủ tròn 05 năm công tác được cộng thêm 01 ngày phép.
+     */
+    function calcThamNienVaPhep(hireDateVal, refDate = new Date()) {
+      const now = refDate instanceof Date ? refDate : new Date();
+      if (!hireDateVal) {
+        return { 
+          years: 0, months: 0, days: 0, bonus: 0, totalLeave: 12, 
+          formattedDate: '', durationText: 'Chưa có ngày tuyển dụng',
+          detailText: '12 ngày phép cơ bản (Chưa có ngày tuyển dụng)'
+        };
+      }
+
+      const str = String(hireDateVal).trim();
+      let day = 1, month = 1, year = 0;
+
+      const dateMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (dateMatch) {
+        day = parseInt(dateMatch[1], 10);
+        month = parseInt(dateMatch[2], 10);
+        year = parseInt(dateMatch[3], 10);
+      } else {
+        const isoMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+        if (isoMatch) {
+          year = parseInt(isoMatch[1], 10);
+          month = parseInt(isoMatch[2], 10);
+          day = parseInt(isoMatch[3], 10);
+        } else {
+          const yearMatch = str.match(/\b(19\d{2}|20\d{2})\b/);
+          if (yearMatch) {
+            year = parseInt(yearMatch[1], 10);
+            month = 1;
+            day = 1;
+          }
+        }
+      }
+
+      if (!year || year < 1960) {
+        return { 
+          years: 0, months: 0, days: 0, bonus: 0, totalLeave: 12, 
+          formattedDate: str, durationText: str,
+          detailText: '12 ngày phép cơ bản'
+        };
+      }
+
+      const formattedDate = `${('0' + day).slice(-2)}/${('0' + month).slice(-2)}/${year}`;
+      
+      // Thời gian hiện tại trừ đi Ngày tuyển dụng
+      const curY = now.getFullYear();
+      const curM = now.getMonth() + 1;
+      const curD = now.getDate();
+
+      let diffYears = curY - year;
+      let diffMonths = curM - month;
+      let diffDays = curD - day;
+
+      if (diffDays < 0) {
+        diffMonths -= 1;
+        const daysInPrevMonth = new Date(curY, curM - 1, 0).getDate();
+        diffDays += daysInPrevMonth;
+      }
+      if (diffMonths < 0) {
+        diffYears -= 1;
+        diffMonths += 12;
+      }
+
+      // Chưa đủ ngày tuyển dụng hoặc mới tuyển dụng
+      if (diffYears < 0 || (diffYears === 0 && diffMonths <= 0 && diffDays < 0)) {
+        return {
+          years: 0, months: 0, days: 0, bonus: 0, totalLeave: 12,
+          formattedDate, durationText: '0 năm (Mới tuyển)',
+          detailText: `Tuyển: ${formattedDate} • Mới tuyển dụng • 12 ngày phép cơ bản`
+        };
+      }
+
+      // Cứ tròn 5 năm công tác được cộng thêm 1 ngày phép
+      const bonus = Math.floor(diffYears / 5);
+      const totalLeave = 12 + bonus;
+
+      let durationText = `${diffYears} năm`;
+      if (diffMonths > 0) {
+        durationText += ` ${diffMonths} tháng`;
+      }
+
+      const detailText = `Tuyển: ${formattedDate} • TGCT: ${durationText} • Tròn ${diffYears} năm: 12 cơ bản + ${bonus} thâm niên = ${totalLeave} ngày phép`;
+
+      return { 
+        years: diffYears, 
+        months: diffMonths, 
+        days: diffDays, 
+        bonus, 
+        totalLeave, 
+        formattedDate, 
+        durationText, 
+        detailText 
+      };
+    }
+
     function getMasterStaffList() {
       const stored = localStorage.getItem('TYT_STAFF_LIST');
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          const activeList = parsed.filter(s => s.status === 'active');
-          if (activeList.length > 0) {
-            return activeList.map((item, idx) => ({
-              name: item.name,
-              point: item.point,
-              shortName: item.shortName || item.name
-            }));
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const activeList = parsed.filter(s => s && s.name && s.status !== 'inactive');
+            if (activeList.length > 0) {
+              return activeList.map((item, idx) => {
+                const fallback = DEFAULT_STAFF_29.find(d => (d.name || "").trim().toLowerCase() === (item.name || "").trim().toLowerCase());
+                const hire = item.hireDate || item.ngayTuyenDung || (fallback ? fallback.hireDate : "");
+
+                return {
+                  id: item.id || `CB${idx + 1}`,
+                  name: item.name || "",
+                  point: item.point || (fallback ? fallback.point : "Điểm trạm chính"),
+                  shortName: item.shortName || (fallback ? fallback.shortName : (item.name || "")),
+                  hireDate: hire
+                };
+              });
+            }
           }
         } catch(e) {}
       }
-      return STAFF_LIST_FULL;
+      return DEFAULT_STAFF_29;
     }
 
     let phepBuData = [];
@@ -480,25 +575,31 @@
     let currentYear = new Date().getFullYear();
     let selectedStationFilter = 'all';
 
-    // Quản lý quyền mở khóa
     let authorizedStation = sessionStorage.getItem('TYT_AUTH_STATION') || null;
-    let pendingAuthContext = null;
     let confirmCallback = null;
 
-    // Lắng nghe tín hiệu cập nhật nhân sự thời gian thực
+    // Lắng nghe sự kiện phát sóng tức thời từ trang Quản Lý Nhân Viên
     const staffBroadcast = new BroadcastChannel('TYT_STAFF_CHANNEL');
     staffBroadcast.onmessage = (e) => {
       if (e.data && e.data.action === 'staff_updated') {
         const oldMap = {};
-        phepBuData.forEach(emp => { oldMap[emp.name] = emp; });
+        phepBuData.forEach(emp => { oldMap[emp.name || ""] = emp; });
         initEmptyData();
         phepBuData.forEach(emp => {
-          if (oldMap[emp.name]) {
-            Object.assign(emp, oldMap[emp.name]);
+          if (oldMap[emp.name || ""]) {
+            const preserved = oldMap[emp.name || ""];
+            emp.buTonTruoc = preserved.buTonTruoc;
+            emp.buTruc = preserved.buTruc;
+            emp.buT7CN = preserved.buT7CN;
+            emp.buDaNghi = preserved.buDaNghi;
+            emp.phepTonTruoc = preserved.phepTonTruoc;
+            emp.phepDaNghi = preserved.phepDaNghi;
+            emp.phepConLaiDenThang = preserved.phepConLaiDenThang;
           }
         });
         renderBody();
-        showToast('Danh sách nhân sự vừa được đồng bộ tự động!', 'info');
+        updateStationCounts();
+        showToast('Đã tự động cập nhật nhân sự & thời gian công tác từ Quản lý nhân sự!', 'info');
       }
     };
 
@@ -509,24 +610,57 @@
       initEmptyData();
       renderAuthStatus();
       generateGrid();
+      updateStationCounts();
       fetchLiveStaffList();
     };
+
+    function updateStationCounts() {
+      const allCount = phepBuData.length;
+      const countChinh = phepBuData.filter(s => s.point === 'Điểm trạm chính').length;
+      const count1 = phepBuData.filter(s => s.point === 'Điểm y tế số 1').length;
+      const count2 = phepBuData.filter(s => s.point === 'Điểm y tế số 2').length;
+      const count3 = phepBuData.filter(s => s.point === 'Điểm y tế số 3').length;
+
+      const setNum = (id, count) => { const el = document.getElementById(id); if (el) el.innerText = count; };
+      setNum('count-all-staff', allCount);
+      setNum('count-st-chinh', countChinh);
+      setNum('count-st-1', count1);
+      setNum('count-st-2', count2);
+      setNum('count-st-3', count3);
+    }
 
     async function fetchLiveStaffList() {
       if (!GOOGLE_SHEET_STAFF_URL) return;
       try {
         const url = GOOGLE_SHEET_STAFF_URL + (GOOGLE_SHEET_STAFF_URL.includes('?') ? '&' : '?') + `action=loadStaffList&t=${Date.now()}`;
-        const res = await fetch(url, { method: 'GET', cache: 'no-store' });
-        const result = await res.json();
-        if (result.status === 'success' && result.records && result.records.length > 0) {
+        const res = await fetch(url, { method: 'GET' });
+        const text = await res.text();
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch(e) {
+          return;
+        }
+        
+        if (result && result.status === 'success' && result.records && result.records.length > 0) {
           localStorage.setItem('TYT_STAFF_LIST', JSON.stringify(result.records));
           const oldMap = {};
-          phepBuData.forEach(emp => { oldMap[emp.name] = emp; });
+          phepBuData.forEach(emp => { oldMap[emp.name || ""] = emp; });
           initEmptyData();
           phepBuData.forEach(emp => {
-            if (oldMap[emp.name]) Object.assign(emp, oldMap[emp.name]);
+            if (oldMap[emp.name || ""]) {
+              const preserved = oldMap[emp.name || ""];
+              emp.buTonTruoc = preserved.buTonTruoc;
+              emp.buTruc = preserved.buTruc;
+              emp.buT7CN = preserved.buT7CN;
+              emp.buDaNghi = preserved.buDaNghi;
+              emp.phepTonTruoc = preserved.phepTonTruoc;
+              emp.phepDaNghi = preserved.phepDaNghi;
+              emp.phepConLaiDenThang = preserved.phepConLaiDenThang;
+            }
           });
           renderBody();
+          updateStationCounts();
         }
       } catch(err) {
         console.warn('Lấy danh bạ online dự phòng không thành công:', err);
@@ -535,21 +669,27 @@
 
     function initEmptyData() {
       const masterList = getMasterStaffList();
-      phepBuData = masterList.map((item, index) => ({
-        id: index,
-        name: item.name,
-        point: item.point,
-        shortName: item.shortName,
-        buTonTruoc: 0,
-        buTruc: 0,
-        buT7CN: 0,
-        buDaNghi: 0,
-        thoiGianCT: "",
-        phepTonTruoc: 0,
-        phepNamNay: 12,
-        phepConLaiDenThang: 12,
-        phepDaNghi: 0
-      }));
+      phepBuData = masterList.map((item, index) => {
+        const hire = item.hireDate || "";
+        const calc = calcThamNienVaPhep(hire, new Date());
+        return {
+          id: index,
+          name: item.name || "",
+          point: item.point || "",
+          shortName: item.shortName || "",
+          buTonTruoc: 0,
+          buTruc: 0,
+          buT7CN: 0,
+          buDaNghi: 0,
+          hireDate: calc.formattedDate || hire,
+          yearsOfService: calc.years,
+          durationText: calc.durationText,
+          phepTonTruoc: 0,
+          phepNamNay: calc.totalLeave,
+          phepConLaiDenThang: calc.totalLeave,
+          phepDaNghi: 0
+        };
+      });
     }
 
     function getPrevNextMonth(m, y) {
@@ -572,9 +712,6 @@
       return num === 0 ? '' : num;
     }
 
-    // =========================================================================
-    // 3. QUẢN LÝ PHÂN QUYỀN & MẬT KHẨU ĐIỂM TRẠM
-    // =========================================================================
     function renderAuthStatus() {
       const container = document.getElementById('auth-status-container');
       if (!authorizedStation) {
@@ -597,12 +734,9 @@
       }
     }
 
-    function openAuthModal(preSelectStation = null, pendingContext = null) {
-      pendingAuthContext = pendingContext;
+    function openAuthModal(preSelectStation = null) {
       const select = document.getElementById('auth-station-select');
-      if (preSelectStation) {
-        select.value = preSelectStation;
-      }
+      if (preSelectStation) select.value = preSelectStation;
       document.getElementById('auth-password-input').value = '';
       document.getElementById('auth-error-msg').classList.add('hidden');
       document.getElementById('auth-modal').classList.remove('hidden');
@@ -611,7 +745,6 @@
 
     function closeAuthModal() {
       document.getElementById('auth-modal').classList.add('hidden');
-      pendingAuthContext = null;
     }
 
     function togglePasswordVisibility() {
@@ -659,9 +792,6 @@
       return emp.point === authorizedStation;
     }
 
-    // =========================================================================
-    // 4. BỘ LỌC ĐIỂM TRẠM & RENDER GIAO DIỆN
-    // =========================================================================
     function filterByStation(stationKey) {
       selectedStationFilter = stationKey;
       
@@ -689,6 +819,14 @@
       currentMonth = parseInt(document.getElementById('select-month').value);
       currentYear = parseInt(document.getElementById('select-year').value);
 
+      phepBuData.forEach(emp => {
+        const calc = calcThamNienVaPhep(emp.hireDate, new Date());
+        emp.yearsOfService = calc.years;
+        emp.durationText = calc.durationText;
+        emp.phepNamNay = calc.totalLeave;
+        emp.phepConLaiDenThang = calc.totalLeave;
+      });
+
       renderHeader();
       renderBody();
 
@@ -708,26 +846,23 @@
           <th colspan="6" class="p-1.5 border-b border-r border-slate-300 bg-blue-50 text-blue-950 text-xs md:text-sm font-black uppercase tracking-wide">
             Quỹ Ngày Bù (Tính từ 01/01/2026)
           </th>
-          <th colspan="6" class="p-1.5 border-b border-slate-300 bg-amber-50 text-amber-950 text-xs md:text-sm font-black uppercase tracking-wide">
-            Quỹ Ngày Phép Năm ${currentYear}
+          <th colspan="5" class="p-1.5 border-b border-slate-300 bg-amber-50 text-amber-950 text-xs md:text-sm font-black uppercase tracking-wide">
+            Quỹ Ngày Phép Năm ${currentYear} (12 ngày + 1 ngày/tròn 5 năm thâm niên)
           </th>
         </tr>
         <tr class="bg-slate-50 text-slate-800 font-bold text-[11px] md:text-xs leading-tight">
-          <!-- CỘT BÙ -->
-          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Số ngày bù tồn lũy kế hết tháng ${prevM}">Bù tồn<br>hết T${prevM}</th>
-          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Ngày trực đêm ca 24/24 trong tháng ${currentMonth} (Lễ = x2)">Trực đêm<br>T${currentMonth}</th>
-          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Đi làm ngày Thứ 7, Chủ Nhật">Làm T7,<br>CN</th>
-          <th class="p-1.5 border-b border-r border-slate-200 bg-blue-100/80 text-blue-950 font-black" title="Tổng ngày bù tháng ${currentMonth}">Tổng bù<br>T${currentMonth}</th>
-          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Số ngày bù đã giải quyết nghỉ trong tháng ${currentMonth}">Bù nghỉ<br>T${currentMonth}</th>
-          <th class="p-1.5 border-b border-r border-slate-300 bg-blue-200/80 text-blue-950 font-black" title="Ngày bù chuyển sang tháng ${nextM}">Bù chuyển<br>sang T${nextM}</th>
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Bù tồn hết tháng ${prevM}">Bù tồn<br>hết T${prevM}</th>
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Trực đêm tháng ${currentMonth}">Trực đêm<br>T${currentMonth}</th>
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Làm T7, CN">Làm T7,<br>CN</th>
+          <th class="p-1.5 border-b border-r border-slate-200 bg-blue-100/80 text-blue-950 font-black" title="Tổng ngày bù">Tổng bù<br>T${currentMonth}</th>
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Bù đã nghỉ">Bù nghỉ<br>T${currentMonth}</th>
+          <th class="p-1.5 border-b border-r border-slate-300 bg-blue-200/80 text-blue-950 font-black" title="Bù chuyển">Bù chuyển<br>sang T${nextM}</th>
           
-          <!-- CỘT PHÉP -->
-          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Thời gian công tác">TG công<br>tác</th>
-          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Số ngày phép tồn của năm ${currentYear - 1}">Phép tồn<br>năm ${currentYear - 1}</th>
-          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Tổng quỹ phép được cấp trong năm ${currentYear}">Phép năm<br>${currentYear}</th>
-          <th class="p-1.5 border-b border-r border-slate-200 bg-amber-100/80 text-amber-950 font-black" title="Số ngày phép còn lại tính đến tháng ${currentMonth}">Phép còn<br>đến T${currentMonth}</th>
-          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Số ngày phép đã nghỉ trong tháng ${currentMonth}">Phép nghỉ<br>T${currentMonth}</th>
-          <th class="p-1.5 border-b border-slate-200 bg-amber-200/80 text-amber-950 font-black" title="Ngày phép tồn chuyển sang tháng ${nextM}">Phép chuyển<br>sang T${nextM}</th>
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Phép tồn năm trước">Phép tồn<br>năm ${currentYear - 1}</th>
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Phép năm nay">Phép năm<br>${currentYear}</th>
+          <th class="p-1.5 border-b border-r border-slate-200 bg-amber-100/80 text-amber-950 font-black" title="Phép còn lại">Phép còn<br>đến T${currentMonth}</th>
+          <th class="p-1.5 border-b border-r border-slate-200 font-bold" title="Phép đã nghỉ">Phép nghỉ<br>T${currentMonth}</th>
+          <th class="p-1.5 border-slate-200 bg-amber-200/80 text-amber-950 font-black" title="Phép chuyển">Phép chuyển<br>sang T${nextM}</th>
         </tr>
       `;
     }
@@ -742,13 +877,15 @@
 
       const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
       const filteredData = phepBuData.filter(emp => {
-        const matchSearch = emp.name.toLowerCase().includes(searchTerm) || 
-                            (emp.shortName && emp.shortName.toLowerCase().includes(searchTerm));
+        const nameSafe = (emp.name || "").toLowerCase();
+        const shortSafe = (emp.shortName || "").toLowerCase();
+        const matchSearch = nameSafe.includes(searchTerm) || shortSafe.includes(searchTerm);
         const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
         return matchSearch && matchStation;
       });
 
       let displayIndex = 1;
+      const now = new Date();
 
       filteredData.forEach((emp) => {
         const isEditable = canEditStaff(emp);
@@ -772,15 +909,23 @@
         totals.phepTonSau += phepTonSau;
 
         const lockNotice = !isEditable ? `onclick="handleLockedCellClick('${emp.point}')"` : '';
+        const calcInfo = calcThamNienVaPhep(emp.hireDate, now);
 
         html += `
-          <tr class="hover:bg-slate-50/70 border-b border-slate-100 transition group h-[32px]">
+          <tr class="hover:bg-slate-50/70 border-b border-slate-100 transition group h-[36px]">
             <td class="p-0.5 sticky-col-1 font-bold text-slate-500 bg-white border-r border-slate-200 text-[10.5px]">${displayIndex}</td>
-            <td class="py-1 px-2.5 sticky-col-2 text-left bg-white border-r border-slate-300 truncate" title="${emp.name}">
-              <span class="text-xs md:text-[13px] font-bold text-slate-900 tracking-tight select-none">${emp.name}</span>
+            <td class="py-1 px-2.5 sticky-col-2 text-left bg-white border-r border-slate-300" title="${calcInfo.detailText}">
+              <div class="flex items-center justify-between">
+                <span class="text-xs md:text-[13px] font-bold text-slate-900 tracking-tight truncate">${emp.name || ""}</span>
+              </div>
+              <div class="text-[10px] text-slate-400 font-semibold truncate flex items-center gap-1 mt-0.5" title="${calcInfo.detailText}">
+                <i class="fa-regular fa-calendar-check text-indigo-500 text-[9px]"></i>
+                <span>${emp.hireDate ? emp.hireDate : 'Chưa có ngày tuyển'}</span>
+                <span class="text-slate-300">•</span>
+                <span class="text-indigo-600 font-bold">${calcInfo.durationText}</span>
+              </div>
             </td>
 
-            <!-- CỘT BÙ -->
             <td class="p-0 border-r border-slate-200 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
               <input type="number" step="0.5" class="cell-input" value="${formatNumberDisplay(emp.buTonTruoc)}" 
                      ${!isEditable ? 'readonly tabindex="-1"' : ''} oninput="handleLiveInput(${originalIndex}, 'buTonTruoc', this.value)">
@@ -804,21 +949,16 @@
               <input type="text" class="cell-input font-black text-blue-700" id="row-butonsau-${originalIndex}" value="${formatNumberDisplay(buTonSau)}" readonly tabindex="-1">
             </td>
 
-            <!-- CỘT PHÉP -->
-            <td class="p-0 border-r border-slate-200 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
-              <input type="text" class="cell-input text-[11px] text-slate-700 font-semibold" value="${emp.thoiGianCT || ''}" 
-                     ${!isEditable ? 'readonly tabindex="-1"' : ''} oninput="handleLiveInput(${originalIndex}, 'thoiGianCT', this.value)">
-            </td>
             <td class="p-0 border-r border-slate-200 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
               <input type="number" step="0.5" class="cell-input" value="${formatNumberDisplay(emp.phepTonTruoc)}" 
                      ${!isEditable ? 'readonly tabindex="-1"' : ''} oninput="handleLiveInput(${originalIndex}, 'phepTonTruoc', this.value)">
             </td>
-            <td class="p-0 border-r border-slate-200 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
-              <input type="number" step="0.5" class="cell-input" value="${formatNumberDisplay(emp.phepNamNay)}" 
+            <td class="p-0 border-r border-slate-200 bg-amber-50/60 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice} title="${calcInfo.detailText}">
+              <input type="number" step="0.5" class="cell-input font-black text-amber-950" id="row-phepnamnay-${originalIndex}" value="${formatNumberDisplay(emp.phepNamNay)}" 
                      ${!isEditable ? 'readonly tabindex="-1"' : ''} oninput="handleLiveInput(${originalIndex}, 'phepNamNay', this.value)">
             </td>
             <td class="p-0 border-r border-slate-200 bg-amber-50/40 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
-              <input type="number" step="0.5" class="cell-input font-bold text-amber-900" value="${formatNumberDisplay(emp.phepConLaiDenThang)}" 
+              <input type="number" step="0.5" class="cell-input font-bold text-amber-900" id="row-phepconlai-${originalIndex}" value="${formatNumberDisplay(emp.phepConLaiDenThang)}" 
                      ${!isEditable ? 'readonly tabindex="-1"' : ''} oninput="handleLiveInput(${originalIndex}, 'phepConLaiDenThang', this.value)">
             </td>
             <td class="p-0 border-r border-slate-200 ${!isEditable ? 'bg-slate-50/70' : ''}" ${lockNotice}>
@@ -833,7 +973,6 @@
         displayIndex++;
       });
 
-      // DÒNG TỔNG CỘNG CUỐI BẢNG
       html += `
         <tr class="font-bold bg-slate-100 border-t-2 border-slate-300 text-xs md:text-sm text-slate-900 h-8">
           <td class="p-1 sticky-col-1 bg-slate-100 border-r border-slate-300 z-40"></td>
@@ -846,7 +985,6 @@
           <td class="p-0.5 border-r border-slate-200 font-black text-slate-800" id="tot-budanghi">${formatNumberDisplay(totals.buDaNghi)}</td>
           <td class="p-0.5 border-r border-slate-300 font-black text-blue-700 bg-blue-200/50" id="tot-butonsau">${formatNumberDisplay(totals.buTonSau)}</td>
 
-          <td class="p-0.5 border-r border-slate-200"></td>
           <td class="p-0.5 border-r border-slate-200 font-black text-slate-800" id="tot-pheptontruoc">${formatNumberDisplay(totals.phepTonTruoc)}</td>
           <td class="p-0.5 border-r border-slate-200 font-black text-slate-800" id="tot-phepnamnay">${formatNumberDisplay(totals.phepNamNay)}</td>
           <td class="p-0.5 border-r border-slate-200 font-black text-amber-900 bg-amber-100/50" id="tot-phepconlai">${formatNumberDisplay(totals.phepConLaiDenThang)}</td>
@@ -867,13 +1005,8 @@
       const emp = phepBuData.find(e => e.id === empId);
       if (!emp) return;
 
-      if (field === 'thoiGianCT') {
-        emp[field] = rawVal;
-      } else {
-        emp[field] = rawVal === '' ? 0 : getSafeNum(rawVal);
-      }
+      emp[field] = rawVal === '' ? 0 : getSafeNum(rawVal);
 
-      // Cập nhật các ô phụ thuộc ngay lập tức mà không làm mất focus
       const tongBu = getSafeNum(emp.buTonTruoc) + getSafeNum(emp.buTruc) + getSafeNum(emp.buT7CN);
       const buTonSau = tongBu - getSafeNum(emp.buDaNghi);
       const phepTonSau = getSafeNum(emp.phepConLaiDenThang) - getSafeNum(emp.phepDaNghi);
@@ -892,8 +1025,9 @@
     function updateTotalsRow() {
       const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
       const filteredData = phepBuData.filter(emp => {
-        const matchSearch = emp.name.toLowerCase().includes(searchTerm) || 
-                            (emp.shortName && emp.shortName.toLowerCase().includes(searchTerm));
+        const nameSafe = (emp.name || "").toLowerCase();
+        const shortSafe = (emp.shortName || "").toLowerCase();
+        const matchSearch = nameSafe.includes(searchTerm) || shortSafe.includes(searchTerm);
         const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
         return matchSearch && matchStation;
       });
@@ -936,9 +1070,6 @@
       setT('tot-pheptonsau', totals.phepTonSau);
     }
 
-    // =========================================================================
-    // 5. ĐỒNG BỘ TỪ BẢNG CHẤM CÔNG (TÍNH TỰ ĐỘNG 2 NGÀY BÙ NẾU TRỰC NGÀY LỄ)
-    // =========================================================================
     async function syncFromTimesheet() {
       const url = GOOGLE_SHEET_CHAM_CONG_URL;
       if (!url) {
@@ -948,26 +1079,30 @@
 
       showConfirmModal(
         'Đồng bộ từ Bảng Chấm Công',
-        `Hệ thống sẽ kéo dữ liệu chấm công Tháng ${currentMonth}/${currentYear} để tự động tính:
-• Ca trực ngày thường (+T): 1 ngày bù/ca (0.5 ngày/buổi)
-• Ca trực NGÀY LỄ (+ VÀNG): 2 ngày bù/ca (1.0 ngày/buổi)
-• Đi làm T7/CN, Phép đã nghỉ (P) và Bù đã nghỉ (NB).
-
-Bạn có muốn tiếp tục?`,
+        `Hệ thống sẽ kéo dữ liệu chấm công Tháng ${currentMonth}/${currentYear} để tự động tính ca trực và ngày nghỉ. Bạn muốn tiếp tục?`,
         async () => {
           showLoading(`Đang trích xuất dữ liệu Bảng Chấm Công Tháng ${currentMonth}...`);
           try {
             const fetchUrl = url + (url.includes('?') ? '&' : '?') + `action=loadAttendance&month=${currentMonth}&year=${currentYear}&t=${Date.now()}`;
-            const response = await fetch(fetchUrl, { method: 'GET', cache: 'no-store' });
-            const result = await response.json();
+            const response = await fetch(fetchUrl, { method: 'GET' });
+            const rawText = await response.text();
+            let result;
+            try {
+              result = JSON.parse(rawText);
+            } catch(e) {
+              showToast("Lỗi định dạng dữ liệu chấm công.", "error");
+              return;
+            }
 
-            if (result.status === 'success' && result.records) {
+            if (result && result.status === 'success' && result.records) {
               let syncCount = 0;
-              let totalHolidayShifts = 0;
               const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
 
               result.records.forEach(rec => {
-                const targetEmp = phepBuData.find(e => e.name === rec.name || (rec.shortName && e.shortName === rec.shortName));
+                const targetEmp = phepBuData.find(e => 
+                    (e.name || "") === rec.name || 
+                    (rec.shortName && (e.shortName || "") === rec.shortName)
+                );
                 if (targetEmp && rec.days && canEditStaff(targetEmp)) {
                   let buTruc = 0;
                   let buT7CN = 0;
@@ -985,20 +1120,15 @@ Bạn có muốn tiếp tục?`,
 
                     [am, pm].forEach(code => {
                       if (code === '+L') {
-                        // TRỰC NGÀY LỄ (+ VÀNG DO NGƯỜI DÙNG TỰ ĐÁNH VÀO)
-                        // 1.0 ngày bù / buổi => Cả ngày trực 2 buổi = 2.0 ngày bù!
                         buTruc += 1.0;
-                        totalHolidayShifts += 0.5;
                       } else if (code === '+T') {
-                        // Ca trực ngày thường: 0.5 ngày bù / buổi => Cả ca trực = 1.0 ngày bù
                         buTruc += 0.5;
                       } else if ((code === '+' || code === 'SP') && isWeekend) {
-                        // Đi làm ngày Thứ 7, CN
                         buT7CN += 0.5;
                       } else if (code === 'NB') {
-                        buDaNghi += 0.5; // Nghỉ bù
+                        buDaNghi += 0.5;
                       } else if (code === 'P') {
-                        phepDaNghi += 0.5; // Nghỉ phép
+                        phepDaNghi += 0.5;
                       }
                     });
                   }
@@ -1012,12 +1142,9 @@ Bạn có muốn tiếp tục?`,
               });
 
               renderBody();
-              const holidayMsg = totalHolidayShifts > 0 
-                ? ` (Phát hiện ${totalHolidayShifts} ca trực ngày Lễ (+ vàng): đã tính x2 = 2 ngày bù/ca)` 
-                : '';
-              showToast(`Đã đồng bộ dữ liệu của ${syncCount} cán bộ thành công!${holidayMsg}`, 'success');
+              showToast(`Đã đồng bộ dữ liệu của ${syncCount} cán bộ thành công!`, 'success');
             } else {
-              showToast(`Chưa có dữ liệu Bảng Chấm Công Tháng ${currentMonth}/${currentYear} trên Cloud. Vui lòng chấm công và lưu trước.`, 'warning');
+              showToast(`Chưa có dữ liệu Bảng Chấm Công Tháng ${currentMonth}/${currentYear} trên Cloud.`, 'warning');
             }
           } catch (err) {
             console.error(err);
@@ -1029,9 +1156,6 @@ Bạn có muốn tiếp tục?`,
       );
     }
 
-    // =========================================================================
-    // 6. LƯU & TẢI DỮ LIỆU GOOGLE SHEETS
-    // =========================================================================
     function showLoading(text) {
       document.getElementById('loading-text').innerText = text;
       document.getElementById('loading-overlay').style.display = 'flex';
@@ -1043,7 +1167,7 @@ Bạn có muốn tiếp tục?`,
     async function saveData() {
       const url = GOOGLE_SHEET_PHEP_BU_URL;
       if (!url) {
-        showToast("Vui lòng cấu hình GOOGLE_SHEET_PHEP_BU_URL trong mã nguồn.", 'warning');
+        showToast("Vui lòng cấu hình GOOGLE_SHEET_PHEP_BU_URL.", 'warning');
         return;
       }
 
@@ -1054,14 +1178,14 @@ Bạn có muốn tiếp tục?`,
           month: currentMonth,
           year: currentYear,
           records: phepBuData.map(e => ({
-            name: e.name,
-            shortName: e.shortName,
-            point: e.point,
+            name: e.name || "",
+            shortName: e.shortName || "",
+            point: e.point || "",
             buTonTruoc: getSafeNum(e.buTonTruoc),
             buTruc: getSafeNum(e.buTruc),
             buT7CN: getSafeNum(e.buT7CN),
             buDaNghi: getSafeNum(e.buDaNghi),
-            thoiGianCT: e.thoiGianCT || '',
+            thoiGianCT: e.hireDate || '',
             phepTonTruoc: getSafeNum(e.phepTonTruoc),
             phepNamNay: getSafeNum(e.phepNamNay),
             phepConLaiDenThang: getSafeNum(e.phepConLaiDenThang),
@@ -1093,102 +1217,86 @@ Bạn có muốn tiếp tục?`,
     async function loadData(isAuto = false) {
       const url = GOOGLE_SHEET_PHEP_BU_URL;
       if (!url) {
-        if (!isAuto) showToast("Vui lòng cấu hình GOOGLE_SHEET_PHEP_BU_URL trong mã nguồn.", 'warning');
+        if (!isAuto) showToast("Vui lòng cấu hình GOOGLE_SHEET_PHEP_BU_URL.", 'warning');
         return;
       }
 
-      showLoading(`Đang ${isAuto ? 'tự động ' : ''}tải dữ liệu Phép, Bù Tháng ${currentMonth}/${currentYear}...`);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 7000));
+
+      if (!isAuto) showLoading(`Đang tải dữ liệu Phép, Bù Tháng ${currentMonth}/${currentYear}...`);
+      
       try {
         const fetchUrl = url + (url.includes('?') ? '&' : '?') + `action=loadPhepBu&month=${currentMonth}&year=${currentYear}&t=${Date.now()}`;
-        const response = await fetch(fetchUrl, { method: 'GET', cache: 'no-store' });
-        const res = await response.json();
+        const fetchPromise = fetch(fetchUrl, { method: 'GET' }).then(async r => {
+          const text = await r.text();
+          try {
+            return JSON.parse(text);
+          } catch(e) {
+            return { status: 'error', message: 'Phản hồi không phải JSON' };
+          }
+        });
 
-        if (res.status === 'success' && res.records && res.records.length > 0) {
+        const res = await Promise.race([fetchPromise, timeoutPromise]);
+
+        if (res && res.status === 'success' && res.records && res.records.length > 0) {
           const masterList = getMasterStaffList();
+          const now = new Date();
+
           phepBuData = masterList.map((item, index) => {
-            const found = res.records.find(r => r.name === item.name);
+            const found = res.records.find(r => 
+              r.name && item.name && r.name.trim().toLowerCase() === (item.name || "").trim().toLowerCase()
+            );
+
+            // Ưu tiên ngày tuyển dụng từ Master List Quản lý nhân viên
+            const hire = item.hireDate || (found ? (found.thoiGianCT || found.hireDate) : "") || "";
+            const calc = calcThamNienVaPhep(hire, now);
+
             if (found) {
-              return { ...item, ...found, id: index };
+              return { 
+                ...item, ...found, 
+                id: index, 
+                hireDate: calc.formattedDate || hire,
+                yearsOfService: calc.years,
+                durationText: calc.durationText,
+                phepNamNay: calc.totalLeave 
+              };
             }
+            
             return {
-              id: index, name: item.name, shortName: item.shortName, point: item.point,
+              id: index, name: item.name || "", shortName: item.shortName || "", point: item.point || "",
               buTonTruoc: 0, buTruc: 0, buT7CN: 0, buDaNghi: 0,
-              thoiGianCT: '', phepTonTruoc: 0, phepNamNay: 12, phepConLaiDenThang: 12, phepDaNghi: 0
+              hireDate: calc.formattedDate || hire, 
+              yearsOfService: calc.years,
+              durationText: calc.durationText,
+              phepTonTruoc: 0, phepNamNay: calc.totalLeave, phepConLaiDenThang: calc.totalLeave, phepDaNghi: 0
             };
           });
           renderBody();
-          showToast(`Đã đồng bộ dữ liệu Tháng ${currentMonth}/${currentYear} từ Google Sheet!`, 'success');
+          updateStationCounts();
+          if (!isAuto) showToast(`Đã đồng bộ dữ liệu Tháng ${currentMonth}/${currentYear} từ Google Sheet!`, 'success');
         } else {
-          // TỰ ĐỘNG KẾT CHUYỂN TỒN TỪ THÁNG TRƯỚC NẾU THÁNG HIỆN TẠI CHƯA CÓ
-          const { prevM, prevY } = getPrevNextMonth(currentMonth, currentYear);
-          const prevUrl = url + (url.includes('?') ? '&' : '?') + `action=loadPhepBu&month=${prevM}&year=${prevY}&t=${Date.now()}`;
-          const prevRes = await fetch(prevUrl, { method: 'GET', cache: 'no-store' });
-          const prevResult = await prevRes.json();
-
-          if (prevResult.status === 'success' && prevResult.records && prevResult.records.length > 0) {
-            const masterList = getMasterStaffList();
-            phepBuData = masterList.map((item, index) => {
-              const rec = prevResult.records.find(r => r.name === item.name);
-              if (rec) {
-                const tongBuTruoc = getSafeNum(rec.buTonTruoc) + getSafeNum(rec.buTruc) + getSafeNum(rec.buT7CN);
-                const buTonSauTruoc = tongBuTruoc - getSafeNum(rec.buDaNghi);
-                const phepTonSauTruoc = getSafeNum(rec.phepConLaiDenThang) - getSafeNum(rec.phepDaNghi);
-
-                let phepConLai = phepTonSauTruoc;
-                let phepTonTruoc = getSafeNum(rec.phepTonTruoc);
-                let phepNamNay = getSafeNum(rec.phepNamNay) || 12;
-
-                // Nếu là Tháng 1 đầu năm: Kết chuyển phép tồn sang năm cũ và cấp 12 ngày phép mới
-                if (currentMonth === 1) {
-                  phepTonTruoc = phepTonSauTruoc;
-                  phepNamNay = 12;
-                  phepConLai = phepTonTruoc + phepNamNay;
-                }
-
-                return {
-                  id: index, name: item.name, shortName: item.shortName, point: item.point,
-                  buTonTruoc: buTonSauTruoc, buTruc: 0, buT7CN: 0, buDaNghi: 0,
-                  thoiGianCT: rec.thoiGianCT || '',
-                  phepTonTruoc: phepTonTruoc,
-                  phepNamNay: phepNamNay,
-                  phepConLaiDenThang: phepConLai,
-                  phepDaNghi: 0
-                };
-              }
-              return {
-                id: index, name: item.name, shortName: item.shortName, point: item.point,
-                buTonTruoc: 0, buTruc: 0, buT7CN: 0, buDaNghi: 0,
-                thoiGianCT: '', phepTonTruoc: 0, phepNamNay: 12, phepConLaiDenThang: 12, phepDaNghi: 0
-              };
-            });
-            renderBody();
-            showToast(`Tháng ${currentMonth} chưa có dữ liệu: Tự động kết chuyển số dư tồn từ Tháng ${prevM}/${prevY}!`, 'info');
-          } else {
-            initEmptyData();
-            renderBody();
-            if (!isAuto) {
-              showToast(`Chưa có dữ liệu Phép, Bù cho Tháng ${currentMonth}/${currentYear}.`, 'info');
-            }
-          }
+          initEmptyData();
+          renderBody();
+          updateStationCounts();
         }
       } catch (err) {
-        console.error(err);
-        if (!isAuto) showToast("Lỗi khi kết nối Google Sheet.", 'error');
+        console.warn("Bỏ qua lỗi tải Phép Bù hoặc quá thời gian:", err);
+        initEmptyData();
+        renderBody();
+        updateStationCounts();
       } finally {
         hideLoading();
       }
     }
 
-    // =========================================================================
-    // 7. XUẤT EXCEL & IN BẢNG TỔNG HỢP
-    // =========================================================================
     function exportToExcel() {
       const { prevM, nextM } = getPrevNextMonth(currentMonth, currentYear);
       const wsData = [
-        ['TRẠM Y TẾ XÃ MỘ ĐỨC', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['TRẠM Y TẾ XÃ MỘ ĐỨC', '', '', '', '', '', '', '', '', '', '', '', ''],
         [`BẢNG TỔNG HỢP THEO DÕI NGÀY PHÉP, NGHỈ BÙ THÁNG ${currentMonth}/${currentYear}`],
+        [`Thời gian công tác = Thời gian hiện tại trừ Ngày tuyển dụng từ Quản Lý Nhân Viên`],
         [],
-        ['TT', 'Họ và tên', 'NGÀY BÙ', '', '', '', '', '', 'NGÀY PHÉP NĂM', '', '', '', '', ''],
+        ['TT', 'Họ và tên', 'NGÀY BÙ', '', '', '', '', '', 'NGÀY PHÉP NĂM', '', '', '', ''],
         [
           '', '',
           `Số ngày bù tồn lại hết tháng ${prevM}`,
@@ -1197,9 +1305,8 @@ Bạn có muốn tiếp tục?`,
           `Tổng cộng ngày bù tháng ${currentMonth}`,
           `Ngày bù đã nghỉ trong tháng ${currentMonth}`,
           `Ngày bù tồn chuyển sang tháng ${nextM}`,
-          `Thời gian công tác`,
           `Phép tồn lại của năm ${currentYear - 1}`,
-          `Phép năm ${currentYear}`,
+          `Phép năm ${currentYear} (12 + thâm niên)`,
           `Phép còn lại đến tháng ${currentMonth}`,
           `Phép đã nghỉ trong tháng`,
           `Ngày phép tồn chuyển sang tháng ${nextM}`
@@ -1208,8 +1315,9 @@ Bạn có muốn tiếp tục?`,
 
       const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
       const filteredData = phepBuData.filter(emp => {
-        const matchSearch = emp.name.toLowerCase().includes(searchTerm) || 
-                            (emp.shortName && emp.shortName.toLowerCase().includes(searchTerm));
+        const nameSafe = (emp.name || "").toLowerCase();
+        const shortSafe = (emp.shortName || "").toLowerCase();
+        const matchSearch = nameSafe.includes(searchTerm) || shortSafe.includes(searchTerm);
         const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
         return matchSearch && matchStation;
       });
@@ -1221,14 +1329,13 @@ Bạn có muốn tiếp tục?`,
 
         wsData.push([
           idx + 1,
-          emp.name,
+          emp.name || "",
           emp.buTonTruoc || 0,
           emp.buTruc || 0,
           emp.buT7CN || 0,
           tongBu,
           emp.buDaNghi || 0,
           buTonSau,
-          emp.thoiGianCT || '',
           emp.phepTonTruoc || 0,
           emp.phepNamNay || 0,
           emp.phepConLaiDenThang || 0,
@@ -1238,19 +1345,20 @@ Bạn có muốn tiếp tục?`,
       });
 
       const merges = [
-        { s: { r: 1, c: 0 }, e: { r: 1, c: 13 } },
-        { s: { r: 3, c: 0 }, e: { r: 4, c: 0 } },
-        { s: { r: 3, c: 1 }, e: { r: 4, c: 1 } },
-        { s: { r: 3, c: 2 }, e: { r: 3, c: 7 } },
-        { s: { r: 3, c: 8 }, e: { r: 3, c: 13 } }
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 12 } },
+        { s: { r: 2, c: 0 }, e: { r: 2, c: 12 } },
+        { s: { r: 4, c: 0 }, e: { r: 5, c: 0 } },
+        { s: { r: 4, c: 1 }, e: { r: 5, c: 1 } },
+        { s: { r: 4, c: 2 }, e: { r: 4, c: 7 } },
+        { s: { r: 4, c: 8 }, e: { r: 4, c: 12 } }
       ];
 
       const ws = XLSX.utils.aoa_to_sheet(wsData);
       ws['!merges'] = merges;
       ws['!cols'] = [
-        { wch: 5 }, { wch: 24 },
+        { wch: 5 }, { wch: 26 },
         { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 12 }, { wch: 11 }, { wch: 12 },
-        { wch: 12 }, { wch: 11 }, { wch: 11 }, { wch: 12 }, { wch: 11 }, { wch: 12 }
+        { wch: 11 }, { wch: 13 }, { wch: 12 }, { wch: 11 }, { wch: 12 }
       ];
 
       const wb = XLSX.utils.book_new();
@@ -1269,16 +1377,16 @@ Bạn có muốn tiếp tục?`,
           : `<div style="font-weight: bold; font-size: 9pt; text-transform: uppercase; margin-top: 2px;">(${selectedStationFilter})</div>`;
       }
 
-      // Khóa cứng tỷ lệ 14 cột theo khổ A4 ngang
+      // Khóa cứng tỷ lệ 13 cột theo khổ A4 ngang (Không hiển thị cột ngày tuyển dụng)
       const colTT = 3.5;
-      const colName = 18.5;
-      const otherColWidth = ((100 - (colTT + colName)) / 12).toFixed(3);
+      const colName = 20.5;
+      const otherColWidth = ((100 - (colTT + colName)) / 11).toFixed(3);
 
       let colgroupHtml = `
         <col style="width: ${colTT}%;">
         <col style="width: ${colName}%;">
       `;
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < 11; i++) {
         colgroupHtml += `<col style="width: ${otherColWidth}%;">`;
       }
       document.getElementById('print-colgroup').innerHTML = colgroupHtml;
@@ -1289,7 +1397,7 @@ Bạn có muốn tiếp tục?`,
           <th rowspan="2">TT</th>
           <th rowspan="2">Họ và tên</th>
           <th colspan="6">NGÀY BÙ</th>
-          <th colspan="6">NGÀY PHÉP NĂM</th>
+          <th colspan="5">NGÀY PHÉP NĂM</th>
         </tr>
         <tr>
           <th>Bù tồn hết T${prevM}</th>
@@ -1299,7 +1407,6 @@ Bạn có muốn tiếp tục?`,
           <th>Bù đã nghỉ T${currentMonth}</th>
           <th>Bù chuyển sang T${nextM}</th>
 
-          <th>Thời gian công tác</th>
           <th>Phép tồn năm ${currentYear - 1}</th>
           <th>Phép năm ${currentYear}</th>
           <th>Phép còn đến T${currentMonth}</th>
@@ -1310,11 +1417,16 @@ Bạn có muốn tiếp tục?`,
 
       const tbody = document.getElementById('print-table-body');
       let bHtml = '';
+      let totals = {
+        buTonTruoc: 0, buTruc: 0, buT7CN: 0, tongBu: 0, buDaNghi: 0, buTonSau: 0,
+        phepTonTruoc: 0, phepNamNay: 0, phepConLaiDenThang: 0, phepDaNghi: 0, phepTonSau: 0
+      };
 
       const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
       const filteredData = phepBuData.filter(emp => {
-        const matchSearch = emp.name.toLowerCase().includes(searchTerm) || 
-                            (emp.shortName && emp.shortName.toLowerCase().includes(searchTerm));
+        const nameSafe = (emp.name || "").toLowerCase();
+        const shortSafe = (emp.shortName || "").toLowerCase();
+        const matchSearch = nameSafe.includes(searchTerm) || shortSafe.includes(searchTerm);
         const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
         return matchSearch && matchStation;
       });
@@ -1324,10 +1436,22 @@ Bạn có muốn tiếp tục?`,
         const buTonSau = tongBu - getSafeNum(emp.buDaNghi);
         const phepTonSau = getSafeNum(emp.phepConLaiDenThang) - getSafeNum(emp.phepDaNghi);
 
+        totals.buTonTruoc += getSafeNum(emp.buTonTruoc);
+        totals.buTruc += getSafeNum(emp.buTruc);
+        totals.buT7CN += getSafeNum(emp.buT7CN);
+        totals.tongBu += tongBu;
+        totals.buDaNghi += getSafeNum(emp.buDaNghi);
+        totals.buTonSau += buTonSau;
+        totals.phepTonTruoc += getSafeNum(emp.phepTonTruoc);
+        totals.phepNamNay += getSafeNum(emp.phepNamNay);
+        totals.phepConLaiDenThang += getSafeNum(emp.phepConLaiDenThang);
+        totals.phepDaNghi += getSafeNum(emp.phepDaNghi);
+        totals.phepTonSau += phepTonSau;
+
         bHtml += `
           <tr>
             <td>${idx + 1}</td>
-            <td style="text-align: left !important; padding-left: 5px !important; font-weight: bold; font-size: 8pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${emp.name}</td>
+            <td style="text-align: left !important; padding-left: 5px !important; font-weight: bold; font-size: 8pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${emp.name || ""}</td>
             <td>${formatNumberDisplay(emp.buTonTruoc)}</td>
             <td>${formatNumberDisplay(emp.buTruc)}</td>
             <td>${formatNumberDisplay(emp.buT7CN)}</td>
@@ -1335,7 +1459,6 @@ Bạn có muốn tiếp tục?`,
             <td>${formatNumberDisplay(emp.buDaNghi)}</td>
             <td style="font-weight: bold;">${formatNumberDisplay(buTonSau)}</td>
 
-            <td style="font-size: 6.5pt;">${emp.thoiGianCT || ''}</td>
             <td>${formatNumberDisplay(emp.phepTonTruoc)}</td>
             <td>${formatNumberDisplay(emp.phepNamNay)}</td>
             <td style="font-weight: bold;">${formatNumberDisplay(emp.phepConLaiDenThang)}</td>
@@ -1344,6 +1467,26 @@ Bạn có muốn tiếp tục?`,
           </tr>
         `;
       });
+
+      bHtml += `
+        <tr style="font-weight: bold; background-color: #f1f5f9;">
+          <td></td>
+          <td style="text-align: center !important;">TỔNG CỘNG</td>
+          <td>${formatNumberDisplay(totals.buTonTruoc)}</td>
+          <td>${formatNumberDisplay(totals.buTruc)}</td>
+          <td>${formatNumberDisplay(totals.buT7CN)}</td>
+          <td>${formatNumberDisplay(totals.tongBu)}</td>
+          <td>${formatNumberDisplay(totals.buDaNghi)}</td>
+          <td>${formatNumberDisplay(totals.buTonSau)}</td>
+
+          <td>${formatNumberDisplay(totals.phepTonTruoc)}</td>
+          <td>${formatNumberDisplay(totals.phepNamNay)}</td>
+          <td>${formatNumberDisplay(totals.phepConLaiDenThang)}</td>
+          <td>${formatNumberDisplay(totals.phepDaNghi)}</td>
+          <td>${formatNumberDisplay(totals.phepTonSau)}</td>
+        </tr>
+      `;
+
       tbody.innerHTML = bHtml;
 
       const lastDay = new Date(currentYear, currentMonth, 0).getDate();
@@ -1352,9 +1495,6 @@ Bạn có muốn tiếp tục?`,
       setTimeout(() => { window.print(); }, 350);
     }
 
-    // =========================================================================
-    // 8. TIỆN ÍCH TOAST & HỘP THOẠI XÁC NHẬN (KHÔNG DÙNG ALERT/CONFIRM)
-    // =========================================================================
     function showToast(msg, type = 'info') {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
