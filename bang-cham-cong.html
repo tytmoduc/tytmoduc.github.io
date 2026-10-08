@@ -4,29 +4,44 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Bảng Chấm Công 01a-LĐTL - Trạm Y Tế Xã Mộ Đức</title>
+  
+  <!-- Tailwind CSS, SheetJS & FontAwesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Times+New+Roman&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Times+New+Roman&display=swap" rel="stylesheet">
   
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-    
-    /* Ghim cột tiêu đề cố định khi cuộn ngang */
-    .sticky-col-1 { position: sticky; left: 0; z-index: 20; background-color: white; min-width: 40px; max-width: 40px; }
-    .sticky-col-2 { position: sticky; left: 40px; z-index: 20; background-color: white; min-width: 175px; max-width: 175px; }
-    .sticky-col-3 { position: sticky; left: 215px; z-index: 20; background-color: white; border-right: 2px solid #cbd5e1; min-width: 36px; max-width: 36px; }
+
+    /* Ghim 3 cột đầu tiên khi cuộn ngang */
+    .sticky-col-1 { 
+      position: sticky; left: 0; z-index: 20; 
+      background-color: white; width: 38px; min-width: 38px; max-width: 38px; 
+      border-right: 1px solid #e2e8f0; 
+    }
+    .sticky-col-2 { 
+      position: sticky; left: 38px; z-index: 20; 
+      background-color: white; width: 175px; min-width: 175px; max-width: 175px; 
+      border-right: 1px solid #e2e8f0; 
+    }
+    .sticky-col-3 { 
+      position: sticky; left: 213px; z-index: 20; 
+      background-color: white; width: 36px; min-width: 36px; max-width: 36px; 
+      border-right: 2px solid #cbd5e1; 
+    }
     
     thead th { position: sticky; top: 0; z-index: 30; }
     thead th.sticky-col-1, thead th.sticky-col-2, thead th.sticky-col-3 { z-index: 40; }
 
-    .weekend-col { background-color: #fef2f2 !important; color: #ef4444; }
+    .weekend-col { background-color: #fff1f2 !important; color: #e11d48; }
+    .weekend-header { background-color: #ffe4e6 !important; color: #e11d48 !important; font-weight: 800; }
     .today-col { background-color: #ecfeff !important; border-left: 2px solid #0891b2 !important; border-right: 2px solid #0891b2 !important; }
-    
-    .no-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
-    .no-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-    .no-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    .no-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    .custom-scrollbar::-webkit-scrollbar { height: 7px; width: 7px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
     #loading-overlay { display: none; }
     .loader {
@@ -36,7 +51,7 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* Mẫu in chuẩn Kho Bạc Nhà Nước / Thông tư 133 - Cố định khung không bị tràn viền phải */
+    /* Định dạng in chuẩn A4 ngang theo Mẫu 01a-LĐTL Bộ Tài chính */
     @media print {
       body { 
         background-color: white !important; 
@@ -49,7 +64,7 @@
       
       @page { 
         size: A4 landscape; 
-        margin: 6mm 6mm 6mm 6mm; /* Tối ưu lề 6mm giúp đủ không gian cho 37 cột */
+        margin: 5mm 5mm 5mm 5mm; 
       } 
       
       #print-container { 
@@ -59,18 +74,16 @@
         margin: 0 !important;
         padding: 0 !important;
         box-sizing: border-box !important;
-      }
-
-      #print-container * {
-        box-sizing: border-box !important;
+        font-family: 'Times New Roman', Times, serif; 
+        color: black;
       }
 
       #print-container table { 
         page-break-inside: auto; 
         border-collapse: collapse !important; 
-        width: 99.5% !important; /* Dự phòng an toàn 0.5% để đường viền phải không bao giờ bị cắt */
+        width: 99.8% !important; 
         margin: 0 auto !important;
-        table-layout: fixed !important; /* Khóa cứng tỷ lệ bảng theo colgroup */
+        table-layout: fixed !important;
       }
       
       #print-container tr { 
@@ -83,18 +96,18 @@
       }
       
       #print-container th, #print-container td { 
-        border: 0.5pt solid black !important; /* Dùng 0.5pt chuẩn in ấn sắc nét */
-        padding: 1.5px 0.5px !important; /* Khống chế padding mỏng tránh phình cột */
+        border: 0.5pt solid black !important; 
+        padding: 1.5px 0.5px !important; 
         text-align: center !important;
         vertical-align: middle !important;
         overflow: hidden !important;
         word-break: break-word !important;
       }
     }
-    #print-container { display: none; font-family: 'Times New Roman', Times, serif; color: black; }
+    #print-container { display: none; }
   </style>
 </head>
-<body class="text-slate-800 h-screen flex flex-col overflow-hidden">
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden antialiased">
 
   <!-- OVERLAY LOADING -->
   <div id="loading-overlay" class="fixed inset-0 bg-white/85 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
@@ -106,8 +119,8 @@
   <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- THANH TIÊU ĐỀ CHÍNH -->
-  <div class="flex-none p-3 md:p-5 pb-2">
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-3 flex flex-col md:flex-row justify-between items-center gap-3">
+  <header class="flex-none p-3 md:p-5 pb-2">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-3 flex flex-col md:flex-row justify-between items-center gap-3 border-l-4 border-l-teal-600">
       <div class="flex items-center gap-3">
         <a href="index.html" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-600 hover:text-teal-700 flex items-center justify-center transition" title="Về trang chủ">
           <i class="fa-solid fa-arrow-left"></i>
@@ -119,7 +132,7 @@
             </h1>
             <span class="bg-teal-50 text-teal-700 text-xs px-2.5 py-0.5 rounded-full font-bold border border-teal-200">TT 133/2016/TT-BTC</span>
           </div>
-          <p class="text-xs text-slate-500 mt-0.5">Trạm Y Tế Xã Mộ Đức • Quản lý chấm công phân quyền theo 04 điểm trạm</p>
+          <p class="text-xs text-slate-500 mt-0.5">Trạm Y Tế Xã Mộ Đức • Liên thông Lịch trực & Quản lý nhân sự • 04 Điểm trạm</p>
         </div>
       </div>
 
@@ -128,7 +141,7 @@
         <!-- Huy hiệu trạng thái đăng nhập điểm trạm -->
         <div id="auth-status-container"></div>
 
-        <!-- MENU CHẤM NHANH (+) VỚI 3 TÙY CHỌN -->
+        <!-- MENU CHẤM NHANH (+) -->
         <div class="relative inline-block text-left" id="quick-fill-dropdown-container">
           <button onclick="toggleQuickFillMenu(event)" class="px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold rounded-xl hover:bg-emerald-100 transition text-xs flex items-center gap-1.5 shadow-sm">
             <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i>
@@ -136,7 +149,7 @@
             <i class="fa-solid fa-chevron-down text-[10px] ml-0.5 text-emerald-600"></i>
           </button>
 
-          <div id="quick-fill-dropdown" class="hidden absolute right-0 mt-1.5 w-60 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 transform transition-all text-xs">
+          <div id="quick-fill-dropdown" class="hidden absolute right-0 mt-1.5 w-60 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 text-xs">
             <div class="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1 flex items-center justify-between">
               <span>Tùy chọn điền công (+)</span>
               <i class="fa-solid fa-bolt text-amber-500"></i>
@@ -148,7 +161,7 @@
               </div>
               <div class="flex-1">
                 <div class="font-bold text-slate-800 group-hover:text-emerald-700">Chọn ngày để chấm nhanh</div>
-                <div class="text-[10.5px] text-slate-400 font-normal">Chọn ngày bất kỳ trong tháng để chấm (+)</div>
+                <div class="text-[10.5px] text-slate-400 font-normal">Chấm (+) cho 1 ngày bất kỳ</div>
               </div>
             </button>
 
@@ -169,23 +182,61 @@
                 <i class="fa-solid fa-calendar-days"></i>
               </div>
               <div class="flex-1">
-                <div class="font-bold text-slate-800 group-hover:text-blue-700">Toàn bộ tháng</div>
+                <div class="font-bold text-slate-800 group-hover:text-blue-700">Toàn bộ ngày thường trong tháng</div>
                 <div class="text-[10.5px] text-slate-400 font-normal" id="quick-fill-month-desc">Chấm T2 - T6 cả tháng đang xem</div>
               </div>
             </button>
           </div>
         </div>
 
-        <button onclick="syncFromSchedule()" class="px-3 py-2 bg-teal-50 text-teal-700 border border-teal-200 font-bold rounded-xl hover:bg-teal-100 transition text-xs flex items-center gap-1.5 shadow-sm" title="Lấy dữ liệu trực từ Lịch Trực">
-          <i class="fa-solid fa-calendar-check"></i> Lấy ca từ Lịch trực
-        </button>
+        <!-- MENU LẤY CA TỪ LỊCH TRỰC -->
+        <div class="relative inline-block text-left" id="sync-schedule-dropdown-container">
+          <button onclick="toggleSyncScheduleMenu(event)" class="px-3 py-2 bg-teal-50 text-teal-700 border border-teal-200 font-bold rounded-xl hover:bg-teal-100 transition text-xs flex items-center gap-1.5 shadow-sm" title="Lấy dữ liệu ca trực đêm (+T) từ Lịch Trực">
+            <i class="fa-solid fa-calendar-check text-teal-600"></i>
+            <span>Lấy ca từ Lịch trực</span>
+            <i class="fa-solid fa-chevron-down text-[10px] ml-0.5 text-teal-600"></i>
+          </button>
+
+          <div id="sync-schedule-dropdown" class="hidden absolute right-0 mt-1.5 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 text-xs">
+            <div class="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1 flex items-center justify-between">
+              <span>Tùy chọn lấy ca trực</span>
+              <i class="fa-solid fa-arrows-rotate text-teal-600"></i>
+            </div>
+            
+            <button onclick="syncFromSchedule('current_week')" class="w-full text-left px-3 py-2 text-slate-700 hover:bg-teal-50 hover:text-teal-800 flex items-start gap-2.5 transition group">
+              <div class="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 group-hover:bg-teal-600 group-hover:text-white transition">
+                <i class="fa-solid fa-calendar-week"></i>
+              </div>
+              <div class="flex-1">
+                <div class="font-bold text-slate-800 group-hover:text-teal-700">Tuần hiện tại (Tuần này)</div>
+                <div class="text-[10.5px] text-slate-400 font-normal">Chỉ lấy ca trực từ Thứ 2 đến Chủ nhật tuần này</div>
+              </div>
+            </button>
+
+            <div class="border-t border-slate-100 my-1"></div>
+
+            <button onclick="syncFromSchedule('month')" class="w-full text-left px-3 py-2 text-slate-700 hover:bg-teal-50 hover:text-teal-800 flex items-start gap-2.5 transition group">
+              <div class="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 group-hover:bg-teal-600 group-hover:text-white transition">
+                <i class="fa-solid fa-calendar-days"></i>
+              </div>
+              <div class="flex-1">
+                <div class="font-bold text-slate-800 group-hover:text-teal-700">Toàn bộ tháng đang xem</div>
+                <div class="text-[10.5px] text-slate-400 font-normal" id="sync-schedule-month-desc">Lấy ca trực cả tháng đang chọn</div>
+              </div>
+            </button>
+          </div>
+        </div>
 
         <button onclick="exportToExcel()" class="px-3 py-2 bg-green-50 text-green-700 border border-green-200 font-bold rounded-xl hover:bg-green-100 transition text-xs flex items-center gap-1.5 shadow-sm">
-          <i class="fa-solid fa-file-excel"></i> Xuất Excel
+          <i class="fa-solid fa-file-excel text-green-600"></i> Xuất Excel
+        </button>
+
+        <button onclick="exportToWord()" class="px-3 py-2 bg-blue-50 text-blue-700 border border-blue-200 font-bold rounded-xl hover:bg-blue-100 transition text-xs flex items-center gap-1.5 shadow-sm" title="Xuất file Microsoft Word (.doc) chuẩn mẫu">
+          <i class="fa-solid fa-file-word text-blue-600"></i> Xuất Word (.doc)
         </button>
 
         <button onclick="printTimesheet()" class="px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded-xl hover:bg-rose-100 transition text-xs flex items-center gap-1.5 shadow-sm">
-          <i class="fa-solid fa-file-pdf"></i> In PDF 01a
+          <i class="fa-solid fa-file-pdf text-rose-600"></i> In PDF 01a
         </button>
 
         <button onclick="loadAttendance()" class="px-3 py-2 bg-slate-100 text-slate-700 border border-slate-200 font-bold rounded-xl hover:bg-slate-200 transition text-xs flex items-center gap-1.5 shadow-sm">
@@ -201,32 +252,38 @@
     <!-- BỘ CHỌN THÁNG, NĂM, LỌC TÊN VÀ BỘ LỌC ĐIỂM TRẠM -->
     <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-2.5 mb-2">
       <div class="flex flex-wrap items-center gap-2">
-        <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm">
-          <label class="font-bold text-slate-700 text-xs ml-1">Tháng:</label>
-          <input type="number" id="select-month" min="1" max="12" class="w-14 p-1 border border-slate-300 rounded-lg text-center font-bold text-xs outline-none focus:border-teal-500" onchange="generateGrid()">
-          <label class="font-bold text-slate-700 text-xs">Năm:</label>
-          <input type="number" id="select-year" min="2024" max="2035" class="w-20 p-1 border border-slate-300 rounded-lg text-center font-bold text-xs outline-none focus:border-teal-500" onchange="generateGrid()">
-          <button onclick="generateGrid()" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-700 transition" title="Làm mới bảng">
-            <i class="fa-solid fa-rotate"></i>
+        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+          <button onclick="changeMonthOffset(-1)" class="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-600 flex items-center justify-center text-xs" title="Tháng trước">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <label class="font-bold text-slate-700 text-xs ml-0.5">T:</label>
+          <input type="number" id="select-month" min="1" max="12" class="w-11 p-1 border border-slate-300 rounded-lg text-center font-bold text-xs outline-none focus:border-teal-500" onchange="generateGrid()">
+          <span class="text-slate-300">/</span>
+          <input type="number" id="select-year" min="2024" max="2035" class="w-16 p-1 border border-slate-300 rounded-lg text-center font-bold text-xs outline-none focus:border-teal-500" onchange="generateGrid()">
+          <button onclick="changeMonthOffset(1)" class="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-600 flex items-center justify-center text-xs" title="Tháng sau">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+          <button onclick="goToCurrentMonth()" class="px-2 py-1 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg text-xs font-bold transition ml-0.5" title="Về tháng hiện tại">
+            Hôm nay
           </button>
         </div>
 
         <!-- Bộ lọc xem theo điểm trạm -->
-        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
-          <button onclick="filterByStation('all')" id="btn-station-all" class="px-2.5 py-1 rounded-lg text-xs font-bold transition bg-teal-600 text-white shadow-sm">
-            Tất cả (29)
+        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm overflow-x-auto custom-scrollbar">
+          <button onclick="filterByStation('all')" id="btn-station-all" class="px-2.5 py-1 rounded-lg text-xs font-bold transition bg-teal-600 text-white shadow-sm whitespace-nowrap">
+            Tất cả (<span id="count-st-all">29</span>)
           </button>
           <button onclick="filterByStation('Điểm trạm chính')" id="btn-station-chinh" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
-            Đức Tân (10)
+            Đức Tân (<span id="count-st-chinh">10</span>)
           </button>
           <button onclick="filterByStation('Điểm y tế số 1')" id="btn-station-1" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
-            Mộ Đức (6)
+            Mộ Đức (<span id="count-st-1">6</span>)
           </button>
           <button onclick="filterByStation('Điểm y tế số 2')" id="btn-station-2" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
-            Đức Hòa (6)
+            Đức Hòa (<span id="count-st-2">6</span>)
           </button>
           <button onclick="filterByStation('Điểm y tế số 3')" id="btn-station-3" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">
-            Đức Phú (7)
+            Đức Phú (<span id="count-st-3">7</span>)
           </button>
         </div>
       </div>
@@ -234,27 +291,26 @@
       <!-- Ô tìm kiếm cán bộ -->
       <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm flex-1 lg:max-w-xs">
         <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
-        <input type="text" id="search-emp" placeholder="Tìm họ và tên cán bộ..." class="w-full bg-transparent border-none outline-none text-xs text-slate-700 focus:ring-0" onkeyup="renderBody()">
+        <input type="text" id="search-emp" placeholder="Tìm họ và tên cán bộ..." class="w-full bg-transparent border-none outline-none text-xs text-slate-700 focus:ring-0 font-medium" onkeyup="renderBody()">
       </div>
 
       <!-- Chú thích ký hiệu chấm công -->
       <div class="flex flex-wrap gap-x-2 gap-y-1 text-[10.5px] font-semibold bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm text-slate-600">
         <div class="flex items-center"><span class="bg-blue-100 text-blue-800 font-extrabold px-1.5 py-0.2 rounded mr-1">+</span> Lương TG</div>
-        <div class="flex items-center"><span class="bg-amber-100 text-amber-800 font-black px-1.5 py-0.2 rounded border border-amber-300 mr-1">+</span> Trực Lễ (+ vàng: 2 ngày bù)</div>
+        <div class="flex items-center"><span class="bg-amber-100 text-amber-800 font-black px-1.5 py-0.2 rounded border border-amber-300 mr-1">+</span> Trực Lễ (+ vàng)</div>
         <div class="flex items-center"><span class="bg-rose-100 text-rose-800 font-extrabold px-1.5 py-0.2 rounded mr-1">+T</span> Trực đêm</div>
         <div class="flex items-center"><span class="bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded mr-1">P</span> Phép</div>
-        <div class="flex items-center"><span class="bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded mr-1">H</span> Học/Họp</div>
         <div class="flex items-center"><span class="bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded mr-1">NB</span> Nghỉ bù</div>
         <div class="flex items-center"><span class="bg-purple-100 text-purple-800 font-extrabold px-1.5 py-0.2 rounded mr-1">Ô</span> Ốm</div>
         <div class="flex items-center"><span class="bg-purple-100 text-purple-800 font-extrabold px-1.5 py-0.2 rounded mr-1">TS</span> Thai sản</div>
         <div class="flex items-center"><span class="bg-amber-100 text-amber-800 font-extrabold px-1.5 py-0.2 rounded mr-1">KL</span> Không lương</div>
       </div>
     </div>
-  </div>
+  </header>
 
   <!-- BẢNG CHẤM CÔNG CHÍNH -->
-  <div class="flex-1 overflow-hidden p-3 md:p-5 pt-0 flex flex-col">
-    <div class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-auto no-scrollbar relative" id="table-container">
+  <main class="flex-1 overflow-hidden p-3 md:p-5 pt-0 flex flex-col">
+    <div class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-auto custom-scrollbar relative" id="table-container">
       <table class="w-max min-w-full text-xs text-center border-collapse whitespace-nowrap">
         <thead id="grid-header">
           <!-- Render tự động bằng JavaScript -->
@@ -263,13 +319,20 @@
           <!-- Render tự động bằng JavaScript -->
         </tbody>
       </table>
-      <!-- Khoảng đệm an toàn giúp các dòng cán bộ cuối danh sách luôn cuộn lên cao thoải mái -->
-      <div class="h-28 w-full"></div>
+      <div class="h-24 w-full"></div>
     </div>
-  </div>
+    
+    <div class="mt-1.5 text-[10.5px] text-slate-500 flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center gap-3">
+        <span><i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i> Phân quyền theo 04 điểm trạm. Ban Giám Đốc có toàn quyền điều hành.</span>
+        <span><i class="fa-solid fa-arrows-rotate text-indigo-600 mr-1"></i> Tự động đồng bộ với Quản lý nhân viên & Lịch trực.</span>
+      </div>
+      <span id="last-sync-time" class="font-bold text-slate-600">Đã sẵn sàng</span>
+    </div>
+  </main>
 
   <!-- MENU CHẤM CÔNG NHANH (QUICK MENU POPUP) - CƠ CHẾ ĐẢO CHIỀU TỰ ĐỘNG -->
-  <div id="quick-menu" class="fixed hidden bg-white shadow-2xl rounded-2xl border border-slate-200 p-2.5 z-50 transform -translate-x-1/2 w-[290px] transition-all duration-150">
+  <div id="quick-menu" class="fixed hidden bg-white shadow-2xl rounded-2xl border border-slate-200 p-2.5 z-50 transform -translate-x-1/2 w-[295px] transition-all duration-150">
     <div class="text-[11px] text-slate-700 font-bold mb-2 uppercase text-center border-b border-slate-100 pb-1.5 flex justify-between items-center" id="quick-menu-title">
       <span>Chấm công</span>
       <span class="text-slate-400 hover:text-slate-600 cursor-pointer font-bold text-xs" onclick="closeQuickMenu()">✕</span>
@@ -279,11 +342,11 @@
       <!-- Lương & Làm việc -->
       <button onclick="applyCode('+')" class="py-1.5 rounded-lg bg-blue-50 text-blue-700 font-bold hover:bg-blue-200 text-xs border border-blue-200" title="Lương thời gian">+</button>
       <button onclick="applyCode('+L')" class="py-1.5 rounded-lg bg-amber-100 text-amber-800 font-black hover:bg-amber-200 text-xs border border-amber-300" title="Trực ngày Lễ: Dấu + màu vàng, tính 2 ngày bù/ca">+ (Lễ)</button>
-      <button onclick="applyCode('SP')" class="py-1.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold hover:bg-indigo-200 text-xs border border-indigo-200" title="Lương sản phẩm">SP</button>
+      <button onclick="applyCode('+T')" class="py-1.5 rounded-lg bg-rose-50 text-rose-700 font-black hover:bg-rose-200 text-xs border border-rose-200" title="Trực đêm">+T</button>
       <button onclick="applyCode('P')" class="py-1.5 rounded-lg bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-200 text-xs border border-emerald-200" title="Nghỉ phép">P</button>
       
       <!-- Nghỉ bù & Chế độ -->
-      <button onclick="applyCode('H')" class="py-1.5 rounded-lg bg-teal-50 text-teal-700 font-bold hover:bg-teal-200 text-xs border border-teal-200" title="Hội nghị, học tập">H</button>
+      <button onclick="applyCode('H')" class="py-1.5 rounded-lg bg-teal-50 text-teal-700 font-bold hover:bg-teal-200 text-xs border border-teal-200" title="Hội nghị, học tập, tập huấn">H</button>
       <button onclick="applyCode('NB')" class="py-1.5 rounded-lg bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-200 text-xs border border-emerald-200" title="Nghỉ bù">NB</button>
       <button onclick="applyCode('Ô')" class="py-1.5 rounded-lg bg-purple-50 text-purple-700 font-bold hover:bg-purple-200 text-xs border border-purple-200" title="Ốm, điều dưỡng">Ô</button>
       <button onclick="applyCode('Cô')" class="py-1.5 rounded-lg bg-purple-50 text-purple-700 font-bold hover:bg-purple-200 text-xs border border-purple-200" title="Con ốm">Cô</button>
@@ -325,7 +388,7 @@
             <option value="Điểm y tế số 1">Điểm y tế số 1 (Mộ Đức)</option>
             <option value="Điểm y tế số 2">Điểm y tế số 2 (Đức Hòa)</option>
             <option value="Điểm y tế số 3">Điểm y tế số 3 (Đức Phú)</option>
-            <option value="Ban Giám Đốc">Ban Giám Đốc (Toàn quyền 4 điểm)</option>
+            <option value="Ban Giám Đốc">Ban Giám Đốc (Toàn quyền 04 điểm)</option>
           </select>
         </div>
 
@@ -338,18 +401,6 @@
             </button>
           </div>
           <p id="auth-error-msg" class="text-rose-600 text-[11px] font-bold mt-1.5 hidden"></p>
-        </div>
-
-        <!-- Bảng mật khẩu mặc định để tham khảo nhanh -->
-        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 space-y-1">
-          <div class="font-bold flex items-center gap-1"><i class="fa-solid fa-key text-amber-600"></i> Mật khẩu mặc định hệ thống:</div>
-          <div class="grid grid-cols-2 gap-1 text-[10.5px] pt-1 text-slate-700">
-            <div>• Đức Tân: <code class="font-mono font-bold text-amber-900">ductan123</code></div>
-            <div>• Mộ Đức: <code class="font-mono font-bold text-amber-900">moduc123</code></div>
-            <div>• Đức Hòa: <code class="font-mono font-bold text-amber-900">duchoa123</code></div>
-            <div>• Đức Phú: <code class="font-mono font-bold text-amber-900">ducphu123</code></div>
-            <div class="col-span-2 pt-0.5">• Ban Giám Đốc: <code class="font-mono font-bold text-amber-900">bgd123</code></div>
-          </div>
         </div>
       </div>
 
@@ -371,7 +422,7 @@
         <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
       <h3 class="font-bold text-slate-800 text-sm mb-1.5" id="confirm-modal-title">Xác nhận</h3>
-      <p class="text-xs text-slate-600 mb-4" id="confirm-modal-msg"></p>
+      <p class="text-xs text-slate-600 mb-4 whitespace-pre-line" id="confirm-modal-msg"></p>
       <div class="flex justify-end gap-2">
         <button onclick="closeConfirmModal(false)" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
           Hủy bỏ
@@ -443,7 +494,7 @@
   <!-- BẢNG IN PDF THEO MẪU 01A-LĐTL CHUẨN XÁC THEO BẢN QUÉT -->
   <div id="print-container" class="w-full text-black" style="font-size: 7.5pt;">
     <!-- TIÊU ĐỀ TRÊN CÙNG: CƠ QUAN CHỦ QUẢN & MẪU 01A-LĐTL -->
-    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; width: 99.5%; margin-left: auto; margin-right: auto;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; width: 99.8%; margin-left: auto; margin-right: auto;">
       <div style="text-align: left; line-height: 1.25;">
         <div style="display: flex; flex-direction: column; align-items: center; width: fit-content;">
           <div style="font-size: 9.5pt; font-weight: normal;">UBND XÃ MỘ ĐỨC</div>
@@ -466,14 +517,14 @@
     </div>
 
     <!-- BẢNG DỮ LIỆU CHẤM CÔNG CHÍNH -->
-    <table id="print-table" style="width: 99.5%; border-collapse: collapse; text-align: center; margin: 0 auto; table-layout: fixed;">
+    <table id="print-table" style="width: 99.8%; border-collapse: collapse; text-align: center; margin: 0 auto; table-layout: fixed;">
       <colgroup id="print-colgroup"></colgroup>
       <thead id="print-table-header"></thead>
       <tbody id="print-table-body"></tbody>
     </table>
 
     <!-- CHÂN TRANG: KÝ HIỆU CHẤM CÔNG & KHU VỰC CHỮ KÝ 2 BÊN -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; page-break-inside: avoid; width: 99.5%; margin-left: auto; margin-right: auto;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; page-break-inside: avoid; width: 99.8%; margin-left: auto; margin-right: auto;">
       <!-- BÊN TRÁI: BẢNG KÝ HIỆU QUY ƯỚC CHẤM CÔNG (2 CỘT) -->
       <div style="width: 53%;">
         <div style="font-weight: bold; font-size: 8.5pt; margin-bottom: 3px;">Ký hiệu chấm công :</div>
@@ -482,7 +533,7 @@
           <div>Nghỉ phép : <b>P</b></div>
           <div>Lương thời gian : <b>+</b></div>
           <div>Hội nghị, học tập : <b>H</b></div>
-          <div>Óm, điều dưỡng : <b>Ô</b></div>
+          <div>Ốm, điều dưỡng : <b>Ô</b></div>
           <div>Nghỉ bù : <b>NB</b></div>
           <div>Con ốm : <b>CÔ</b></div>
           <div>Nghỉ không lương : <b>KL</b></div>
@@ -498,10 +549,12 @@
         <div style="width: 48%;">
           <div style="font-weight: bold;">Người chấm công</div>
           <div style="font-style: italic; font-size: 7.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, họ tên)</div>
+          <div style="font-weight: bold; font-size: 8pt;">Võ Quang Vinh</div>
         </div>
         <div style="width: 48%;">
           <div style="font-weight: bold;">Giám đốc trạm y tế</div>
-          <div style="font-style: italic; font-size: 7.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, họ tên)</div>
+          <div style="font-style: italic; font-size: 7.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, đóng dấu)</div>
+          <div style="font-weight: bold; font-size: 8pt;">BS. Phạm Minh Đức</div>
         </div>
       </div>
     </div>
@@ -509,9 +562,12 @@
 
   <script>
     // =========================================================================
-    // 1. CẤU HÌNH BẢNG MẬT KHẨU PHÂN QUYỀN ĐIỂM TRẠM
-    // Bạn có thể tùy chỉnh mật khẩu của từng điểm trạm bên dưới:
+    // 1. CẤU HÌNH LIÊN KẾT GOOGLE APPS SCRIPT & BẢNG MẬT KHẨU
     // =========================================================================
+    const GOOGLE_SHEET_CHAM_CONG_URL = "https://script.google.com/macros/s/AKfycbwjYcU1KIGtTBQHmUnrdrNZD6nS1DTVGImvKCP1PbRtweAqLe0KMIUNc8YsZrL-28Ss8A/exec";
+    const GOOGLE_SHEETS_LICH_TRUC_URL = "https://script.google.com/macros/s/AKfycbxcFk7LYV7MIouy9hSeTSQ12yTflnFmrAnbmvqnsj4zrghSsIAOVNfgbyVtle0XaDA8yA/exec";
+    const GOOGLE_SHEET_STAFF_URL = "https://script.google.com/macros/s/AKfycbz8rE8UkPQOG-gk_annTiMfKic9qoUQRn-X-qII3Dtme_xPMwecwi0YzbxoSHlLbNZmBg/exec";
+
     const STATION_PASSWORDS = {
       "Điểm trạm chính": "ductan123",
       "Điểm y tế số 1": "moduc123",
@@ -520,101 +576,103 @@
       "Ban Giám Đốc": "bgd123"
     };
 
-    // CẤU HÌNH GOOGLE APPS SCRIPT URL CHO BẢNG CHẤM CÔNG
-    const GOOGLE_SHEET_CHAM_CONG_URL = "https://script.google.com/macros/s/AKfycbwjYcU1KIGtTBQHmUnrdrNZD6nS1DTVGImvKCP1PbRtweAqLe0KMIUNc8YsZrL-28Ss8A/exec";
-    const GOOGLE_SHEET_LICH_TRUC_URL = "";
-    const GOOGLE_SHEET_STAFF_URL = "https://script.google.com/macros/s/AKfycbxtHm89HEoyWzivmq2vuu5uUAX4mejLfR2hWU3W1x0Hy9LdhRI-aFuGRsXkSz_Id0Hl/exec";
-
     // =========================================================================
-    // 2. DANH SÁCH 29 CÁN BỘ Y TẾ - CHỈ LƯU HỌ VÀ TÊN ĐẦY ĐỦ
+    // 2. DANH BẠ 29 CÁN BỘ GỐC CHUẨN XÁC 100% TOÀN XÃ MỘ ĐỨC
     // =========================================================================
-    const STAFF_LIST_FULL = [
+    const DEFAULT_STAFF_29_ROSTER = [
       // 1. Điểm trạm chính (Đức Tân) - 10 cán bộ
-      { name: "Trần Thị Lệ Thy", point: "Điểm trạm chính", shortName: "NHS Thy" },
-      { name: "Trịnh Thị Minh Tuệ", point: "Điểm trạm chính", shortName: "Ys Tuệ" },
-      { name: "Huỳnh Thị Thuỳ Yên", point: "Điểm trạm chính", shortName: "DS Yên" },
-      { name: "Võ Thị Thanh Thùy", point: "Điểm trạm chính", shortName: "NHS Thuỳ" },
-      { name: "Bùi Đạt Hiếu", point: "Điểm trạm chính", shortName: "DS Hiếu" },
-      { name: "Nguyễn Thị Như Nguyện", point: "Điểm trạm chính", shortName: "BS Nguyện" },
-      { name: "Võ Thị Thanh Thuyên", point: "Điểm trạm chính", shortName: "Bs Thuyên" },
-      { name: "Lê Thị Thủy", point: "Điểm trạm chính", shortName: "Ys Thủy" },
-      { name: "Trần Thị Việt Châu", point: "Điểm trạm chính", shortName: "CN Châu" },
-      { name: "Võ Quang Vinh", point: "Điểm trạm chính", shortName: "ĐD Vinh" },
+      { name: "Võ Thị Thanh Thuyên", shortName: "Bs Thuyên", point: "Điểm trạm chính" },
+      { name: "Trịnh Thị Minh Tuệ", shortName: "Ys Tuệ", point: "Điểm trạm chính" },
+      { name: "Võ Thị Thanh Thùy", shortName: "NHS Thuỳ", point: "Điểm trạm chính" },
+      { name: "Lê Thị Thu Thủy", shortName: "Ys Thủy", point: "Điểm trạm chính" },
+      { name: "Võ Quang Vinh", shortName: "ĐD Vinh", point: "Điểm trạm chính" },
+      { name: "Nguyễn Thị Như Nguyện", shortName: "BS Nguyện", point: "Điểm trạm chính" },
+      { name: "Trần Thị Lệ Thy", shortName: "NHS Thy", point: "Điểm trạm chính" },
+      { name: "Lê Thị Nương", shortName: "NHS Nương", point: "Điểm trạm chính" },
+      { name: "Bùi Đạt Hiếu", shortName: "DS Hiếu", point: "Điểm trạm chính" },
+      { name: "Huỳnh Thị Thùy Yên", shortName: "DS Yên", point: "Điểm trạm chính" },
 
       // 2. Điểm y tế số 1 (Mộ Đức) - 6 cán bộ
-      { name: "Phạm Minh Đức", point: "Điểm y tế số 1", shortName: "BS Đức" },
-      { name: "Đoàn Thị Diễm", point: "Điểm y tế số 1", shortName: "DS Diễm" },
-      { name: "Võ Thị Thanh Việt", point: "Điểm y tế số 1", shortName: "NHS Việt" },
-      { name: "Huỳnh Thị Anh Tin", point: "Điểm y tế số 1", shortName: "NHS Tin" },
-      { name: "Nguyễn Thị Thu Nguyệt", point: "Điểm y tế số 1", shortName: "ĐD Nguyệt" },
-      { name: "Trần Thị Lài", point: "Điểm y tế số 1", shortName: "ĐD Lài" },
+      { name: "Phạm Minh Đức", shortName: "BS Đức", point: "Điểm y tế số 1" },
+      { name: "Đoàn Thị Diễm", shortName: "DS Diễm", point: "Điểm y tế số 1" },
+      { name: "Võ Thị Thanh Việt", shortName: "ĐD Việt", point: "Điểm y tế số 1" }, // Đã chuẩn hóa ĐD Việt
+      { name: "Huỳnh Thị Anh Tin", shortName: "NHS Tin", point: "Điểm y tế số 1" },
+      { name: "Nguyễn Thị Thu Nguyệt", shortName: "ĐD Nguyệt", point: "Điểm y tế số 1" },
+      { name: "Trần Thị Lài", shortName: "ĐD Lài", point: "Điểm y tế số 1" },
 
       // 3. Điểm y tế số 2 (Đức Hòa) - 6 cán bộ
-      { name: "Trần Thị Kim Thanh", point: "Điểm y tế số 2", shortName: "ĐD Thanh" },
-      { name: "Nguyễn Thị Phương Thảo", point: "Điểm y tế số 2", shortName: "DS Thảo" },
-      { name: "Cao Thị Ánh Trúc", point: "Điểm y tế số 2", shortName: "ĐD Trúc" },
-      { name: "Huỳnh Văn Phương", point: "Điểm y tế số 2", shortName: "Ys Phương" },
-      { name: "Nguyễn Thị Kiều Thắm", point: "Điểm y tế số 2", shortName: "NHS Thắm" },
-      { name: "Nguyễn Phu", point: "Điểm y tế số 2", shortName: "BS Phu" },
+      { name: "Nguyễn Phu", shortName: "BS Phu", point: "Điểm y tế số 2" },
+      { name: "Huỳnh Văn Phương", shortName: "Ys Phương", point: "Điểm y tế số 2" },
+      { name: "Trần Thị Kim Thanh", shortName: "ĐD Thanh", point: "Điểm y tế số 2" },
+      { name: "Nguyễn Thị Kiều Thắm", shortName: "NHS Thắm", point: "Điểm y tế số 2" },
+      { name: "Cao Thị Ánh Trúc", shortName: "ĐD Trúc", point: "Điểm y tế số 2" },
+      { name: "Nguyễn Thị Phương Thảo", shortName: "DS Thảo", point: "Điểm y tế số 2" },
 
       // 4. Điểm y tế số 3 (Đức Phú) - 7 cán bộ
-      { name: "Phạm Trần Thị Hoà", point: "Điểm y tế số 3", shortName: "DS Hoà" },
-      { name: "Nguyễn Thị Ánh Thu", point: "Điểm y tế số 3", shortName: "CN Thu" },
-      { name: "Nguyễn Thị Bé", point: "Điểm y tế số 3", shortName: "NHS Bé" },
-      { name: "Nguyễn Anh Vũ", point: "Điểm y tế số 3", shortName: "Ys Vũ" },
-      { name: "Phạm Thị Mỹ Trâm", point: "Điểm y tế số 3", shortName: "NHS Trâm" },
-      { name: "Lê Thị Tố Lan", point: "Điểm y tế số 3", shortName: "NHS Lan" },
-      { name: "Nguyễn Thị Ly Va", point: "Điểm y tế số 3", shortName: "ĐD Ly Va" }
+      { name: "Lê Thị Tố Lan", shortName: "NHS Lan", point: "Điểm y tế số 3" },
+      { name: "Nguyễn Anh Vũ", shortName: "Ys Vũ", point: "Điểm y tế số 3" },
+      { name: "Nguyễn Thị Ánh Thu", shortName: "CN Thu", point: "Điểm y tế số 3" },
+      { name: "Nguyễn Thị Ly Va", shortName: "ĐD Ly Va", point: "Điểm y tế số 3" },
+      { name: "Nguyễn Thị Bé", shortName: "NHS Bé", point: "Điểm y tế số 3" },
+      { name: "Phạm Thị Mỹ Trâm", shortName: "NHS Trâm", point: "Điểm y tế số 3" },
+      { name: "Phạm Trần Thị Hòa", shortName: "DS Hoà", point: "Điểm y tế số 3" }
     ];
 
-    // LẤY DANH SÁCH NHÂN SỰ TẬP TRUNG TỪ BỘ NHỚ TRUNG TÂM
     function getMasterStaffList() {
       const stored = localStorage.getItem('TYT_STAFF_LIST');
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          // Chỉ lấy cán bộ đang công tác (active)
-          const activeList = parsed.filter(s => s.status === 'active');
-          if (activeList.length > 0) {
-            return activeList.map((item, idx) => ({
-              name: item.name,
-              point: item.point,
-              shortName: item.shortName || item.name
-            }));
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const activeList = parsed.filter(s => s && s.name && s.status !== 'inactive');
+            if (activeList.length >= 20) {
+              return activeList.map((item, idx) => {
+                let shortN = item.shortName || item.name;
+                if (item.name && item.name.includes('Thanh Việt')) {
+                  shortN = 'ĐD Việt';
+                }
+                return {
+                  id: item.id || `CB${idx + 1}`,
+                  name: item.name,
+                  point: item.point || 'Điểm trạm chính',
+                  shortName: shortN
+                };
+              });
+            }
           }
         } catch(e) {}
       }
-      return STAFF_LIST_FULL;
+      return DEFAULT_STAFF_29_ROSTER;
     }
 
     let attendanceData = [];
     let currentMonth = new Date().getMonth() + 1;
     let currentYear = new Date().getFullYear();
     let daysInMonth = 31;
-    let activeCell = null; // { empIndex, day, session }
+    let activeCell = null;
     let selectedStationFilter = 'all';
 
-    // Trạng thái điểm trạm hiện tại đang được mở khóa đăng nhập
     let authorizedStation = sessionStorage.getItem('TYT_AUTH_STATION') || null;
-    let pendingAuthContext = null; // Lưu lại ô đang click khi cần đăng nhập
-
-    // Hộp thoại xác nhận chung
+    let pendingAuthContext = null;
     let confirmCallback = null;
 
-    // Lắng nghe tín hiệu cập nhật nhân sự từ trang Quản Lý Nhân Viên
-    const staffBroadcast = new BroadcastChannel('TYT_STAFF_CHANNEL');
-    staffBroadcast.onmessage = (e) => {
-      if (e.data && e.data.action === 'staff_updated') {
-        const oldDaysMap = {};
-        attendanceData.forEach(emp => { oldDaysMap[emp.name] = emp.days; });
-        initEmptyData();
-        attendanceData.forEach(emp => {
-          if (oldDaysMap[emp.name]) emp.days = oldDaysMap[emp.name];
-        });
-        renderBody();
-        showToast('Danh sách cán bộ đã được tự động cập nhật!', 'info');
-      }
-    };
+    // Lắng nghe sự kiện phát sóng tức thời từ trang Quản Lý Nhân Viên
+    try {
+      const staffBroadcast = new BroadcastChannel('TYT_STAFF_CHANNEL');
+      staffBroadcast.onmessage = (e) => {
+        if (e.data && e.data.action === 'staff_updated') {
+          const oldDaysMap = {};
+          attendanceData.forEach(emp => { oldDaysMap[emp.name] = emp.days; });
+          initEmptyData();
+          attendanceData.forEach(emp => {
+            if (oldDaysMap[emp.name]) emp.days = oldDaysMap[emp.name];
+          });
+          updateStationCounts();
+          renderBody();
+          showToast('Đã tự động cập nhật danh sách cán bộ!', 'info');
+        }
+      };
+    } catch(e) {}
 
     window.onload = () => {
       document.getElementById('select-month').value = currentMonth;
@@ -622,13 +680,14 @@
 
       initEmptyData();
       renderAuthStatus();
+      updateStationCounts();
       generateGrid();
       fetchLiveStaffList();
 
-      // Đóng menu khi bấm ra ngoài
+      // Đóng menu khi nhấp chuột ra ngoài
       document.addEventListener('click', (e) => {
         const menu = document.getElementById('quick-menu');
-        if (!e.target.closest('td') && !e.target.closest('#quick-menu')) {
+        if (menu && !e.target.closest('td') && !e.target.closest('#quick-menu')) {
           closeQuickMenu();
         }
 
@@ -636,12 +695,47 @@
         if (qfContainer && !qfContainer.contains(e.target)) {
           closeQuickFillMenu();
         }
+
+        const syncContainer = document.getElementById('sync-schedule-dropdown-container');
+        if (syncContainer && !syncContainer.contains(e.target)) {
+          closeSyncScheduleMenu();
+        }
       });
     };
 
-    // =========================================================================
-    // 3. QUẢN LÝ PHÂN QUYỀN & MẬT KHẨU ĐIỂM TRẠM
-    // =========================================================================
+    function updateStationCounts() {
+      const list = attendanceData;
+      const setEl = (id, count) => { const el = document.getElementById(id); if (el) el.innerText = count; };
+      setEl('count-st-all', list.length);
+      setEl('count-st-chinh', list.filter(s => s.point === 'Điểm trạm chính').length);
+      setEl('count-st-1', list.filter(s => s.point === 'Điểm y tế số 1').length);
+      setEl('count-st-2', list.filter(s => s.point === 'Điểm y tế số 2').length);
+      setEl('count-st-3', list.filter(s => s.point === 'Điểm y tế số 3').length);
+    }
+
+    async function fetchLiveStaffList() {
+      if (!GOOGLE_SHEET_STAFF_URL) return;
+      try {
+        const url = GOOGLE_SHEET_STAFF_URL + (GOOGLE_SHEET_STAFF_URL.includes('?') ? '&' : '?') + `action=loadStaffList&t=${Date.now()}`;
+        const res = await fetch(url, { method: 'GET' });
+        const text = await res.text();
+        let result;
+        try { result = JSON.parse(text); } catch(e) { return; }
+
+        if (result && result.status === 'success' && result.records && result.records.length > 0) {
+          localStorage.setItem('TYT_STAFF_LIST', JSON.stringify(result.records));
+          const oldDaysMap = {};
+          attendanceData.forEach(emp => { oldDaysMap[emp.name] = emp.days; });
+          initEmptyData();
+          attendanceData.forEach(emp => {
+            if (oldDaysMap[emp.name]) emp.days = oldDaysMap[emp.name];
+          });
+          updateStationCounts();
+          renderBody();
+        }
+      } catch(err) {}
+    }
+
     function renderAuthStatus() {
       const container = document.getElementById('auth-status-container');
       if (!authorizedStation) {
@@ -655,7 +749,7 @@
         container.innerHTML = `
           <div class="flex items-center gap-1.5 bg-teal-50 text-teal-800 border border-teal-300 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm">
             <i class="fa-solid fa-lock-open text-teal-600"></i>
-            <span>Đang mở: <b class="${isBGD ? 'text-indigo-700' : 'text-teal-900'}">${authorizedStation}</b></span>
+            <span>Đang mở: <b class="${isBGD ? 'text-indigo-700 font-extrabold' : 'text-teal-900 font-bold'}">${authorizedStation}</b></span>
             <button onclick="logoutStation()" class="ml-1 text-slate-400 hover:text-rose-600 p-0.5" title="Đăng xuất khỏi điểm trạm này">
               <i class="fa-solid fa-arrow-right-from-bracket"></i>
             </button>
@@ -705,7 +799,6 @@
         closeAuthModal();
         showToast(`Đã mở khóa quyền chấm công: ${station}`, 'success');
 
-        // Nếu vừa bấm vào 1 ô, tự động mở tiếp menu ô đó
         if (pendingAuthContext) {
           const ctx = pendingAuthContext;
           pendingAuthContext = null;
@@ -725,16 +818,12 @@
       showToast('Đã khóa quyền chấm công.', 'info');
     }
 
-    // Kiểm tra nhân viên có thuộc điểm trạm đã mở khóa hay không
     function canEditStaff(emp) {
       if (!authorizedStation) return false;
       if (authorizedStation === 'Ban Giám Đốc') return true;
       return emp.point === authorizedStation;
     }
 
-    // =========================================================================
-    // 4. BỘ LỌC ĐIỂM TRẠM & KHỞI TẠO DỮ LIỆU
-    // =========================================================================
     function filterByStation(stationKey) {
       selectedStationFilter = stationKey;
       
@@ -748,6 +837,7 @@
 
       buttons.forEach(b => {
         const el = document.getElementById(b.id);
+        if (!el) return;
         if (b.key === stationKey) {
           el.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition bg-teal-600 text-white shadow-sm whitespace-nowrap";
         } else {
@@ -765,29 +855,8 @@
         name: item.name,
         point: item.point,
         shortName: item.shortName,
-        days: {} // Lưu trạng thái dạng "S|C", VD: "+|+"
+        days: {}
       }));
-    }
-
-    async function fetchLiveStaffList() {
-      if (!GOOGLE_SHEET_STAFF_URL) return;
-      try {
-        const url = GOOGLE_SHEET_STAFF_URL + (GOOGLE_SHEET_STAFF_URL.includes('?') ? '&' : '?') + `action=loadStaffList&t=${Date.now()}`;
-        const res = await fetch(url, { method: 'GET', cache: 'no-store' });
-        const result = await res.json();
-        if (result.status === 'success' && result.records && result.records.length > 0) {
-          localStorage.setItem('TYT_STAFF_LIST', JSON.stringify(result.records));
-          const oldDaysMap = {};
-          attendanceData.forEach(emp => { oldDaysMap[emp.name] = emp.days; });
-          initEmptyData();
-          attendanceData.forEach(emp => {
-            if (oldDaysMap[emp.name]) emp.days = oldDaysMap[emp.name];
-          });
-          renderBody();
-        }
-      } catch(err) {
-        console.warn('Lấy danh bạ online dự phòng không thành công:', err);
-      }
     }
 
     function parseDayCode(str) {
@@ -801,18 +870,41 @@
       return `${am || ''}|${pm || ''}`;
     }
 
-    function fNum(n) { return n > 0 ? n : ''; }
+    function fNum(n) { return n > 0 ? (Number.isInteger(n) ? n : n.toFixed(1)) : ''; }
 
     function getColorClass(code) {
       if (!code) return '';
-      if (code === '+') return 'text-blue-700 bg-blue-50/70';
-      if (code === '+L') return 'text-amber-800 bg-amber-200/90 font-black border border-amber-300 shadow-sm';
-      if (code === '+T') return 'text-rose-700 bg-rose-50/70 font-black';
-      if (code === 'SP') return 'text-indigo-700 bg-indigo-50/70';
-      if (['P', 'H', 'NB', 'LĐ'].includes(code)) return 'text-emerald-700 bg-emerald-50/70 font-bold';
-      if (['N', 'KL'].includes(code)) return 'text-amber-700 bg-amber-50/70';
-      if (['Ô', 'Cô', 'TS', 'T'].includes(code)) return 'text-purple-700 bg-purple-50/70';
+      if (code === '+') return 'text-blue-700 bg-blue-50/70 font-black';
+      if (code === '+L') return 'text-amber-900 bg-amber-200/95 font-black border border-amber-300 shadow-xs';
+      if (code === '+T') return 'text-rose-700 bg-rose-50/80 font-black';
+      if (code === 'SP') return 'text-indigo-700 bg-indigo-50/70 font-black';
+      if (['P', 'H', 'NB', 'LĐ'].includes(code)) return 'text-emerald-700 bg-emerald-50/70 font-black';
+      if (['N', 'KL'].includes(code)) return 'text-amber-800 bg-amber-50/70 font-bold';
+      if (['Ô', 'Cô', 'TS', 'T'].includes(code)) return 'text-purple-700 bg-purple-50/70 font-bold';
       return 'text-slate-700 font-bold bg-slate-100';
+    }
+
+    function changeMonthOffset(offset) {
+      currentMonth += offset;
+      if (currentMonth > 12) {
+        currentMonth = 1;
+        currentYear += 1;
+      } else if (currentMonth < 1) {
+        currentMonth = 12;
+        currentYear -= 1;
+      }
+      document.getElementById('select-month').value = currentMonth;
+      document.getElementById('select-year').value = currentYear;
+      generateGrid();
+    }
+
+    function goToCurrentMonth() {
+      const today = new Date();
+      currentMonth = today.getMonth() + 1;
+      currentYear = today.getFullYear();
+      document.getElementById('select-month').value = currentMonth;
+      document.getElementById('select-year').value = currentYear;
+      generateGrid();
     }
 
     function generateGrid(autoLoad = true) {
@@ -823,7 +915,6 @@
       renderHeader();
       renderBody();
 
-      // Tự động kéo dữ liệu từ Google Sheet ngay khi tạo bảng hoặc chuyển tháng
       if (autoLoad && GOOGLE_SHEET_CHAM_CONG_URL) {
         loadAttendance(true);
       }
@@ -835,52 +926,57 @@
       const isCurrentMonth = (today.getMonth() + 1 === currentMonth && today.getFullYear() === currentYear);
       const todayDate = today.getDate();
       
+      const dayNamesShort = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+
       // Hàng 1
       let row1 = `
-        <tr class="bg-slate-100 text-slate-700 font-bold">
-          <th rowspan="2" class="p-2 sticky-col-1 border-r border-slate-300 bg-slate-100 z-50">STT</th>
-          <th rowspan="2" class="p-2 sticky-col-2 border-r border-slate-300 text-left bg-slate-100 z-50">Họ và tên</th>
-          <th rowspan="2" class="p-2 sticky-col-3 border-r border-slate-300 bg-slate-100 z-50">Buổi</th>
-          <th colspan="${daysInMonth}" class="p-2 border-b border-r border-slate-300">Các ngày trong Tháng ${currentMonth}/${currentYear}</th>
-          <th colspan="3" class="p-2 border-b border-slate-300 bg-teal-50 text-teal-800">Quy ra công</th>
+        <tr class="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
+          <th rowspan="2" class="p-2 sticky-col-1 border-r border-slate-300 bg-slate-100 z-50 text-xs font-black">TT</th>
+          <th rowspan="2" class="p-2 sticky-col-2 border-r border-slate-300 text-left bg-slate-100 z-50 text-xs font-black">Họ và tên</th>
+          <th rowspan="2" class="p-2 sticky-col-3 border-r border-slate-300 bg-slate-100 z-50 text-[11px] font-black">Buổi</th>
+          <th colspan="${daysInMonth}" class="p-2 border-b border-r border-slate-300 text-xs font-black uppercase tracking-wide">
+            Các ngày trong Tháng ${currentMonth}/${currentYear}
+          </th>
+          <th colspan="3" class="p-2 border-b border-slate-300 bg-teal-50 text-teal-900 text-xs font-black uppercase tracking-wide">Quy ra công</th>
         </tr>
       `;
 
       // Hàng 2: Các ngày trong tháng
-      let row2 = `<tr class="bg-slate-50 text-slate-600 font-bold text-[11px]">`;
+      let row2 = `<tr class="bg-slate-50 text-slate-700 font-bold text-[11px]">`;
       for (let i = 1; i <= daysInMonth; i++) {
         const d = new Date(currentYear, currentMonth - 1, i);
-        const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
+        const dayOfWeek = d.getDay();
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
         const isToday = isCurrentMonth && (i === todayDate);
 
-        let extraCls = '';
-        if (isToday) {
-          extraCls = 'today-col font-extrabold text-teal-700';
-        } else if (isWeekend) {
-          extraCls = 'weekend-col';
-        }
+        let extraCls = isToday ? 'today-col font-black text-teal-800' : (isWeekend ? 'weekend-header' : '');
 
-        row2 += `<th class="p-1 border-b border-r border-slate-200 min-w-[32px] ${extraCls}">${i}</th>`;
+        row2 += `
+          <th class="p-1 border-b border-r border-slate-200 min-w-[34px] ${extraCls}">
+            <div class="text-[9.5px] uppercase font-bold text-slate-400 ${isWeekend ? 'text-rose-600' : ''}">${dayNamesShort[dayOfWeek]}</div>
+            <div class="text-xs font-extrabold">${i}</div>
+          </th>
+        `;
       }
       row2 += `
-        <th class="p-1 border-b border-r border-slate-200 bg-teal-50 text-[10px] w-[56px] text-teal-800" title="Số công hưởng lương thời gian">Lương<br>TG (+)</th>
-        <th class="p-1 border-b border-r border-slate-200 bg-teal-50 text-[10px] w-[56px] text-teal-800" title="Nghỉ việc, ngừng việc hưởng 100% lương">Hưởng<br>100%</th>
-        <th class="p-1 border-b border-r border-slate-200 bg-teal-50 text-[10px] w-[56px] text-teal-800" title="Số công hưởng BHXH">Hưởng<br>BHXH</th>
+        <th class="p-1 border-b border-r border-slate-200 bg-teal-50 text-[10.5px] w-[60px] text-teal-900 font-black" title="Số công hưởng lương thời gian (+)">Lương<br>TG (+)</th>
+        <th class="p-1 border-b border-r border-slate-200 bg-teal-50 text-[10.5px] w-[60px] text-teal-900 font-black" title="Số công hưởng 100% lương (P, H, NB)">Hưởng<br>100%</th>
+        <th class="p-1 border-b border-slate-200 bg-teal-50 text-[10.5px] w-[60px] text-teal-900 font-black" title="Số công hưởng BHXH (Ốm, Thai sản, Tai nạn)">Hưởng<br>BHXH</th>
       </tr>`;
 
-      // Hàng 3: Đánh số cột theo biểu mẫu 01a-LĐTL
-      let row3 = `<tr class="bg-slate-200 text-slate-500 font-normal text-[10px]">
+      // Hàng 3: Đánh số cột theo Mẫu 01a-LĐTL
+      let row3 = `<tr class="bg-slate-200 text-slate-600 font-bold text-[10px]">
         <th class="p-1 sticky-col-1 border-b-2 border-r border-slate-300 bg-slate-200 z-50">A</th>
         <th class="p-1 sticky-col-2 border-b-2 border-r border-slate-300 bg-slate-200 z-50">B</th>
         <th class="p-1 sticky-col-3 border-b-2 border-r border-slate-300 bg-slate-200 z-50">C</th>
       `;
       for (let i = 1; i <= daysInMonth; i++) {
-        row3 += `<th class="p-0.5 border-b-2 border-r border-slate-200 text-[9px] min-w-[32px]">${i}</th>`;
+        row3 += `<th class="p-0.5 border-b-2 border-r border-slate-200 text-[9px] min-w-[34px]">${i}</th>`;
       }
       row3 += `
-        <th class="p-1 border-b-2 border-r border-slate-200 bg-teal-100/70 text-teal-700 font-bold">33</th>
-        <th class="p-1 border-b-2 border-r border-slate-200 bg-teal-100/70 text-teal-700 font-bold">34</th>
-        <th class="p-1 border-b-2 border-slate-200 bg-teal-100/70 text-teal-700 font-bold">36</th>
+        <th class="p-1 border-b-2 border-r border-slate-200 bg-teal-100/80 text-teal-900 font-black">33</th>
+        <th class="p-1 border-b-2 border-r border-slate-200 bg-teal-100/80 text-teal-900 font-black">34</th>
+        <th class="p-1 border-b-2 border-slate-200 bg-teal-100/80 text-teal-900 font-black">36</th>
       </tr>`;
 
       thead.innerHTML = row1 + row2 + row3;
@@ -907,9 +1003,8 @@
 
       const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
       
-      // Lọc theo từ khóa tìm kiếm và điểm trạm được chọn
       const filteredData = attendanceData.filter(emp => {
-        const matchSearch = emp.name.toLowerCase().includes(searchTerm);
+        const matchSearch = emp.name.toLowerCase().includes(searchTerm) || (emp.shortName && emp.shortName.toLowerCase().includes(searchTerm));
         const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
         return matchSearch && matchStation;
       });
@@ -932,11 +1027,12 @@
         // DÒNG CA SÁNG (S)
         html += `
           <tr class="hover:bg-slate-50/70 border-b border-slate-100 transition group">
-            <td rowspan="2" class="p-2 sticky-col-1 font-bold text-slate-500 bg-white border-b border-slate-200">${displayIndex}</td>
-            <td rowspan="2" class="p-2 sticky-col-2 text-left font-semibold text-slate-800 bg-white border-b border-slate-200 truncate" title="${emp.name} (${emp.point})">
-              ${emp.name}
+            <td rowspan="2" class="p-1.5 sticky-col-1 font-bold text-slate-500 bg-white border-b border-slate-200 text-center text-xs">${displayIndex}</td>
+            <td rowspan="2" class="py-1 px-2 sticky-col-2 text-left bg-white border-b border-slate-200" title="${emp.name} (${emp.point})">
+              <div class="font-bold text-slate-900 text-xs truncate">${emp.name}</div>
+              <div class="text-[10px] text-teal-700 font-semibold font-mono truncate">${emp.shortName || ''}</div>
             </td>
-            <td class="p-1 sticky-col-3 text-center text-[10px] font-extrabold text-teal-700 bg-white border-b border-slate-100 border-r border-slate-300">S</td>
+            <td class="p-0.5 sticky-col-3 text-center text-[10px] font-black text-teal-700 bg-white border-b border-slate-100 border-r border-slate-300">S</td>
         `;
 
         for (let d = 1; d <= daysInMonth; d++) {
@@ -957,16 +1053,16 @@
         }
 
         html += `
-            <td rowspan="2" class="p-1 border-r border-slate-200 bg-teal-50/40 font-bold text-blue-700 border-b border-slate-200 text-xs">${fNum(totals.col33)}</td>
-            <td rowspan="2" class="p-1 border-r border-slate-200 bg-teal-50/40 font-bold text-emerald-700 border-b border-slate-200 text-xs">${fNum(totals.col34)}</td>
-            <td rowspan="2" class="p-1 border-slate-200 bg-teal-50/40 font-bold text-purple-700 border-b border-slate-200 text-xs">${fNum(totals.col36)}</td>
+            <td rowspan="2" class="p-1 border-r border-slate-200 bg-teal-50/50 font-black text-blue-800 border-b border-slate-200 text-xs">${fNum(totals.col33)}</td>
+            <td rowspan="2" class="p-1 border-r border-slate-200 bg-teal-50/50 font-black text-emerald-800 border-b border-slate-200 text-xs">${fNum(totals.col34)}</td>
+            <td rowspan="2" class="p-1 border-slate-200 bg-teal-50/50 font-black text-purple-800 border-b border-slate-200 text-xs">${fNum(totals.col36)}</td>
           </tr>
         `;
 
         // DÒNG CA CHIỀU (C)
         html += `
           <tr class="hover:bg-slate-50/70 border-b border-slate-200 transition group">
-            <td class="p-1 sticky-col-3 text-center text-[10px] font-extrabold text-amber-700 bg-white border-b border-slate-200 border-r border-slate-300">C</td>
+            <td class="p-0.5 sticky-col-3 text-center text-[10px] font-black text-amber-700 bg-white border-b border-slate-200 border-r border-slate-300">C</td>
         `;
 
         for (let d = 1; d <= daysInMonth; d++) {
@@ -992,32 +1088,28 @@
 
       // DÒNG TỔNG CỘNG CUỐI BẢNG
       html += `
-        <tr class="font-bold bg-slate-100 border-t-2 border-slate-300 text-xs text-slate-800">
+        <tr class="font-extrabold bg-slate-100 border-t-2 border-slate-300 text-xs text-slate-800">
           <td class="p-2 sticky-col-1 bg-slate-100 border-r border-slate-300 z-40"></td>
-          <td class="p-2 sticky-col-2 text-center bg-slate-100 border-r border-slate-300 z-40 uppercase tracking-wide">TỔNG CỘNG</td>
+          <td class="p-2 sticky-col-2 text-center bg-slate-100 border-r border-slate-300 z-40 uppercase tracking-wider text-xs">TỔNG CỘNG</td>
           <td class="p-2 sticky-col-3 bg-slate-100 border-r border-slate-300 z-40"></td>
       `;
       for (let d = 1; d <= daysInMonth; d++) {
         html += `<td class="border-r border-slate-200"></td>`;
       }
       html += `
-          <td class="p-2 border-r border-slate-300 text-blue-700 font-extrabold">${fNum(grandTotals.col33)}</td>
-          <td class="p-2 border-r border-slate-300 text-emerald-700 font-extrabold">${fNum(grandTotals.col34)}</td>
-          <td class="p-2 text-purple-700 font-extrabold">${fNum(grandTotals.col36)}</td>
+          <td class="p-1 border-r border-slate-300 text-blue-900 font-black text-xs">${fNum(grandTotals.col33)}</td>
+          <td class="p-1 border-r border-slate-300 text-emerald-900 font-black text-xs">${fNum(grandTotals.col34)}</td>
+          <td class="p-1 text-purple-900 font-black text-xs">${fNum(grandTotals.col36)}</td>
         </tr>
       `;
 
       tbody.innerHTML = html;
     }
 
-    // =========================================================================
-    // 5. THAO TÁC CHẤM CÔNG & KIỂM TRA MẬT KHẨU
-    // =========================================================================
     function openMenu(e, empIndex, day, session) {
       e.stopPropagation();
       const emp = attendanceData[empIndex];
 
-      // Nếu chưa có quyền của điểm trạm này, tự động bật popup yêu cầu mật khẩu
       if (!canEditStaff(emp)) {
         openAuthModal(emp.point, { event: e, empIndex, day, session });
         showToast(`Vui lòng nhập mật khẩu của ${emp.point} để chấm công.`, 'warning');
@@ -1029,16 +1121,15 @@
       const menu = document.getElementById('quick-menu');
       
       document.getElementById('quick-menu-title').innerHTML = `
-        <span class="truncate max-w-[200px]">${emp.name}: ${session === 'am' ? 'Sáng' : 'Chiều'} ngày ${day}</span>
+        <span class="truncate max-w-[210px] font-extrabold">${emp.name}: ${session === 'am' ? 'Sáng' : 'Chiều'} ${day}/${currentMonth}</span>
         <span class="text-slate-400 hover:text-slate-600 cursor-pointer font-bold text-xs" onclick="closeQuickMenu()">✕</span>
       `;
       
-      // 1. Mở menu trước để đo kích thước thực tế chính xác
       menu.classList.remove('hidden');
-      const menuWidth = menu.offsetWidth || 290;
-      const menuHeight = menu.offsetHeight || 215;
+      const menuWidth = menu.offsetWidth || 295;
+      const menuHeight = menu.offsetHeight || 220;
 
-      // 2. Tính toán trục ngang (X) - Chống tràn mép trái và mép phải màn hình
+      // Xử lý trục X
       let left = rect.left + rect.width / 2;
       const halfWidth = menuWidth / 2;
       if (left + halfWidth > window.innerWidth - 12) {
@@ -1048,20 +1139,17 @@
         left = 12 + halfWidth;
       }
 
-      // 3. Tính toán trục dọc (Y) - Tự động đảo chiều LÊN TRÊN nếu bấm ở các dòng sát đáy
+      // Xử lý trục Y tự động đảo chiều
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
 
       let top;
       if (spaceBelow < menuHeight + 15 && spaceAbove > spaceBelow) {
-        // Không đủ chỗ phía dưới -> Tự động nhảy LÊN PHÍA TRÊN ô đang bấm
         top = rect.top - menuHeight - 6;
       } else {
-        // Đủ chỗ phía dưới -> Mở XUỐNG PHÍA DƯỚI ô đang bấm như bình thường
         top = rect.bottom + 6;
       }
 
-      // 4. Khóa biên an toàn, không bao giờ để menu chui ra ngoài khung nhìn của thiết bị
       if (top < 10) top = 10;
       if (top + menuHeight > window.innerHeight - 10) {
         top = window.innerHeight - menuHeight - 10;
@@ -1073,12 +1161,12 @@
       activeCell = { empIndex, day, session };
       
       document.querySelectorAll('td div').forEach(el => el.classList.remove('ring-2', 'ring-teal-500'));
-      td.querySelector('div').classList.add('ring-2', 'ring-teal-500');
+      td.querySelector('div')?.classList.add('ring-2', 'ring-teal-500');
     }
 
     function closeQuickMenu() {
       const menu = document.getElementById('quick-menu');
-      menu.classList.add('hidden');
+      if (menu) menu.classList.add('hidden');
       activeCell = null;
       document.querySelectorAll('td div').forEach(el => el.classList.remove('ring-2', 'ring-teal-500'));
     }
@@ -1088,8 +1176,14 @@
         let currentStr = attendanceData[activeCell.empIndex].days[activeCell.day] || '';
         let { am, pm } = parseDayCode(currentStr);
 
-        if (activeCell.session === 'am') am = code;
-        else pm = code;
+        if (code === '+T' || code === '+L') {
+          // Ca trực 24h: tự động áp dụng cả sáng và chiều hiển thị dấu + màu đỏ / vàng
+          am = code;
+          pm = code;
+        } else {
+          if (activeCell.session === 'am') am = code;
+          else pm = code;
+        }
 
         const newCodeStr = buildDayCode(am, pm);
 
@@ -1104,7 +1198,6 @@
       }
     }
 
-    // ĐIỀU KHIỂN BẬT/TẮT MENU CHẤM NHANH
     function toggleQuickFillMenu(e) {
       e.stopPropagation();
       const dropdown = document.getElementById('quick-fill-dropdown');
@@ -1121,7 +1214,6 @@
       if (dropdown) dropdown.classList.add('hidden');
     }
 
-    // MỞ BẢNG CHỌN NGÀY ĐỂ CHẤM NHANH (+)
     function openQuickFillDateModal() {
       closeQuickFillMenu();
 
@@ -1163,16 +1255,12 @@
       document.getElementById('quick-fill-date-modal').classList.add('hidden');
     }
 
-    // ÁP DỤNG CHẤM CÔNG (+) CHO NGÀY ĐÃ CHỌN
     function applyQuickFillDate() {
       const selectedDay = parseInt(document.getElementById('quick-fill-day-select').value);
       const sessionRadios = document.getElementsByName('quickFillSession');
       let chosenSession = 'both';
       for (const r of sessionRadios) {
-        if (r.checked) {
-          chosenSession = r.value;
-          break;
-        }
+        if (r.checked) { chosenSession = r.value; break; }
       }
 
       closeQuickFillDateModal();
@@ -1206,7 +1294,6 @@
       showToast(`Đã chấm (+) ngày ${selectedDay} (${sessionText}) cho ${targetDesc}!`, 'success');
     }
 
-    // HÀM XỬ LÝ CHẤM NHANH (+) THEO TUẦN HIỆN TẠI HOẶC CẢ THÁNG
     function quickFill(scope) {
       closeQuickFillMenu();
 
@@ -1226,12 +1313,10 @@
       let modalMsg = '';
 
       if (scope === 'week') {
-        // Xác định Thứ 2 của tuần hiện tại
-        const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1; // 0: Thứ 2, 6: Chủ nhật
+        const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1;
         const monday = new Date(today);
         monday.setDate(today.getDate() - dayOfWeek);
 
-        // Lấy các ngày từ Thứ 2 đến Thứ 6 của tuần hiện tại nằm trong Tháng/Năm đang chọn
         for (let i = 0; i < 5; i++) {
           const dObj = new Date(monday);
           dObj.setDate(monday.getDate() + i);
@@ -1241,15 +1326,14 @@
         }
 
         if (targetDays.length === 0) {
-          showToast(`Tuần hiện tại không có ngày làm việc nào thuộc Tháng ${currentMonth}/${currentYear}!`, 'warning');
+          showToast(`Tuần này không có ngày làm việc nào thuộc Tháng ${currentMonth}/${currentYear}!`, 'warning');
           return;
         }
 
         modalTitle = 'Xác nhận chấm nhanh Tuần này';
-        modalMsg = `Hệ thống sẽ điền dấu (+) cho các ngày Thứ 2 đến Thứ 6 tuần này (${targetDays.map(d => `ngày ${d}`).join(', ')} Tháng ${currentMonth}) cho ${targetDesc}. Bạn có muốn tiếp tục?`;
+        modalMsg = `Hệ thống sẽ điền dấu (+) cho các ngày Thứ 2 đến Thứ 6 tuần này (${targetDays.map(d => `ngày ${d}`).join(', ')}) cho ${targetDesc}. Bạn muốn tiếp tục?`;
 
       } else if (scope === 'month') {
-        // Toàn bộ các ngày làm việc (Thứ 2 đến Thứ 6) trong tháng
         for (let d = 1; d <= daysInMonth; d++) {
           const dateObj = new Date(currentYear, currentMonth - 1, d);
           const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
@@ -1259,11 +1343,10 @@
         }
 
         modalTitle = 'Xác nhận chấm nhanh Cả tháng';
-        modalMsg = `Hệ thống sẽ tự động điền dấu (+) (Lương thời gian) cho các ngày Thứ 2 đến Thứ 6 trong toàn bộ Tháng ${currentMonth}/${currentYear} cho ${targetDesc}. Bạn có muốn tiếp tục?`;
+        modalMsg = `Hệ thống sẽ điền dấu (+) cho các ngày Thứ 2 đến Thứ 6 trong toàn bộ Tháng ${currentMonth}/${currentYear} cho ${targetDesc}. Bạn muốn tiếp tục?`;
       }
 
       showConfirmModal(modalTitle, modalMsg, () => {
-        let updatedCount = 0;
         attendanceData.forEach(emp => {
           if (canEditStaff(emp)) {
             targetDays.forEach(d => {
@@ -1271,7 +1354,6 @@
               if (!am) am = '+';
               if (!pm) pm = '+';
               emp.days[d] = buildDayCode(am, pm);
-              updatedCount++;
             });
           }
         });
@@ -1280,42 +1362,96 @@
       });
     }
 
-    // ĐỒNG BỘ CA TỪ LỊCH TRỰC
-    async function syncFromSchedule() {
-      const url = GOOGLE_SHEET_LICH_TRUC_URL;
-      if (!url) {
-        showToast("Chưa cấu hình URL Lịch Trực trong GOOGLE_SHEET_LICH_TRUC_URL.", 'warning');
+    function toggleSyncScheduleMenu(e) {
+      if (e) e.stopPropagation();
+      const dropdown = document.getElementById('sync-schedule-dropdown');
+      if (dropdown) {
+        dropdown.classList.toggle('hidden');
+        const desc = document.getElementById('sync-schedule-month-desc');
+        if (desc) {
+          desc.innerText = `Lấy ca trực cả Tháng ${currentMonth}/${currentYear}`;
+        }
+      }
+    }
+
+    function closeSyncScheduleMenu() {
+      const dropdown = document.getElementById('sync-schedule-dropdown');
+      if (dropdown) dropdown.classList.add('hidden');
+    }
+
+    async function syncFromSchedule(scope = 'month') {
+      closeSyncScheduleMenu();
+
+      if (!authorizedStation) {
+        openAuthModal();
+        showToast('Vui lòng mở khóa điểm trạm để đồng bộ ca từ Lịch trực!', 'warning');
         return;
       }
 
-      showLoading(`Đang tải Lịch Trực Tháng ${currentMonth}...`);
+      const today = new Date();
+      let monday = null, sunday = null;
+
+      if (scope === 'current_week') {
+        const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1;
+        monday = new Date(today);
+        monday.setDate(today.getDate() - dayOfWeek);
+        monday.setHours(0, 0, 0, 0);
+
+        sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
+
+        let hasDaysInCurrentMonth = false;
+        for (let i = 0; i < 7; i++) {
+          const dObj = new Date(monday);
+          dObj.setDate(monday.getDate() + i);
+          if (dObj.getMonth() + 1 === currentMonth && dObj.getFullYear() === currentYear) {
+            hasDaysInCurrentMonth = true;
+            break;
+          }
+        }
+
+        if (!hasDaysInCurrentMonth) {
+          showToast(`Tuần hiện tại không có ngày nào thuộc Tháng ${currentMonth}/${currentYear} đang xem!`, 'warning');
+          return;
+        }
+      }
+
+      const scopeText = (scope === 'current_week') ? 'Tuần hiện tại' : `Tháng ${currentMonth}/${currentYear}`;
+      showLoading(`Đang quét ca trực ${scopeText}...`);
+      let syncCount = 0;
+
+      // Hàm kiểm tra ngày có nằm trong phạm vi cần lấy hay không
+      function isDateInScope(curDate) {
+        if (curDate.getMonth() + 1 !== currentMonth || curDate.getFullYear() !== currentYear) {
+          return false;
+        }
+        if (scope === 'current_week') {
+          return curDate >= monday && curDate <= sunday;
+        }
+        return true;
+      }
+
+      // 1. Quét từ Cache cục bộ của trang Lịch Trực (TYT_LICH_TRUC_SAVED_WEEKS_V3)
       try {
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'exportMonth' }) 
-        });
-        const result = await response.json();
-        
-        if (result.status === 'success' && result.data) {
-          let syncCount = 0;
-          result.data.forEach(week => {
-            const wStart = new Date(week.weekStart);
-            if (isNaN(wStart.getTime())) return;
-            
-            for (let i = 0; i < 7; i++) {
-              const curDate = new Date(wStart);
-              curDate.setDate(wStart.getDate() + i);
-              
-              if (curDate.getMonth() + 1 === currentMonth && curDate.getFullYear() === currentYear) {
-                const dayOfMonth = curDate.getDate();
-                for (let r = 0; r < week.grid.length; r++) {
-                  if (week.grid[r]) {
-                    const empShort = week.grid[r][i + 1]; 
-                    if (empShort && empShort !== '-') {
-                      const targetEmp = attendanceData.find(e => e.shortName === empShort || e.name.includes(empShort));
+        const rawLocal = localStorage.getItem('TYT_LICH_TRUC_SAVED_WEEKS_V3');
+        if (rawLocal) {
+          const weeksMap = JSON.parse(rawLocal);
+          for (const [wStartStr, weekData] of Object.entries(weeksMap)) {
+            if (weekData && weekData.grid && Array.isArray(weekData.grid)) {
+              const p = wStartStr.split('-');
+              const wStart = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+              for (let i = 0; i < 7; i++) {
+                const curDate = new Date(wStart);
+                curDate.setDate(wStart.getDate() + i);
+                if (isDateInScope(curDate)) {
+                  const dayNum = curDate.getDate();
+                  for (let r = 0; r < 4; r++) {
+                    const staffName = weekData.grid[r] ? weekData.grid[r][i + 1] : null;
+                    if (staffName && staffName !== '-') {
+                      const targetEmp = attendanceData.find(e => e.shortName === staffName || e.name === staffName || e.name.includes(staffName));
                       if (targetEmp && canEditStaff(targetEmp)) {
-                        targetEmp.days[dayOfMonth] = buildDayCode('+T', '+T');
+                        targetEmp.days[dayNum] = buildDayCode('+T', '+T');
                         syncCount++;
                       }
                     }
@@ -1323,24 +1459,55 @@
                 }
               }
             }
-          });
-          
-          renderBody();
-          showToast(`Đã đồng bộ thành công ${syncCount} lượt trực vào Bảng chấm công!`, 'success');
-        } else {
-          showToast("Không lấy được dữ liệu lịch trực: " + (result.message || "Trống"), 'warning');
+          }
         }
-      } catch (err) {
-        console.error(err);
-        showToast("Lỗi khi kết nối đến lịch trực.", 'error');
-      } finally {
-        hideLoading();
+      } catch(e) {}
+
+      // 2. Quét tiếp từ Cloud API Lịch Trực nếu có kết nối
+      if (GOOGLE_SHEETS_LICH_TRUC_URL) {
+        try {
+          const response = await fetch(GOOGLE_SHEETS_LICH_TRUC_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'exportMonth', month: currentMonth, year: currentYear })
+          });
+          const result = await response.json();
+          if (result.status === 'success' && result.data && Array.isArray(result.data)) {
+            result.data.forEach(week => {
+              const parts = week.weekStart.split('-');
+              const wStart = new Date(parts[0], parts[1] - 1, parts[2]);
+              for (let i = 0; i < 7; i++) {
+                const curDate = new Date(wStart);
+                curDate.setDate(wStart.getDate() + i);
+                if (isDateInScope(curDate)) {
+                  const dayNum = curDate.getDate();
+                  for (let r = 0; r < 4; r++) {
+                    const staffShort = week.grid[r] ? week.grid[r][i + 1] : null;
+                    if (staffShort && staffShort !== '-') {
+                      const targetEmp = attendanceData.find(e => e.shortName === staffShort || e.name === staffShort || e.name.includes(staffShort));
+                      if (targetEmp && canEditStaff(targetEmp)) {
+                        targetEmp.days[dayNum] = buildDayCode('+T', '+T');
+                        syncCount++;
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          }
+        } catch(err) {}
+      }
+
+      hideLoading();
+      renderBody();
+      if (syncCount > 0) {
+        const scopeMsg = (scope === 'current_week') ? 'trong Tuần này' : `Tháng ${currentMonth}/${currentYear}`;
+        showToast(`Đã đồng bộ thành công ${syncCount} ca trực đêm (+T) ${scopeMsg} từ Lịch Trực!`, 'success');
+      } else {
+        showToast(`Đã quét xong. Không có ca trực mới nào cần cập nhật cho điểm trạm của bạn.`, 'info');
       }
     }
 
-    // =========================================================================
-    // 6. LƯU & TẢI DỮ LIỆU GOOGLE SHEETS
-    // =========================================================================
     function showLoading(text) {
       document.getElementById('loading-text').innerText = text;
       document.getElementById('loading-overlay').style.display = 'flex';
@@ -1352,7 +1519,7 @@
     async function saveAttendance() {
       const url = GOOGLE_SHEET_CHAM_CONG_URL;
       if (!url) {
-        showToast("Vui lòng dán Web App URL vào GOOGLE_SHEET_CHAM_CONG_URL trong mã nguồn.", 'warning');
+        showToast("Vui lòng cấu hình GOOGLE_SHEET_CHAM_CONG_URL.", 'warning');
         return;
       }
 
@@ -1382,11 +1549,11 @@
         const res = await response.json();
         if (res.status === 'success') {
           showToast(`Đã lưu Bảng Chấm Công Tháng ${currentMonth}/${currentYear} lên Cloud!`, 'success');
+          document.getElementById('last-sync-time').innerText = "Đã lưu: " + new Date().toLocaleTimeString('vi-VN');
         } else {
           showToast("Lỗi lưu dữ liệu: " + res.message, 'error');
         }
       } catch (err) {
-        console.error(err);
         showToast("Lỗi kết nối khi gửi dữ liệu lên Google Sheet.", 'error');
       } finally {
         hideLoading();
@@ -1395,66 +1562,51 @@
 
     async function loadAttendance(isAuto = false) {
       const url = GOOGLE_SHEET_CHAM_CONG_URL;
-      if (!url) {
-        if (!isAuto) showToast("Vui lòng cấu hình GOOGLE_SHEET_CHAM_CONG_URL trong mã nguồn.", 'warning');
-        return;
-      }
+      if (!url) return;
 
-      showLoading(`Đang ${isAuto ? 'tự động ' : ''}tải Bảng Chấm Công Tháng ${currentMonth}/${currentYear}...`);
+      if (!isAuto) showLoading(`Đang tải Bảng Chấm Công Tháng ${currentMonth}/${currentYear}...`);
       try {
         const fetchUrl = url + (url.includes('?') ? '&' : '?') + `action=loadAttendance&month=${currentMonth}&year=${currentYear}&t=${Date.now()}`;
-        const response = await fetch(fetchUrl, { method: 'GET', cache: 'no-store' });
+        const response = await fetch(fetchUrl, { method: 'GET' });
         const res = await response.json();
         
-        if (res.status === 'success' && res.records) {
+        if (res && res.status === 'success' && res.records && res.records.length > 0) {
           initEmptyData();
           res.records.forEach(rec => {
             const target = attendanceData.find(e => e.name === rec.name);
             if (target && rec.days) target.days = rec.days;
           });
           renderBody();
-          showToast(`Đã đồng bộ dữ liệu Tháng ${currentMonth}/${currentYear} từ Google Sheet!`, 'success');
+          document.getElementById('last-sync-time').innerText = "Đã tải: " + new Date().toLocaleTimeString('vi-VN');
+          if (!isAuto) showToast(`Đã tải dữ liệu Tháng ${currentMonth}/${currentYear} từ Cloud!`, 'success');
         } else {
           initEmptyData();
           renderBody();
-          if (!isAuto) {
-            showToast(`Chưa có dữ liệu lưu trên Cloud cho Tháng ${currentMonth}/${currentYear}.`, 'info');
-          } else {
-            showToast(`Tháng ${currentMonth}/${currentYear} chưa có dữ liệu lưu (Đang để bảng trống).`, 'info');
-          }
+          if (!isAuto) showToast(`Chưa có bản lưu trên Cloud cho Tháng ${currentMonth}/${currentYear}.`, 'info');
         }
       } catch (err) {
-        console.error(err);
-        if (!isAuto) {
-          showToast("Lỗi khi tải bảng chấm công từ Google Sheet.", 'error');
-        } else {
-          showToast("Không thể kết nối tự động với Google Sheet. Vui lòng kiểm tra lại mạng.", 'warning');
-        }
+        if (!isAuto) showToast("Lỗi khi tải bảng chấm công từ Google Sheet.", 'error');
       } finally {
-        hideLoading();
+        if (!isAuto) hideLoading();
       }
     }
 
-    // =========================================================================
-    // 7. XUẤT EXCEL & IN PDF (CHỈ HIỂN THỊ HỌ VÀ TÊN)
-    // =========================================================================
     function exportToExcel() {
       const wsData = [
-        ['TRẠM Y TẾ XÃ MỘ ĐỨC', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Mẫu số 01a-LĐTL'],
-        ['Bộ phận: Tổ Y tế - Dân số', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '(Ban hành theo TT số 133/2016/TT-BTC)'],
-        [],
+        ['UBND XÃ MỘ ĐỨC', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Mẫu số 01a-LĐTL'],
+        ['TRẠM Y TẾ', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '(Ban hành theo TT số 133/2016/TT-BTC)'],
         [`BẢNG CHẤM CÔNG THÁNG ${currentMonth} NĂM ${currentYear}`],
         []
       ];
 
-      let h1 = ['STT', 'Họ và tên', 'Buổi'];
-      for (let i = 1; i <= daysInMonth; i++) h1.push(i === 1 ? 'Ngày trong tháng' : '');
+      let h1 = ['TT', 'Họ và tên', 'Buổi'];
+      for (let i = 1; i <= daysInMonth; i++) h1.push(i === 1 ? 'Các ngày trong tháng' : '');
       h1.push('Quy ra công', '', '');
       wsData.push(h1);
 
       let h2 = ['', '', ''];
       for (let i = 1; i <= daysInMonth; i++) h2.push(i.toString());
-      h2.push('Số công hưởng lương TG', 'Số công nghỉ việc hưởng 100%', 'Số công hưởng BHXH');
+      h2.push('Số công hưởng lương TG (+)', 'Số công hưởng 100% lương', 'Số công hưởng BHXH');
       wsData.push(h2);
 
       let h3 = ['A', 'B', 'C'];
@@ -1464,7 +1616,7 @@
 
       const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
       const filteredData = attendanceData.filter(emp => {
-        const matchSearch = emp.name.toLowerCase().includes(searchTerm);
+        const matchSearch = emp.name.toLowerCase().includes(searchTerm) || (emp.shortName && emp.shortName.toLowerCase().includes(searchTerm));
         const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
         return matchSearch && matchStation;
       });
@@ -1474,7 +1626,7 @@
       filteredData.forEach((emp) => {
         const totals = calculateTotals(emp.days);
         
-        // Ca Sáng (Chỉ họ và tên)
+        // Ca Sáng
         const rowAm = [displayIndex, emp.name, 'S'];
         for (let d = 1; d <= daysInMonth; d++) {
           const { am } = parseDayCode(emp.days[d] || '');
@@ -1496,16 +1648,16 @@
       });
 
       const merges = [
-        { s: {r:3, c:0}, e: {r:3, c:daysInMonth + 5} },
-        { s: {r:5, c:0}, e: {r:7, c:0} },
-        { s: {r:5, c:1}, e: {r:7, c:1} },
-        { s: {r:5, c:2}, e: {r:7, c:2} },
-        { s: {r:5, c:3}, e: {r:5, c:daysInMonth + 2} },
-        { s: {r:5, c:daysInMonth + 3}, e: {r:5, c:daysInMonth + 5} }
+        { s: {r:2, c:0}, e: {r:2, c:daysInMonth + 5} },
+        { s: {r:4, c:0}, e: {r:6, c:0} },
+        { s: {r:4, c:1}, e: {r:6, c:1} },
+        { s: {r:4, c:2}, e: {r:6, c:2} },
+        { s: {r:4, c:3}, e: {r:4, c:daysInMonth + 2} },
+        { s: {r:4, c:daysInMonth + 3}, e: {r:4, c:daysInMonth + 5} }
       ];
       
       for (let i = 0; i < filteredData.length; i++) {
-        const startRow = 8 + i * 2;
+        const startRow = 7 + i * 2;
         merges.push({ s: {r:startRow, c:0}, e: {r:startRow+1, c:0} });
         merges.push({ s: {r:startRow, c:1}, e: {r:startRow+1, c:1} });
         merges.push({ s: {r:startRow, c:daysInMonth + 3}, e: {r:startRow+1, c:daysInMonth + 3} });
@@ -1518,12 +1670,150 @@
       
       const wscols = [{wch: 5}, {wch: 26}, {wch: 5}]; 
       for (let i = 0; i < daysInMonth; i++) wscols.push({wch: 4}); 
-      wscols.push({wch: 10},{wch: 10},{wch: 10});
+      wscols.push({wch: 11},{wch: 11},{wch: 11});
       ws['!cols'] = wscols;
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, `ChamCong_T${currentMonth}`);
       XLSX.writeFile(wb, `BangChamCong_TYTMoDuc_T${currentMonth}_${currentYear}.xlsx`);
+    }
+
+    function exportToWord() {
+      const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
+      const filteredData = attendanceData.filter(emp => {
+        const matchSearch = emp.name.toLowerCase().includes(searchTerm) || (emp.shortName && emp.shortName.toLowerCase().includes(searchTerm));
+        const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
+        return matchSearch && matchStation;
+      });
+
+      let tbodyRows = '';
+      let displayIndex = 1;
+      let grandTotals = { col33: 0, col34: 0, col36: 0 };
+
+      filteredData.forEach(emp => {
+        const totals = calculateTotals(emp.days);
+        grandTotals.col33 += totals.col33;
+        grandTotals.col34 += totals.col34;
+        grandTotals.col36 += totals.col36;
+
+        let amCells = '';
+        let pmCells = '';
+        for (let d = 1; d <= daysInMonth; d++) {
+          const { am, pm } = parseDayCode(emp.days[d] || '');
+          amCells += `<td style="border: 1px solid black; padding: 2px; text-align: center;">${(am === '+T' || am === '+L') ? '+' : (am || '')}</td>`;
+          pmCells += `<td style="border: 1px solid black; padding: 2px; text-align: center;">${(pm === '+T' || pm === '+L') ? '+' : (pm || '')}</td>`;
+        }
+
+        tbodyRows += `
+          <tr>
+            <td rowspan="2" style="border: 1px solid black; padding: 2px; text-align: center;">${displayIndex}</td>
+            <td rowspan="2" style="border: 1px solid black; padding: 2px 4px; text-align: left; font-weight: bold;">${emp.name}</td>
+            <td style="border: 1px solid black; padding: 2px; text-align: center; font-weight: bold;">S</td>
+            ${amCells}
+            <td rowspan="2" style="border: 1px solid black; padding: 2px; text-align: center; font-weight: bold;">${fNum(totals.col33)}</td>
+            <td rowspan="2" style="border: 1px solid black; padding: 2px; text-align: center; font-weight: bold;">${fNum(totals.col34)}</td>
+            <td rowspan="2" style="border: 1px solid black; padding: 2px; text-align: center; font-weight: bold;">${fNum(totals.col36)}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid black; padding: 2px; text-align: center; font-weight: bold;">C</td>
+            ${pmCells}
+          </tr>
+        `;
+        displayIndex++;
+      });
+
+      // Header ngày
+      let dayHeaders = '';
+      for (let d = 1; d <= daysInMonth; d++) {
+        dayHeaders += `<th style="border: 1px solid black; padding: 2px; text-align: center; font-size: 8pt;">${d}</th>`;
+      }
+
+      const wordTemplate = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset='utf-8'>
+          <title>Bang_Cham_Cong_T${currentMonth}_${currentYear}</title>
+          <style>
+            @page {
+              size: 29.7cm 21.0cm;
+              margin: 1.0cm 1.0cm 1.0cm 1.0cm;
+              mso-page-orientation: landscape;
+            }
+            body { font-family: 'Times New Roman', Times, serif; font-size: 8.5pt; color: black; }
+            table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+            th, td { border: 1px solid black; }
+          </style>
+        </head>
+        <body>
+          <table style="border: none; margin-bottom: 8px;">
+            <tr>
+              <td style="border: none; width: 50%; text-align: left;">
+                <div style="font-size: 10pt;">UBND XÃ MỘ ĐỨC</div>
+                <div style="font-size: 10.5pt; font-weight: bold;">TRẠM Y TẾ</div>
+                <div style="font-size: 8pt;">Mã ĐVQHNS: 1026187</div>
+              </td>
+              <td style="border: none; width: 50%; text-align: right;">
+                <div style="font-weight: bold; font-size: 10pt;">Mẫu số 01a-LĐTL</div>
+                <div style="font-style: italic; font-size: 8pt;">(Ban hành theo TT số 133/2016/TT-BTC)</div>
+              </td>
+            </tr>
+          </table>
+
+          <div style="text-align: center; margin-bottom: 8px;">
+            <div style="font-weight: bold; font-size: 13pt;">BẢNG CHẤM CÔNG</div>
+            <div style="font-style: italic; font-size: 10pt;">Tháng ${currentMonth} năm ${currentYear}</div>
+          </div>
+
+          <table style="border-collapse: collapse; font-size: 8pt;">
+            <thead>
+              <tr style="background-color: #f1f5f9;">
+                <th rowspan="2" style="width: 25px;">TT</th>
+                <th rowspan="2" style="width: 140px;">Họ và tên</th>
+                <th rowspan="2" style="width: 20px;">B</th>
+                <th colspan="${daysInMonth}">Ngày trong tháng</th>
+                <th colspan="3" style="width: 90px;">Quy ra công</th>
+              </tr>
+              <tr style="background-color: #f1f5f9;">
+                ${dayHeaders}
+                <th style="width: 30px;">33</th>
+                <th style="width: 30px;">34</th>
+                <th style="width: 30px;">36</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tbodyRows}
+            </tbody>
+          </table>
+
+          <table style="border: none; margin-top: 15px; font-size: 9.5pt;">
+            <tr>
+              <td style="border: none; width: 50%; text-align: center;">
+                <div style="font-weight: bold;">Người chấm công</div>
+                <div style="font-style: italic; font-size: 8pt; margin-top: 2px; margin-bottom: 50px;">(Ký, ghi rõ họ tên)</div>
+                <div style="font-weight: bold;">Võ Quang Vinh</div>
+              </td>
+              <td style="border: none; width: 50%; text-align: center;">
+                <div style="font-weight: bold;">Giám đốc trạm y tế</div>
+                <div style="font-style: italic; font-size: 8pt; margin-top: 2px; margin-bottom: 50px;">(Ký, đóng dấu)</div>
+                <div style="font-weight: bold;">BS. Phạm Minh Đức</div>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob(['\ufeff', wordTemplate], { type: 'application/msword;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `BangChamCong_TYTMoDuc_T${currentMonth}_${currentYear}.doc`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast("Đã xuất file Word (.doc) thành công!", "success");
     }
 
     function printTimesheet() {
@@ -1536,15 +1826,15 @@
           : `<div style="font-weight: bold; font-size: 9pt; text-transform: uppercase; margin-top: 2px;">(${selectedStationFilter})</div>`;
       }
 
-      // TÍNH TOÁN ĐỘ RỘNG CÁC CỘT CHUẨN XÁC THEO TỶ LỆ BẢN QUÉT
+      // Khóa cứng tỷ lệ cột chuẩn A4 ngang
       const colTT = 2.8;
       const colName = 16.5;
       const colBuoi = 2.6;
       const colQuy1 = 3.8;
       const colQuy2 = 4.6;
       const colQuy3 = 3.8;
-      const sumFixed = colTT + colName + colBuoi + colQuy1 + colQuy2 + colQuy3; // 34.1%
-      const remainingForDays = 100 - sumFixed; // 65.9%
+      const sumFixed = colTT + colName + colBuoi + colQuy1 + colQuy2 + colQuy3; 
+      const remainingForDays = 100 - sumFixed; 
       const dayWidth = (remainingForDays / daysInMonth).toFixed(3);
       const totalDayWidths = parseFloat(dayWidth) * daysInMonth;
       const adjustedColName = (colName + (remainingForDays - totalDayWidths)).toFixed(3);
@@ -1564,7 +1854,6 @@
       `;
       document.getElementById('print-colgroup').innerHTML = colgroupHtml;
 
-      // KHỞI TẠO TIÊU ĐỀ 2 HÀNG ĐÚNG CHUẨN BẢN QUÉT (BỎ HÀNG 3 THỪA A, B, C...)
       const thead = document.getElementById('print-table-header');
       let hHtml = `
         <tr>
@@ -1592,7 +1881,7 @@
       
       const searchTerm = (document.getElementById('search-emp')?.value || '').toLowerCase().trim();
       const filteredData = attendanceData.filter(emp => {
-        const matchSearch = emp.name.toLowerCase().includes(searchTerm);
+        const matchSearch = emp.name.toLowerCase().includes(searchTerm) || (emp.shortName && emp.shortName.toLowerCase().includes(searchTerm));
         const matchStation = (selectedStationFilter === 'all') || (emp.point === selectedStationFilter);
         return matchSearch && matchStation;
       });
@@ -1604,7 +1893,7 @@
         // Dòng Ca Sáng
         bHtml += `<tr>
           <td rowspan="2" style="font-size: 7pt;">${displayIndex}</td>
-          <td rowspan="2" style="text-align: left !important; padding-left: 3px !important; font-size: 7pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${emp.name}</td>
+          <td rowspan="2" style="text-align: left !important; padding-left: 3px !important; font-size: 7pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold;">${emp.name}</td>
           <td style="font-size: 6.5pt; font-weight: bold;">S</td>
         `;
         for (let d = 1; d <= daysInMonth; d++) {
@@ -1631,13 +1920,9 @@
       });
       
       tbody.innerHTML = bHtml;
-
       setTimeout(() => { window.print(); }, 350);
     }
 
-    // =========================================================================
-    // 8. TIỆN ÍCH TOAST & HỘP THOẠI XÁC NHẬN
-    // =========================================================================
     function showToast(msg, type = 'info') {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
