@@ -1,0 +1,2526 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quản Lý Lịch Đi Học, Đi Họp & Tập Huấn - TYT Mộ Đức</title>
+
+  <!-- Tailwind CSS & SheetJS & FontAwesome & Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Times+New+Roman&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+    }
+    
+    .font-times {
+      font-family: 'Times New Roman', Times, serif;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    #loading-overlay { display: none; }
+    .loader {
+      border: 4px solid #f1f5f9; border-top: 4px solid #d97706;
+      border-radius: 50%; width: 42px; height: 42px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .a4-simulation-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 20mm 15mm 20mm 25mm; /* Chuẩn NĐ 30: Trái 25mm, phải 15mm, trên 20mm, dưới 20mm */
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.15), 0 4px 6px -2px rgba(0,0,0,0.05);
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .editable-active [contenteditable="true"] {
+      outline: 1.5px dashed #0284c7;
+      background-color: #f0f9ff;
+      border-radius: 3px;
+      padding: 1px 3px;
+    }
+
+    @media print {
+      body {
+        background-color: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      
+      body.print-schedule-mode > *:not(#print-container) { display: none !important; }
+      body.print-assignment-mode > *:not(#print-assignment-container) { display: none !important; }
+
+      #print-container {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+        font-family: 'Times New Roman', Times, serif;
+        color: black;
+      }
+
+      #print-assignment-container {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+        font-family: 'Times New Roman', Times, serif;
+        color: black;
+        line-height: 1.45;
+      }
+
+      #print-container table {
+        page-break-inside: auto;
+        border-collapse: collapse !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+      }
+      
+      #print-container tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+      
+      #print-container thead {
+        display: table-header-group;
+      }
+      
+      #print-container th, #print-container td {
+        border: 0.5pt solid black !important;
+        padding: 4px 3px !important;
+        vertical-align: middle !important;
+        font-size: 8pt !important;
+      }
+    }
+    #print-container { display: none; }
+    #print-assignment-container { display: none; }
+  </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col bg-slate-50 antialiased selection:bg-amber-100 selection:text-amber-900">
+
+  <!-- OVERLAY LOADING -->
+  <div id="loading-overlay" class="fixed inset-0 bg-white/85 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+    <div class="loader mb-4"></div>
+    <p class="text-amber-700 font-bold text-base" id="loading-text">Đang đồng bộ lịch đi học & tập huấn...</p>
+  </div>
+
+  <!-- TOAST THÔNG BÁO -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <header class="flex-none p-3 md:p-5 pb-2">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-3 flex flex-col md:flex-row justify-between items-center gap-3 border-l-4 border-l-amber-600">
+      
+      <!-- Thông tin đơn vị & Tiêu đề -->
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-700 flex items-center justify-center transition" title="Về trang chủ">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg sm:text-xl md:text-2xl font-black text-slate-800 tracking-tight flex items-center">
+              <i class="fa-solid fa-graduation-cap text-amber-600 mr-2"></i>Quản Lý Lịch Đi Học, Đi Họp & Tập Huấn
+            </h1>
+            <span class="bg-amber-50 text-amber-800 text-[11px] px-2.5 py-0.5 rounded-full font-bold border border-amber-200">TYT Xã Mộ Đức</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">Sắp xếp theo cấp độ màu khẩn cấp • Tự động ẩn lịch cũ • Xuất văn bản Phân công nhiệm vụ A4 chuẩn NĐ 30/2020</p>
+        </div>
+      </div>
+
+      <!-- CÁC NÚT HÀNH ĐỘNG CHÍNH -->
+      <div class="flex flex-wrap gap-2 justify-end items-center">
+        
+        <!-- Nút chuyển chế độ xem: Danh Sách <-> Văn Bản A4 -->
+        <div class="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200 shadow-xs">
+          <button id="tab-btn-cards" onclick="switchMainTab('cards')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-800 shadow-xs flex items-center gap-1.5">
+            <i class="fa-solid fa-calendar-days text-amber-600"></i>
+            <span>Lịch Sắp Tới</span>
+          </button>
+          <button id="tab-btn-doc" onclick="switchMainTab('doc')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-file-contract text-sky-600"></i>
+            <span>Văn Bản Phân Công A4</span>
+          </button>
+        </div>
+
+        <button onclick="openMeetingModal()" class="px-3.5 py-2 bg-amber-600 text-white font-bold rounded-xl hover:bg-amber-700 transition text-xs flex items-center gap-1.5 shadow-sm shadow-amber-600/30">
+          <i class="fa-solid fa-plus"></i> Thêm Lịch Mới
+        </button>
+
+        <button onclick="openDutyAssignmentModal()" class="px-3 py-2 bg-amber-50 text-amber-800 border border-amber-300 font-bold rounded-xl hover:bg-amber-100 transition text-xs flex items-center gap-1.5 shadow-sm" title="Tạo văn bản phân công nhiệm vụ cử cán bộ đi học / tập huấn">
+          <i class="fa-solid fa-file-signature text-amber-700"></i> Soạn Phân Công
+        </button>
+
+        <button onclick="exportToExcel()" class="px-3 py-2 bg-green-50 text-green-700 border border-green-200 font-bold rounded-xl hover:bg-green-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-file-excel"></i> Xuất Excel
+        </button>
+
+        <button onclick="printMeetingSchedule()" class="px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded-xl hover:bg-rose-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-print"></i> In Bảng Lịch
+        </button>
+
+        <button onclick="saveMeetingsToCloud()" class="px-3.5 py-2 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition text-xs flex items-center gap-1.5 shadow-sm shadow-emerald-600/30" title="Lưu và đồng bộ lịch lên Google Sheets">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Lưu Cloud
+        </button>
+
+        <button onclick="openApiConfigModal()" class="px-3 py-2 bg-slate-100 text-slate-700 border border-slate-200 font-bold rounded-xl hover:bg-slate-200 transition text-xs flex items-center gap-1.5 shadow-sm" title="Cấu hình Google Sheets Apps Script API">
+          <i class="fa-solid fa-gear"></i> Cấu Hình Cloud
+        </button>
+
+        <button onclick="fetchMeetingsFromCloud()" class="px-3 py-2 bg-amber-50 text-amber-700 border border-amber-200 font-bold rounded-xl hover:bg-amber-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-rotate text-amber-600"></i> Tải lại
+        </button>
+      </div>
+    </div>
+
+    <!-- THẺ THỐNG KÊ NHANH 4 CHỈ SỐ -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-2.5">
+      
+      <div class="bg-white p-3 rounded-2xl border border-rose-200 bg-gradient-to-r from-rose-50/70 to-white shadow-xs flex items-center justify-between">
+        <div>
+          <div class="text-[10.5px] font-bold text-rose-600 uppercase tracking-wide">Hôm Nay / Đang Diễn Ra</div>
+          <div class="text-xl font-black text-rose-700 mt-0.5" id="stat-count-today">0</div>
+          <div class="text-[10px] text-rose-500 font-semibold">Cần cử cán bộ tham dự ngay</div>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-bell animate-bounce"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-3 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50/70 to-white shadow-xs flex items-center justify-between">
+        <div>
+          <div class="text-[10.5px] font-bold text-amber-700 uppercase tracking-wide">Ngày Mai / 1-2 Ngày Tới</div>
+          <div class="text-xl font-black text-amber-800 mt-0.5" id="stat-count-tomorrow">0</div>
+          <div class="text-[10px] text-amber-600 font-semibold">Chuẩn bị hồ sơ, phân công</div>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-clock"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-3 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50/70 to-white shadow-xs flex items-center justify-between">
+        <div>
+          <div class="text-[10.5px] font-bold text-sky-700 uppercase tracking-wide">Trong Tuần Này</div>
+          <div class="text-xl font-black text-sky-800 mt-0.5" id="stat-count-week">0</div>
+          <div class="text-[10px] text-sky-600 font-semibold">Kế hoạch công tác tuần</div>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-calendar-week"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div>
+          <div class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide">Tổng Lịch Sắp Tới</div>
+          <div class="text-xl font-black text-slate-800 mt-0.5" id="stat-count-total">0</div>
+          <div class="text-[10px] text-emerald-600 font-semibold" id="stat-hidden-past">Đã tự động ẩn lịch cũ</div>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-calendar-check"></i>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BỘ LỌC DANH MỤC & THỜI GIAN & Ô TÌM KIẾM -->
+    <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-2 mb-1">
+      
+      <div class="flex flex-wrap items-center gap-1.5">
+        
+        <!-- Lọc theo loại hình: Tất cả | Đi học | Tập huấn | Cuộc họp -->
+        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs overflow-x-auto custom-scrollbar">
+          <button onclick="filterByCategory('all')" id="btn-cat-all" class="px-2.5 py-1 rounded-lg text-xs font-bold transition bg-amber-600 text-white shadow-xs whitespace-nowrap">
+            Tất cả (<span id="count-cat-all">0</span>)
+          </button>
+          <button onclick="filterByCategory('dihoc')" id="btn-cat-dihoc" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap flex items-center gap-1">
+            <i class="fa-solid fa-book-open-reader text-indigo-600"></i> Đi Học / Đào Tạo (<span id="count-cat-dihoc">0</span>)
+          </button>
+          <button onclick="filterByCategory('taphuan')" id="btn-cat-taphuan" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap flex items-center gap-1">
+            <i class="fa-solid fa-chalkboard-user text-amber-600"></i> Tập Huấn (<span id="count-cat-taphuan">0</span>)
+          </button>
+          <button onclick="filterByCategory('hop')" id="btn-cat-hop" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap flex items-center gap-1">
+            <i class="fa-solid fa-users text-teal-600"></i> Họp / Giao Ban (<span id="count-cat-hop">0</span>)
+          </button>
+        </div>
+
+        <!-- Lọc theo thời gian -->
+        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs">
+          <button onclick="filterByTime('all')" id="btn-time-all" class="px-2 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white transition">Tất cả thời gian</button>
+          <button onclick="filterByTime('urgent')" id="btn-time-urgent" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Hôm nay / Ngày mai</button>
+          <button onclick="filterByTime('week')" id="btn-time-week" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Trong tuần này</button>
+          <button onclick="filterByTime('month')" id="btn-time-month" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Trong tháng</button>
+        </div>
+
+      </div>
+
+      <!-- Ô tìm kiếm lịch -->
+      <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs flex-1 lg:max-w-xs">
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+        <input type="text" id="search-meeting-input" placeholder="Tìm nội dung, cán bộ, địa điểm..." class="w-full bg-transparent border-none outline-none text-xs text-slate-700 focus:ring-0" onkeyup="renderMeetingsList()">
+      </div>
+
+    </div>
+  </header>
+
+  <!-- NỘI DUNG CHÍNH (GỒM 2 TAB: DANH SÁCH LỊCH & VĂN BẢN A4) -->
+  <main class="flex-1 overflow-hidden p-3 md:p-5 pt-0 flex flex-col">
+    
+    <!-- TAB 1: DANH SÁCH LỊCH SẮP TỚI (CẤP ĐỘ MÀU GIẢM DẦN) -->
+    <div id="view-tab-cards" class="flex-1 flex flex-col overflow-hidden space-y-3">
+      
+      <!-- Khung danh sách thẻ lịch -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar pr-1 space-y-2.5" id="meetings-list-container">
+        <!-- Render sống động qua JS -->
+      </div>
+
+      <!-- Khu vực lịch sử đã qua (Tự động ẩn) -->
+      <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row justify-between items-center gap-2 text-xs">
+        <div class="text-slate-500 font-medium flex items-center gap-1.5">
+          <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+          <span>Các sự kiện đã hết hạn được tự động loại bỏ để bạn không bị nhầm lẫn.</span>
+        </div>
+        <button onclick="toggleArchivedMeetings()" id="btn-toggle-archive" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-clock-rotate-left text-slate-500"></i>
+          <span>Xem lịch sử đã qua (<span id="count-archived-num">0</span>)</span>
+        </button>
+      </div>
+
+      <!-- Danh sách lịch đã kết thúc (Mặc định ẩn) -->
+      <div id="archived-meetings-container" class="hidden max-h-48 overflow-y-auto custom-scrollbar space-y-2 p-3 bg-slate-100 rounded-2xl border border-slate-200 text-xs">
+        <!-- Render qua JS khi người dùng cần xem -->
+      </div>
+    </div>
+
+    <!-- TAB 2: SOẠN & XEM TRƯỚC VĂN BẢN PHÂN CÔNG NHIỆM VỤ A4 TRỰC DIỆN -->
+    <div id="view-tab-doc" class="hidden flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 bg-slate-200/80 rounded-2xl border border-slate-300 flex flex-col items-center justify-start space-y-4">
+      
+      <!-- Thanh công cụ nổi phía trên bản in A4 -->
+      <div class="w-full max-w-4xl bg-slate-900 text-white p-3 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-file-contract"></i>
+          </span>
+          <div>
+            <div class="font-extrabold text-sm flex items-center gap-2">
+              <span>Văn Bản Phân Công Nhiệm Vụ (Khổ A4)</span>
+              <span class="bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] px-2 py-0.2 rounded-full font-bold">NĐ 30/2020/NĐ-CP</span>
+            </div>
+            <div class="text-[11px] text-slate-400">Chọn lịch nguồn bên dưới để tự động tạo mẫu văn bản cử cán bộ</div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Chọn nhanh lịch họp nguồn -->
+          <select id="direct-doc-source-select" onchange="onDirectDocSourceChange(this.value)" class="bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl px-2.5 py-1.5 outline-none hover:bg-slate-700 cursor-pointer max-w-xs truncate">
+            <!-- Điền động qua JS -->
+          </select>
+
+          <!-- Bật tắt sửa trực tiếp -->
+          <button id="btn-direct-edit" onclick="toggleDirectEditMode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-pen-to-square text-sky-400"></i>
+            <span id="btn-direct-edit-label">Chỉnh sửa trực tiếp</span>
+          </button>
+
+          <!-- Tải Word -->
+          <button onclick="downloadDirectWordDoc()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shadow-blue-600/30">
+            <i class="fa-solid fa-file-word"></i>
+            <span>Tải File Word (.doc)</span>
+          </button>
+
+          <!-- In / Xuất PDF -->
+          <button onclick="printDirectDoc()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shadow-amber-600/30">
+            <i class="fa-solid fa-print"></i>
+            <span>In / Xuất PDF A4</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TỜ GIẤY A4 TRỰC DIỆN (ĐÚNG TỈ LỆ 210mm x 297mm) -->
+      <article id="direct-a4-paper" class="a4-simulation-sheet font-times text-black text-[13pt] leading-[1.4] select-text">
+        <!-- Render sống động qua JS -->
+      </article>
+
+    </div>
+
+  </main>
+
+  <!-- MODAL THÊM / SỬA LỊCH ĐI HỌC & TẬP HUẤN -->
+  <div id="meeting-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-slate-200 overflow-hidden transform transition-all my-auto">
+      
+      <!-- Header Modal -->
+      <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-calendar-plus"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base leading-tight" id="meeting-modal-title">Thêm Lịch Đi Học / Tập Huấn Mới</h3>
+            <p class="text-[11px] text-slate-400">Thiết lập thời gian, chọn cán bộ từ danh bạ 4 điểm trạm và đơn vị tổ chức</p>
+          </div>
+        </div>
+        <button onclick="closeMeetingModal()" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Form nhập liệu -->
+      <form onsubmit="handleSaveMeetingSubmit(event)" class="p-4 sm:p-5 space-y-3 text-xs max-h-[80vh] overflow-y-auto custom-scrollbar">
+        <input type="hidden" id="form-meeting-id">
+
+        <!-- Chọn loại hình sự kiện -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Loại hình sự kiện: <span class="text-rose-500">*</span></label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer font-bold hover:bg-amber-50 peer-checked:border-amber-500 transition">
+              <input type="radio" name="form-event-category" value="dihoc" class="text-amber-600 focus:ring-amber-500">
+              <span>🎓 Đi Học / Đào Tạo</span>
+            </label>
+            <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer font-bold hover:bg-amber-50 transition">
+              <input type="radio" name="form-event-category" value="taphuan" checked class="text-amber-600 focus:ring-amber-500">
+              <span>📋 Tập Huấn</span>
+            </label>
+            <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer font-bold hover:bg-amber-50 transition">
+              <input type="radio" name="form-event-category" value="hop" class="text-amber-600 focus:ring-amber-500">
+              <span>🏛️ Cuộc Họp / Giao Ban</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Chọn chế độ ngày: 1 Ngày hoặc Khoảng ngày -->
+        <div class="bg-slate-100 p-2.5 rounded-xl border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-700">Hình thức thời gian:</span>
+            <div class="flex items-center gap-1">
+              <button type="button" id="btn-mode-single" onclick="switchFormTimeMode('single')" class="px-2.5 py-1 bg-amber-600 text-white rounded-lg font-bold text-[11px] shadow-xs">
+                1 Ngày Cụ Thể
+              </button>
+              <button type="button" id="btn-mode-range" onclick="switchFormTimeMode('range')" class="px-2.5 py-1 bg-white text-slate-700 rounded-lg font-bold text-[11px] hover:bg-slate-200">
+                Khoảng Ngày (Nhiều Ngày)
+              </button>
+            </div>
+          </div>
+
+          <!-- Khối 1 Ngày -->
+          <div id="form-time-box-single" class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Ngày diễn ra:</label>
+              <input type="date" id="form-single-date" class="w-full p-2 bg-white border border-slate-300 rounded-lg font-bold text-slate-800 outline-none focus:ring-1 focus:ring-amber-500" onchange="updateFormPreview()">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Buổi / Khung giờ:</label>
+              <select id="form-single-session" class="w-full p-2 bg-white border border-slate-300 rounded-lg font-bold text-slate-800 outline-none focus:ring-1 focus:ring-amber-500" onchange="onFormSessionChange()">
+                <option value="08:00">Sáng (08:00)</option>
+                <option value="13:30">Chiều (13:30)</option>
+                <option value="07:30">Sáng sớm (07:30)</option>
+                <option value="Cả ngày">Cả ngày</option>
+                <option value="custom">Giờ tùy chỉnh...</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Giờ cụ thể:</label>
+              <input type="time" id="form-single-custom-time" value="08:00" class="w-full p-2 bg-white border border-slate-300 rounded-lg font-bold text-slate-800 outline-none focus:ring-1 focus:ring-amber-500" onchange="updateFormPreview()">
+            </div>
+          </div>
+
+          <!-- Khối Khoảng ngày -->
+          <div id="form-time-box-range" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Từ ngày:</label>
+              <input type="date" id="form-range-start" class="w-full p-2 bg-white border border-slate-300 rounded-lg font-bold text-slate-800 outline-none focus:ring-1 focus:ring-amber-500" onchange="updateFormPreview()">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Đến ngày:</label>
+              <input type="date" id="form-range-end" class="w-full p-2 bg-white border border-slate-300 rounded-lg font-bold text-slate-800 outline-none focus:ring-1 focus:ring-amber-500" onchange="updateFormPreview()">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Ghi chú giờ:</label>
+              <input type="text" id="form-range-note" placeholder="VD: Cả ngày hoặc 08:00 - 17:00" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-slate-800 outline-none focus:ring-1 focus:ring-amber-500" oninput="updateFormPreview()">
+            </div>
+          </div>
+
+          <!-- Dòng xem trước thời gian -->
+          <div class="p-2 bg-amber-50/80 border border-amber-200 rounded-lg text-[11px] text-amber-900 font-bold flex items-center gap-1.5">
+            <i class="fa-regular fa-clock text-amber-600"></i>
+            <span id="form-time-preview-text">Chưa chọn ngày diễn ra</span>
+          </div>
+        </div>
+
+        <!-- Tên nội dung / chuyên đề -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="font-bold text-slate-700">Nội dung / Chuyên đề / Tên lớp học: <span class="text-rose-500">*</span></label>
+            <span class="text-[10.5px] text-slate-400">Bấm gợi ý nhanh dưới</span>
+          </div>
+          <input type="text" id="form-topic" required placeholder="Nhập tên cuộc họp, lớp tập huấn hoặc chương trình đào tạo..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-500">
+          
+          <!-- Chips gợi ý nhanh chuyên đề -->
+          <div class="flex flex-wrap gap-1 mt-1.5" id="topic-chips-container">
+            <!-- Nạp động qua JS -->
+          </div>
+        </div>
+
+        <!-- Cán bộ tham dự (Danh bạ 29 cán bộ 4 điểm trạm) -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="font-bold text-slate-700">Cán bộ tham dự / Cử đi học: <span class="text-rose-500">*</span></label>
+            <button type="button" onclick="toggleStaffDirectoryModal()" class="text-amber-700 font-bold hover:underline text-[11px] flex items-center gap-1">
+              <i class="fa-solid fa-users text-amber-600"></i> Mở danh bạ 29 cán bộ (Tích chọn)
+            </button>
+          </div>
+
+          <!-- Thẻ các cán bộ đã chọn -->
+          <div id="form-selected-staff-chips" class="flex flex-wrap gap-1.5 mb-1.5 min-h-[30px] p-1.5 bg-slate-50 border border-slate-200 rounded-xl">
+            <!-- Render động bằng JS -->
+          </div>
+
+          <input type="text" id="form-staff-input" readonly onclick="toggleStaffDirectoryModal()" placeholder="Bấm vào đây để chọn cán bộ từ danh bạ 4 điểm trạm..." class="w-full p-2 bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 cursor-pointer">
+        </div>
+
+        <!-- Địa điểm & Đơn vị tổ chức -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Địa điểm / Hình thức: <span class="text-rose-500">*</span></label>
+            <input type="text" id="form-location" required placeholder="Khách sạn Hùng Vương / Sở Y tế / Zoom..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-500">
+            <div class="flex flex-wrap gap-1 mt-1" id="location-chips-container"></div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Đơn vị tổ chức / Triệu tập:</label>
+            <input type="text" id="form-organizer" placeholder="Sở Y tế Quảng Ngãi / CDC / UBND Xã..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-500">
+            <div class="flex flex-wrap gap-1 mt-1" id="organizer-chips-container"></div>
+          </div>
+        </div>
+
+        <!-- Trạng thái -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Trạng thái triển khai:</label>
+          <select id="form-status" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-500">
+            <option value="Đã xếp lịch">Đã xếp lịch</option>
+            <option value="Sắp diễn ra">Sắp diễn ra</option>
+            <option value="Đang diễn ra">Đang diễn ra</option>
+            <option value="Đã hoàn thành">Đã hoàn thành</option>
+          </select>
+        </div>
+
+        <!-- Footer Modal -->
+        <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
+          <button type="button" onclick="closeMeetingModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+            Hủy Bỏ
+          </button>
+          <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-amber-600/30">
+            Lưu Thông Tin Lịch
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DANH BẠ 29 CÁN BỘ (CHỌN NHANH) -->
+  <div id="staff-directory-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
+      
+      <div class="p-3.5 bg-slate-900 text-white flex justify-between items-center flex-none">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xs">
+            <i class="fa-solid fa-users"></i>
+          </span>
+          <h3 class="font-extrabold text-sm">Danh Bạ 29 Cán Bộ TYT Xã Mộ Đức</h3>
+        </div>
+        <button onclick="closeStaffDirectoryModal()" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-3 border-b border-slate-200 bg-slate-50 flex-none">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="staff-search-input" placeholder="Tìm kiếm theo họ tên, viết tắt (VD: Bs Thuyên, Đức)..." class="w-full pl-8 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs outline-none focus:ring-1 focus:ring-amber-500" oninput="filterStaffDirectoryList()">
+        </div>
+      </div>
+
+      <!-- Danh sách cán bộ nhóm theo 4 điểm trạm -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3" id="staff-directory-list-container">
+        <!-- Render bằng JS -->
+      </div>
+
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center flex-none text-xs">
+        <span class="text-slate-500 font-bold">Đã chọn: <b id="modal-selected-count" class="text-amber-600 font-black">0</b> cán bộ</span>
+        <button type="button" onclick="closeStaffDirectoryModal()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-xs transition">
+          Xác Nhận Cán Bộ
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL XUẤT VĂN BẢN PHÂN CÔNG NHIỆM VỤ CỬ CÁN BỘ -->
+  <div id="duty-assignment-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl border border-slate-200 overflow-hidden my-auto flex flex-col max-h-[92vh]">
+      
+      <!-- Header Modal -->
+      <div class="p-3.5 bg-slate-900 text-white flex justify-between items-center flex-none">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black">
+            <i class="fa-solid fa-file-signature"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base leading-tight">Xuất Văn Bản Phân Công Nhiệm Vụ Cử Cán Bộ</h3>
+            <p class="text-[11px] text-slate-300">Chuẩn thể thức Nghị định 30/2020/NĐ-CP • Xuất tệp Word (.doc) và In PDF A4 dọc</p>
+          </div>
+        </div>
+        <button onclick="closeDutyAssignmentModal()" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Body: 2 Cột (Trái: Form chỉnh sửa; Phải: Xem trước A4) -->
+      <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3 sm:p-4 overflow-y-auto bg-slate-100 custom-scrollbar">
+        
+        <!-- Cột trái: Tùy biến thông số văn bản (5 cột) -->
+        <div class="lg:col-span-5 bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs space-y-3 text-xs">
+          <div class="font-bold text-slate-800 text-xs border-b pb-1.5 flex items-center justify-between">
+            <span class="flex items-center gap-1.5 text-amber-800">
+              <i class="fa-solid fa-sliders"></i> Tùy biến thông số văn bản
+            </span>
+            <span class="text-[10.5px] text-slate-400 font-normal">Tự cập nhật bản xem trước</span>
+          </div>
+
+          <!-- Chọn từ lịch nguồn -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Chọn từ lịch đi học / tập huấn:</label>
+            <select id="duty-source-meeting" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-semibold text-slate-800 outline-none focus:ring-1 focus:ring-amber-500" onchange="onDutySourceMeetingChange()">
+              <!-- Điền tự động bằng JS -->
+            </select>
+          </div>
+
+          <!-- Số hiệu văn bản & Ngày ban hành -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Số văn bản: <span class="text-rose-500">*</span></label>
+              <input type="text" id="duty-doc-number" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-bold text-slate-800 outline-none" placeholder="26/TB-TYT" oninput="updateDutyPreview()">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Ngày ký ban hành:</label>
+              <input type="text" id="duty-doc-date" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-800 outline-none" placeholder="16 tháng 9 năm 2026" oninput="updateDutyPreview()">
+            </div>
+          </div>
+
+          <!-- Trích yếu nội dung -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Trích yếu (V/v): <span class="text-rose-500">*</span></label>
+            <textarea id="duty-doc-subject" rows="2" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-800 outline-none focus:ring-1 focus:ring-amber-500" oninput="updateDutyPreview()"></textarea>
+          </div>
+
+          <!-- Căn cứ công văn triệu tập -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Căn cứ văn bản mời / triệu tập:</label>
+            <textarea id="duty-doc-basis" rows="3" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 outline-none focus:ring-1 focus:ring-amber-500 font-normal" placeholder="Căn cứ Công văn số ... ngày ... của ... về việc ..." oninput="updateDutyPreview()"></textarea>
+          </div>
+
+          <!-- Cán bộ được cử tham gia -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Danh sách cán bộ cử tham gia (Mỗi người 1 dòng):</label>
+            <textarea id="duty-doc-staff" rows="3" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-semibold outline-none focus:ring-1 focus:ring-amber-500" placeholder="CN. Nguyễn Thị Ánh Thu&#10;HS. Nguyễn Thị Bé" oninput="updateDutyPreview()"></textarea>
+          </div>
+
+          <!-- Thời gian & Địa điểm -->
+          <div class="space-y-2">
+            <div>
+              <label class="block font-bold text-slate-700 mb-0.5">Thời gian diễn ra:</label>
+              <input type="text" id="duty-doc-time" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-800 outline-none" oninput="updateDutyPreview()">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-0.5">Địa điểm:</label>
+              <input type="text" id="duty-doc-location" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-800 outline-none" oninput="updateDutyPreview()">
+            </div>
+          </div>
+
+          <!-- Người ký -->
+          <div class="grid grid-cols-2 gap-2 pt-1 border-t">
+            <div>
+              <label class="block font-bold text-slate-700 mb-0.5">Chức vụ người ký:</label>
+              <input type="text" id="duty-signer-role" class="w-full p-1.5 bg-slate-50 border border-slate-300 rounded-lg font-bold text-slate-800 outline-none text-center" value="GIÁM ĐỐC" oninput="updateDutyPreview()">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-0.5">Họ tên người ký:</label>
+              <input type="text" id="duty-signer-name" class="w-full p-1.5 bg-slate-50 border border-slate-300 rounded-lg font-bold text-slate-800 outline-none text-center" value="Phạm Minh Đức" oninput="updateDutyPreview()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Cột phải: Khung bản xem trước tờ A4 dọc (7 cột) -->
+        <div class="lg:col-span-7 flex flex-col bg-white p-3.5 sm:p-5 rounded-xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between border-b pb-2 mb-2 text-xs font-bold text-slate-700">
+            <span class="flex items-center gap-1.5 text-slate-900">
+              <i class="fa-solid fa-eye text-emerald-600"></i> Bản xem trước thể thức (Khổ A4)
+            </span>
+            <span class="text-[11px] text-slate-400 font-normal">Font: Times New Roman</span>
+          </div>
+
+          <!-- Bản xem trước văn bản A4 -->
+          <div class="flex-1 bg-white border border-slate-300 shadow-inner p-4 sm:p-6 overflow-y-auto custom-scrollbar text-black font-times text-[13px] leading-relaxed select-text" id="duty-preview-paper">
+            <!-- Render sống động bằng JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Modal: Nút Thao Tác Xuất File & In -->
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex flex-wrap gap-2 justify-between items-center flex-none">
+        <div class="text-[11px] text-slate-500 hidden sm:flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-check text-emerald-600"></i>
+          File Word xuất ra có thể chỉnh sửa tự do bằng Microsoft Word, Google Docs hoặc WPS Office.
+        </div>
+        <div class="flex items-center gap-2 ml-auto">
+          <button type="button" onclick="closeDutyAssignmentModal()" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+            Đóng
+          </button>
+          <button type="button" onclick="copyDutyAssignmentText()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1">
+            <i class="fa-solid fa-copy"></i> Sao chép
+          </button>
+          <button type="button" onclick="downloadDutyWordDoc()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+            <i class="fa-solid fa-file-word"></i> Xuất File Word (.doc)
+          </button>
+          <button type="button" onclick="printDutyAssignment()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-amber-600/30 flex items-center gap-1.5">
+            <i class="fa-solid fa-print"></i> In Văn Bản A4 (PDF)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CẤU HÌNH GOOGLE APPS SCRIPT CLOUD API -->
+  <div id="api-config-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 overflow-hidden">
+      <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-cloud-bolt"></i>
+          </div>
+          <h3 class="font-extrabold text-sm">Cấu Hình Google Sheets Cloud API</h3>
+        </div>
+        <button onclick="closeApiConfigModal()" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs">
+        <p class="text-slate-600 leading-relaxed">
+          Đường dẫn Web App URL của Google Apps Script (tệp <code class="font-mono bg-slate-100 px-1 py-0.5 rounded text-amber-700 font-bold">google_apps_script_hop_tap_huan.gs</code>) để đồng bộ lịch 2 chiều:
+        </p>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Google Apps Script Web App URL:</label>
+          <input type="text" id="cloud-api-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl font-mono text-xs text-slate-800 outline-none focus:ring-2 focus:ring-amber-500">
+        </div>
+
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 space-y-1">
+          <div class="font-bold flex items-center gap-1">
+            <i class="fa-solid fa-lightbulb text-amber-600"></i> Mẹo tiện ích:
+          </div>
+          <p>Hệ thống tự động lưu trữ cấu hình trên trình duyệt để những lần truy cập sau tự động đồng bộ.</p>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2 justify-end">
+        <button onclick="closeApiConfigModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+          Hủy Bỏ
+        </button>
+        <button onclick="saveCloudApiUrl()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-amber-600/30">
+          Lưu & Đồng Bộ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL XÁC NHẬN CHUNG (KHÔNG DÙNG ALERT/CONFIRM) -->
+  <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 p-5">
+      <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg mb-3">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 class="font-bold text-slate-800 text-sm mb-1.5" id="confirm-modal-title">Xác nhận</h3>
+      <p class="text-xs text-slate-600 mb-4 whitespace-pre-line" id="confirm-modal-msg"></p>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeConfirmModal(false)" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+          Hủy bỏ
+        </button>
+        <button onclick="closeConfirmModal(true)" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition">
+          Đồng ý
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KHUNG IN VĂN BẢN PHÂN CÔNG A4 (DỌC) -->
+  <div id="print-assignment-container" class="w-full text-black font-times">
+    <!-- Render động khi in -->
+  </div>
+
+  <!-- KHUNG IN BẢNG LỊCH HỌP & TẬP HUẤN (NGANG) -->
+  <div id="print-container" class="w-full text-black font-times">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+      <div style="text-align: left; line-height: 1.25;">
+        <div style="font-size: 8.5pt;">UBND XÃ MỘ ĐỨC</div>
+        <div style="font-weight: bold; font-size: 9pt;">TRẠM Y TẾ</div>
+      </div>
+      <div style="text-align: right; line-height: 1.25;">
+        <div style="font-weight: bold; font-size: 9pt;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+        <div style="font-weight: bold; font-size: 8pt;">Độc lập - Tự do - Hạnh phúc</div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 4px; margin-bottom: 8px;">
+      <div style="font-weight: bold; font-size: 13pt;">LỊCH ĐI HỌC, ĐI HỌP & TẬP HUẤN CHUYÊN MÔN</div>
+      <div style="font-style: italic; font-size: 8pt;" id="print-sub-title">Trạm Y Tế Xã Mộ Đức</div>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+      <thead>
+        <tr style="background-color: #f1f5f9; font-weight: bold; text-align: center;">
+          <th style="width: 28px;">TT</th>
+          <th style="width: 130px;">Thời Gian</th>
+          <th>Nội Dung / Lớp Học / Chuyên Đề</th>
+          <th style="width: 160px;">Cán Bộ Cử Đi</th>
+          <th style="width: 150px;">Địa Điểm</th>
+          <th style="width: 120px;">Đơn Vị Triệu Tập</th>
+          <th style="width: 75px;">Trạng Thái</th>
+        </tr>
+      </thead>
+      <tbody id="print-table-body"></tbody>
+    </table>
+
+    <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 8.5pt;">
+      <div style="width: 45%;"></div>
+      <div style="width: 55%; text-align: right; font-style: italic;" id="print-footer-date">
+        Mộ Đức, ngày ... tháng ... năm ...
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; margin-top: 10px; text-align: center; font-size: 9pt;">
+      <div style="width: 45%;">
+        <div style="font-weight: bold;">Người Lập Lịch</div>
+        <div style="font-style: italic; font-size: 7.5pt; margin-top: 2px; margin-bottom: 45px;">(Ký, ghi rõ họ tên)</div>
+      </div>
+      <div style="width: 45%;">
+        <div style="font-weight: bold;">Giám Đốc Trạm Y Tế</div>
+        <div style="font-style: italic; font-size: 7.5pt; margin-top: 2px; margin-bottom: 45px;">(Ký, đóng dấu)</div>
+        <div style="font-weight: bold;">BS. Phạm Minh Đức</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // URL GOOGLE APPS SCRIPT WEB APP MẶC ĐỊNH
+    const DEFAULT_GOOGLE_SHEET_HOP_URL = "https://script.google.com/macros/s/AKfycbxXEckUzIAPzXan6uJfx0J_MPB_DKQFBP-50wVY_2s8-HXSuCm0qnkdPz0B8q-ww3c3dA/exec";
+    const savedApiUrl = localStorage.getItem('TYT_MEETINGS_API_URL');
+    let GOOGLE_SHEET_HOP_URL = (savedApiUrl && savedApiUrl.trim() !== "") ? savedApiUrl : DEFAULT_GOOGLE_SHEET_HOP_URL;
+
+    // 29 cán bộ theo 4 điểm trạm chuẩn xác
+    const DEFAULT_STAFF_29 = [
+      // 1. Đức Tân - 10 cán bộ
+      { name: "Trần Thị Lệ Thy", shortName: "NHS Thy", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Trịnh Thị Minh Tuệ", shortName: "Ys Tuệ", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Huỳnh Thị Thuỳ Yên", shortName: "DS Yên", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Võ Thị Thanh Thùy", shortName: "NHS Thuỳ", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Bùi Đạt Hiếu", shortName: "DS Hiếu", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Nguyễn Thị Như Nguyện", shortName: "BS Nguyện", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Võ Thị Thanh Thuyên", shortName: "Bs Thuyên", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Lê Thị Thủy", shortName: "Ys Thủy", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Trần Thị Việt Châu", shortName: "CN Châu", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Võ Quang Vinh", shortName: "ĐD Vinh", point: "Điểm trạm chính (Đức Tân)" },
+
+      // 2. Mộ Đức - 6 cán bộ
+      { name: "Phạm Minh Đức", shortName: "BS Đức", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Đoàn Thị Diễm", shortName: "DS Diễm", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Võ Thị Thanh Việt", shortName: "NHS Việt", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Huỳnh Thị Anh Tin", shortName: "NHS Tin", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Nguyễn Thị Thu Nguyệt", shortName: "ĐD Nguyệt", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Trần Thị Lài", shortName: "ĐD Lài", point: "Điểm y tế số 1 (Mộ Đức)" },
+
+      // 3. Đức Hòa - 6 cán bộ
+      { name: "Trần Thị Kim Thanh", shortName: "ĐD Thanh", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Nguyễn Thị Phương Thảo", shortName: "DS Thảo", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Cao Thị Ánh Trúc", shortName: "ĐD Trúc", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Huỳnh Văn Phương", shortName: "Ys Phương", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Nguyễn Thị Kiều Thắm", shortName: "NHS Thắm", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Nguyễn Phu", shortName: "BS Phu", point: "Điểm y tế số 2 (Đức Hòa)" },
+
+      // 4. Đức Phú - 7 cán bộ
+      { name: "Phạm Trần Thị Hoà", shortName: "DS Hoà", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Nguyễn Thị Ánh Thu", shortName: "CN Thu", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Nguyễn Thị Bé", shortName: "NHS Bé", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Nguyễn Anh Vũ", shortName: "Ys Vũ", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Phạm Thị Mỹ Trâm", shortName: "NHS Trâm", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Lê Thị Tố Lan", shortName: "NHS Lan", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Nguyễn Thị Ly Va", shortName: "ĐD Ly Va", point: "Điểm y tế số 3 (Đức Phú)" }
+    ];
+
+    // Dữ liệu mẫu ban đầu
+    const INITIAL_MEETINGS = [
+      {
+        tempId: "m_danso_2026",
+        category: "taphuan",
+        time: "Ngày 01 – 02/10/2026",
+        topic: "Lớp tập huấn chuyên môn, nghiệp vụ dân số và phát triển năm 2026",
+        staff: "CN. Nguyễn Thị Ánh Thu, HS. Nguyễn Thị Bé",
+        location: "Khách sạn Hùng Vương (Số 45 đường Hùng Vương, phường Cẩm Thành, Quảng Ngãi)",
+        organizer: "Chi cục Dân số - KHHGĐ tỉnh",
+        status: "Đã xếp lịch",
+        startDate: "2026-10-01T08:00:00",
+        endDate: "2026-10-02T17:00:00"
+      },
+      {
+        tempId: "m_cme_phanve_2026",
+        category: "dihoc",
+        time: "Từ ngày 24/09/2026 đến 26/09/2026",
+        topic: "Khóa đào tạo liên tục (CME) kỹ năng cấp cứu ban đầu, chẩn đoán & xử trí sốc phản vệ theo Thông tư 51/2017/TT-BYT",
+        staff: "BS. Võ Thị Thanh Thuyên, YS. Trịnh Thị Minh Tuệ, ĐD. Võ Quang Vinh",
+        location: "Hội trường Bệnh viện Đa khoa tỉnh Quảng Ngãi",
+        organizer: "Sở Y tế tỉnh Quảng Ngãi",
+        status: "Đã xếp lịch",
+        startDate: "2026-09-24T07:30:00",
+        endDate: "2026-09-26T17:00:00"
+      },
+      {
+        tempId: "m_tiemchung_2026",
+        category: "taphuan",
+        time: "Thứ 2 (21/09/2026) - 08:00",
+        topic: "Tập huấn triển khai phân hệ phần mềm quản lý tiêm chủng mở rộng quốc gia V2.0",
+        staff: "BS. Phạm Minh Đức, NHS. Huỳnh Thị Anh Tin, ĐD. Nguyễn Thị Thu Nguyệt",
+        location: "Hội trường Trung tâm Kiểm soát Bệnh tật tỉnh (CDC Quảng Ngãi)",
+        organizer: "CDC Tỉnh Quảng Ngãi",
+        status: "Sắp diễn ra",
+        startDate: "2026-09-21T08:00:00",
+        endDate: "2026-09-21T17:00:00"
+      },
+      {
+        tempId: "m_giaoban_q3_2026",
+        category: "hop",
+        time: "Thứ 3 (22/09/2026) - 13:30",
+        topic: "Cuộc họp giao ban chuyên môn y tế cơ sở & đánh giá Bộ tiêu chí quốc gia y tế xã Quý 3/2026",
+        staff: "BS. Nguyễn Thị Như Nguyện, BS. Nguyễn Phu, CN. Trần Thị Việt Châu",
+        location: "Phòng họp số 2 - UBND Xã Mộ Đức",
+        organizer: "UBND Xã Mộ Đức",
+        status: "Đã xếp lịch",
+        startDate: "2026-09-22T13:30:00",
+        endDate: "2026-09-22T17:00:00"
+      },
+      {
+        tempId: "m_duoc_bv_2026",
+        category: "taphuan",
+        time: "Thứ 4 (14/10/2026) - 08:30",
+        topic: "Tập huấn công tác Dược lâm sàng, kiểm soát kê đơn và thanh quyết toán BHYT trạm y tế",
+        staff: "DS. Huỳnh Thị Thuỳ Yên, DS. Bùi Đạt Hiếu, DS. Đoàn Thị Diễm",
+        location: "Hội trường Sở Y tế Quảng Ngãi",
+        organizer: "Sở Y tế Quảng Ngãi",
+        status: "Đã xếp lịch",
+        startDate: "2026-10-14T08:30:00",
+        endDate: "2026-10-14T16:30:00"
+      },
+      // Sự kiện trong quá khứ (sẽ được tự động ẩn vào kho lưu trữ)
+      {
+        tempId: "m_past_1",
+        category: "hop",
+        time: "Thứ 5 (10/09/2026) - 08:00",
+        topic: "Họp triển khai công tác phòng chống sốt xuất huyết tháng 9",
+        staff: "BS. Phạm Minh Đức, NHS. Võ Thị Thanh Việt",
+        location: "Điểm y tế số 1 (Mộ Đức)",
+        organizer: "Trạm Y tế Mộ Đức",
+        status: "Đã hoàn thành",
+        startDate: "2026-09-10T08:00:00",
+        endDate: "2026-09-10T11:30:00"
+      }
+    ];
+
+    const PRESET_SUGGESTIONS = {
+      topics: [
+        "Lớp tập huấn chuyên môn, nghiệp vụ dân số và phát triển năm 2026",
+        "Khóa đào tạo liên tục (CME) kỹ năng cấp cứu ban đầu & xử trí sốc phản vệ",
+        "Tập huấn triển khai phần mềm quản lý tiêm chủng mở rộng quốc gia",
+        "Cuộc họp giao ban chuyên môn y tế cơ sở và đánh giá Bộ tiêu chí quốc gia",
+        "Lớp bồi dưỡng kỹ năng tư vấn chăm sóc sức khỏe sinh sản & tiền hôn nhân"
+      ],
+      locations: [
+        "Khách sạn Hùng Vương (45 Hùng Vương, Quảng Ngãi)",
+        "Hội trường Sở Y tế tỉnh Quảng Ngãi",
+        "Trung tâm Kiểm soát Bệnh tật tỉnh (CDC)",
+        "Bệnh viện Đa khoa tỉnh Quảng Ngãi",
+        "Phòng họp số 2 - UBND Xã Mộ Đức",
+        "Trực tuyến qua Zoom / Google Meet"
+      ],
+      organizers: [
+        "Sở Y tế tỉnh Quảng Ngãi",
+        "Trung tâm Kiểm soát Bệnh tật tỉnh (CDC)",
+        "UBND Xã Mộ Đức",
+        "Bệnh viện Đa khoa tỉnh Quảng Ngãi",
+        "Trung tâm Y tế huyện"
+      ]
+    };
+
+    let meetingsList = [];
+    let currentCategoryFilter = 'all';
+    let currentTimeFilter = 'all';
+    let currentFormTimeMode = 'single';
+    let formSelectedStaff = [];
+    let currentDutyMeeting = null;
+    let confirmCallback = null;
+    let isDirectEditActive = false;
+
+    // Lấy danh bạ nhân sự tập trung từ LocalStorage nếu có
+    function getLiveStaffList() {
+      const stored = localStorage.getItem('TYT_STAFF_LIST');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          const active = parsed.filter(s => s.status !== 'inactive');
+          if (active.length > 0) {
+            return active.map(item => ({
+              name: item.name,
+              shortName: item.shortName || item.name,
+              point: item.point || 'Điểm trạm chính'
+            }));
+          }
+        } catch(e) {}
+      }
+      return DEFAULT_STAFF_29;
+    }
+
+    window.onload = function() {
+      initAppStorage();
+      processMeetingsData();
+      initFormChips();
+      populateDutyDocDropdown();
+      if (GOOGLE_SHEET_HOP_URL) {
+        fetchMeetingsFromCloud(true);
+      }
+    };
+
+    function initAppStorage() {
+      const saved = localStorage.getItem('TYT_MEETINGS_DATA');
+      if (saved) {
+        try {
+          meetingsList = JSON.parse(saved);
+        } catch(e) {
+          meetingsList = [...INITIAL_MEETINGS];
+        }
+      } else {
+        meetingsList = [...INITIAL_MEETINGS];
+        saveMeetingsToStorage(false);
+      }
+    }
+
+    function saveMeetingsToStorage(notify = true) {
+      localStorage.setItem('TYT_MEETINGS_DATA', JSON.stringify(meetingsList));
+      if (notify) {
+        showToast('Đã lưu dữ liệu vào bộ nhớ máy!');
+      }
+    }
+
+    function parseDateTime(item) {
+      let start = null;
+      let end = null;
+
+      if (item.startDate) start = new Date(item.startDate);
+      if (item.endDate) end = new Date(item.endDate);
+
+      // Nếu không có ISO, bóc tách từ chuỗi hiển thị
+      if (!start || isNaN(start.getTime())) {
+        const matches = (item.time || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/g);
+        if (matches && matches.length > 0) {
+          const p1 = matches[0].split('/');
+          start = new Date(parseInt(p1[2], 10), parseInt(p1[1], 10) - 1, parseInt(p1[0], 10), 8, 0, 0);
+
+          if (matches.length > 1) {
+            const p2 = matches[1].split('/');
+            end = new Date(parseInt(p2[2], 10), parseInt(p2[1], 10) - 1, parseInt(p2[0], 10), 17, 0, 0);
+          } else {
+            end = new Date(start.getTime());
+            end.setHours(23, 59, 59);
+          }
+        }
+      }
+
+      if (!end || isNaN(end.getTime())) {
+        if (start && !isNaN(start.getTime())) {
+          end = new Date(start.getTime());
+          end.setHours(23, 59, 59);
+        } else {
+          start = new Date(2099, 0, 1);
+          end = new Date(2099, 0, 1);
+        }
+      }
+
+      return { start, end };
+    }
+
+    function processMeetingsData() {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+
+      const parsed = meetingsList.map((item, idx) => {
+        const { start, end } = parseDateTime(item);
+        
+        // Hết hạn = Thời điểm kết thúc nhỏ hơn hiện tại
+        const isExpired = end.getTime() < now.getTime();
+
+        // Tính khoảng cách ngày so với hôm nay
+        const diffMs = start.getTime() - todayStart.getTime();
+        const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+
+        // 5 CẤP ĐỘ MÀU KHẨN CẤP
+        let level = 5;
+        let levelBadge = '';
+        let levelText = '';
+        let colorTheme = {};
+
+        if (isExpired) {
+          level = 0;
+        } else if (diffDays <= 0 && end.getTime() >= now.getTime()) {
+          // CẤP 1: HÔM NAY / ĐANG DIỄN RA
+          level = 1;
+          levelBadge = 'bg-rose-600 text-white animate-pulse';
+          levelText = diffDays < 0 ? '⚡ ĐANG DIỄN RA' : '🔴 HÔM NAY';
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-rose-600 border-rose-200 bg-gradient-to-r from-rose-50/80 to-white',
+            badgeBg: 'bg-rose-100 text-rose-800 border border-rose-300',
+            dateBox: 'bg-rose-600 text-white',
+            tag: 'Hôm nay'
+          };
+        } else if (diffDays === 1 || diffDays === 2) {
+          // CẤP 2: NGÀY MAI / CÒN 1-2 NGÀY
+          level = 2;
+          levelBadge = 'bg-amber-500 text-white';
+          levelText = diffDays === 1 ? '🟠 NGÀY MAI' : '🟠 CÒN 2 NGÀY';
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-amber-500 border-amber-200 bg-gradient-to-r from-amber-50/70 to-white',
+            badgeBg: 'bg-amber-100 text-amber-900 border border-amber-300',
+            dateBox: 'bg-amber-500 text-white',
+            tag: diffDays === 1 ? 'Ngày mai' : 'Còn 2 ngày'
+          };
+        } else if (diffDays <= 7) {
+          // CẤP 3: TRONG TUẦN NÀY
+          level = 3;
+          levelBadge = 'bg-sky-600 text-white';
+          levelText = `🔵 CÒN ${diffDays} NGÀY (Tuần này)`;
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-sky-500 border-sky-200 bg-gradient-to-r from-sky-50/60 to-white',
+            badgeBg: 'bg-sky-100 text-sky-900 border border-sky-300',
+            dateBox: 'bg-sky-600 text-white',
+            tag: `Còn ${diffDays} ngày`
+          };
+        } else if (diffDays <= 14) {
+          // CẤP 4: TUẦN TỚI
+          level = 4;
+          levelBadge = 'bg-teal-600 text-white';
+          levelText = `🟢 CÒN ${diffDays} NGÀY (Tuần tới)`;
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-teal-500 border-teal-200 bg-gradient-to-r from-teal-50/50 to-white',
+            badgeBg: 'bg-teal-100 text-teal-900 border border-teal-300',
+            dateBox: 'bg-teal-600 text-white',
+            tag: `Còn ${diffDays} ngày`
+          };
+        } else {
+          // CẤP 5: TRÊN 2 TUẦN
+          level = 5;
+          levelBadge = 'bg-slate-500 text-white';
+          levelText = `⚪ CÒN ${diffDays} NGÀY`;
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-slate-400 border-slate-200 bg-white',
+            badgeBg: 'bg-slate-100 text-slate-700 border border-slate-300',
+            dateBox: 'bg-slate-700 text-white',
+            tag: `Còn ${diffDays} ngày`
+          };
+        }
+
+        return {
+          ...item,
+          tempId: item.tempId || `m_${idx}_${Date.now()}`,
+          category: item.category || 'taphuan',
+          start,
+          end,
+          diffDays,
+          isExpired,
+          level,
+          levelBadge,
+          levelText,
+          colorTheme
+        };
+      });
+
+      // TỰ ĐỘNG BỎ QUA NGÀY HẾT HẠN
+      const activeUpcoming = parsed.filter(m => !m.isExpired);
+      const archivedPast = parsed.filter(m => m.isExpired);
+
+      // SẮP XẾP NGÀY GẦN NHẤT ĐẦU TIÊN
+      activeUpcoming.sort((a, b) => a.start.getTime() - b.start.getTime());
+      archivedPast.sort((a, b) => b.end.getTime() - a.end.getTime());
+
+      window.__ACTIVE_MEETINGS = activeUpcoming;
+      window.__ARCHIVED_MEETINGS = archivedPast;
+
+      updateStatistics();
+      renderMeetingsList();
+      renderArchivedList();
+      populateDutyDocDropdown();
+    }
+
+    function updateStatistics() {
+      const active = window.__ACTIVE_MEETINGS || [];
+      const archived = window.__ARCHIVED_MEETINGS || [];
+
+      const todayCount = active.filter(m => m.diffDays <= 0).length;
+      const tomorrowCount = active.filter(m => m.diffDays === 1 || m.diffDays === 2).length;
+      const weekCount = active.filter(m => m.diffDays <= 7).length;
+
+      document.getElementById('stat-count-today').innerText = todayCount;
+      document.getElementById('stat-count-tomorrow').innerText = tomorrowCount;
+      document.getElementById('stat-count-week').innerText = weekCount;
+      document.getElementById('stat-count-total').innerText = active.length;
+      document.getElementById('stat-hidden-past').innerText = `Đã ẩn ${archived.length} lịch cũ`;
+
+      const diHocCount = active.filter(m => m.category === 'dihoc').length;
+      const tapHuanCount = active.filter(m => m.category === 'taphuan').length;
+      const hopCount = active.filter(m => m.category === 'hop').length;
+
+      document.getElementById('count-cat-all').innerText = active.length;
+      document.getElementById('count-cat-dihoc').innerText = diHocCount;
+      document.getElementById('count-cat-taphuan').innerText = tapHuanCount;
+      document.getElementById('count-cat-hop').innerText = hopCount;
+
+      document.getElementById('count-archived-num').innerText = archived.length;
+    }
+
+    function renderMeetingsList() {
+      const container = document.getElementById('meetings-list-container');
+      const search = (document.getElementById('search-meeting-input')?.value || '').toLowerCase().trim();
+      const list = window.__ACTIVE_MEETINGS || [];
+
+      const filtered = list.filter(item => {
+        const matchSearch = item.topic.toLowerCase().includes(search) ||
+                            item.staff.toLowerCase().includes(search) ||
+                            item.location.toLowerCase().includes(search) ||
+                            (item.organizer || '').toLowerCase().includes(search) ||
+                            item.time.toLowerCase().includes(search);
+
+        let matchCat = true;
+        if (currentCategoryFilter !== 'all') {
+          matchCat = item.category === currentCategoryFilter;
+        }
+
+        let matchTime = true;
+        if (currentTimeFilter === 'urgent') matchTime = item.diffDays <= 2;
+        else if (currentTimeFilter === 'week') matchTime = item.diffDays <= 7;
+        else if (currentTimeFilter === 'month') matchTime = item.diffDays <= 30;
+
+        return matchSearch && matchCat && matchTime;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="p-10 text-center bg-white rounded-2xl border border-dashed border-slate-300">
+            <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xl mx-auto mb-2.5">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div class="font-extrabold text-slate-800 text-sm">Không Tìm Thấy Lịch Đi Học / Tập Huấn Nào Phù Hợp</div>
+            <div class="text-xs text-slate-400 mt-1">Các lịch cũ đã hết hạn đều đã được tự động đưa vào kho lưu trữ.</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const staffArr = (item.staff || '').split(',').map(s => s.trim()).filter(Boolean);
+
+        let catBadge = '';
+        if (item.category === 'dihoc') {
+          catBadge = '<span class="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200 text-[10.5px] font-bold"><i class="fa-solid fa-book-open-reader mr-1"></i> Đi Học / Đào Tạo</span>';
+        } else if (item.category === 'taphuan') {
+          catBadge = '<span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200 text-[10.5px] font-bold"><i class="fa-solid fa-chalkboard-user mr-1"></i> Tập Huấn</span>';
+        } else {
+          catBadge = '<span class="px-2 py-0.5 rounded-md bg-teal-100 text-teal-800 border border-teal-200 text-[10.5px] font-bold"><i class="fa-solid fa-users mr-1"></i> Họp / Giao Ban</span>';
+        }
+
+        return `
+          <div class="bg-white p-3.5 sm:p-4 rounded-2xl border shadow-xs transition hover:shadow-md ${item.colorTheme.cardBorder}">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-100">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2.5 py-1 rounded-lg text-[11px] font-black shadow-xs ${item.levelBadge}">
+                  ${item.levelText}
+                </span>
+                ${catBadge}
+                <span class="font-extrabold text-slate-800 text-xs sm:text-sm font-mono flex items-center gap-1.5">
+                  <i class="fa-regular fa-clock text-amber-600"></i> ${item.time}
+                </span>
+              </div>
+
+              <div class="flex items-center gap-1.5 self-end sm:self-auto">
+                <span class="px-2 py-0.5 rounded-full text-[10.5px] font-bold ${item.colorTheme.badgeBg}">
+                  ${item.status || 'Đã xếp lịch'}
+                </span>
+                
+                <button onclick="openDutyAssignmentModal('${item.tempId}')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-[11px] flex items-center gap-1 transition shadow-xs" title="Soạn văn bản Phân công nhiệm vụ cử cán bộ">
+                  <i class="fa-solid fa-file-signature text-amber-700"></i>
+                  <span>Phân công A4</span>
+                </button>
+
+                <button onclick="handleEditMeeting('${item.tempId}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-700 flex items-center justify-center transition" title="Sửa lịch">
+                  <i class="fa-solid fa-pen text-[11px]"></i>
+                </button>
+                <button onclick="handleDeleteMeeting('${item.tempId}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 flex items-center justify-center transition" title="Xóa lịch">
+                  <i class="fa-solid fa-trash text-[11px]"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="text-sm sm:text-base font-black text-slate-900 mb-2 leading-snug">
+              ${item.topic}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-600 pt-1">
+              <div class="space-y-1">
+                <div class="flex items-start gap-1.5">
+                  <i class="fa-solid fa-location-dot text-rose-500 mt-0.5 text-[11px]"></i>
+                  <span><b>Địa điểm:</b> <span class="text-slate-800 font-semibold">${item.location}</span></span>
+                </div>
+                <div class="flex items-start gap-1.5">
+                  <i class="fa-solid fa-building-flag text-indigo-500 mt-0.5 text-[11px]"></i>
+                  <span><b>Tổ chức:</b> <span class="text-slate-800 font-semibold">${item.organizer || '---'}</span></span>
+                </div>
+              </div>
+
+              <div>
+                <div class="font-bold text-slate-700 mb-1 flex items-center gap-1">
+                  <i class="fa-solid fa-users text-teal-600"></i>
+                  <span>Cán bộ cử tham gia (${staffArr.length}):</span>
+                </div>
+                <div class="flex flex-wrap gap-1">
+                  ${staffArr.map(s => `
+                    <span class="px-2 py-0.5 bg-slate-100 border border-slate-200 text-teal-900 rounded-md text-[11px] font-bold shadow-xs">
+                      ${s}
+                    </span>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderArchivedList() {
+      const container = document.getElementById('archived-meetings-container');
+      const list = window.__ARCHIVED_MEETINGS || [];
+
+      if (list.length === 0) {
+        container.innerHTML = '<div class="text-center text-slate-400 py-3 italic">Không có lịch nào trong quá khứ.</div>';
+        return;
+      }
+
+      container.innerHTML = list.map(item => `
+        <div class="p-2.5 bg-white rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 text-xs opacity-75">
+          <div>
+            <div class="font-bold text-slate-800">${item.topic}</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">
+              <span><i class="fa-regular fa-clock"></i> ${item.time}</span> • 
+              <span><i class="fa-solid fa-location-dot"></i> ${item.location}</span> • 
+              <span><i class="fa-solid fa-users"></i> ${item.staff}</span>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 bg-slate-200 text-slate-600 rounded-md font-bold text-[10px] whitespace-nowrap">
+            Đã kết thúc
+          </span>
+        </div>
+      `).join('');
+    }
+
+    function toggleArchivedMeetings() {
+      const box = document.getElementById('archived-meetings-container');
+      const btn = document.getElementById('btn-toggle-archive');
+      const isHidden = box.classList.contains('hidden');
+
+      if (isHidden) {
+        box.classList.remove('hidden');
+        btn.innerHTML = `<i class="fa-solid fa-chevron-up"></i> <span>Ẩn lịch sử đã qua</span>`;
+      } else {
+        box.classList.add('hidden');
+        const count = (window.__ARCHIVED_MEETINGS || []).length;
+        btn.innerHTML = `<i class="fa-solid fa-clock-rotate-left"></i> <span>Xem lịch sử đã qua (${count})</span>`;
+      }
+    }
+
+    function filterByCategory(cat) {
+      currentCategoryFilter = cat;
+      const btns = [
+        { id: 'btn-cat-all', cat: 'all' },
+        { id: 'btn-cat-dihoc', cat: 'dihoc' },
+        { id: 'btn-cat-taphuan', cat: 'taphuan' },
+        { id: 'btn-cat-hop', cat: 'hop' }
+      ];
+      btns.forEach(b => {
+        const el = document.getElementById(b.id);
+        if (b.cat === cat) {
+          el.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition bg-amber-600 text-white shadow-xs whitespace-nowrap";
+        } else {
+          el.className = "px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap";
+        }
+      });
+      renderMeetingsList();
+    }
+
+    function filterByTime(type) {
+      currentTimeFilter = type;
+      const btns = [
+        { id: 'btn-time-all', type: 'all' },
+        { id: 'btn-time-urgent', type: 'urgent' },
+        { id: 'btn-time-week', type: 'week' },
+        { id: 'btn-time-month', type: 'month' }
+      ];
+      btns.forEach(b => {
+        const el = document.getElementById(b.id);
+        if (b.type === type) {
+          el.className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white transition";
+        } else {
+          el.className = "px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition";
+        }
+      });
+      renderMeetingsList();
+    }
+
+    function switchMainTab(tab) {
+      const btnCards = document.getElementById('tab-btn-cards');
+      const btnDoc = document.getElementById('tab-btn-doc');
+      const viewCards = document.getElementById('view-tab-cards');
+      const viewDoc = document.getElementById('view-tab-doc');
+
+      if (tab === 'cards') {
+        btnCards.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-800 shadow-xs flex items-center gap-1.5";
+        btnDoc.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5";
+        viewCards.classList.remove('hidden');
+        viewDoc.classList.add('hidden');
+      } else {
+        btnDoc.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-800 shadow-xs flex items-center gap-1.5";
+        btnCards.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5";
+        viewCards.classList.add('hidden');
+        viewDoc.classList.remove('hidden');
+        renderDirectA4Paper();
+      }
+    }
+
+    function openMeetingModal(meetingToEdit = null) {
+      const modal = document.getElementById('meeting-modal');
+      const title = document.getElementById('meeting-modal-title');
+      
+      formSelectedStaff = [];
+
+      if (meetingToEdit) {
+        title.innerText = "Chỉnh Sửa Lịch Đi Học / Tập Huấn";
+        document.getElementById('form-meeting-id').value = meetingToEdit.tempId;
+        document.getElementById('form-topic').value = meetingToEdit.topic;
+        document.getElementById('form-location').value = meetingToEdit.location;
+        document.getElementById('form-organizer').value = meetingToEdit.organizer || '';
+        document.getElementById('form-status').value = meetingToEdit.status || 'Đã xếp lịch';
+
+        const radios = document.getElementsByName('form-event-category');
+        for (const r of radios) {
+          if (r.value === meetingToEdit.category) r.checked = true;
+        }
+
+        formSelectedStaff = (meetingToEdit.staff || '').split(',').map(s => s.trim()).filter(Boolean);
+
+        if (meetingToEdit.startDate && meetingToEdit.endDate && meetingToEdit.startDate.slice(0, 10) !== meetingToEdit.endDate.slice(0, 10)) {
+          switchFormTimeMode('range');
+          document.getElementById('form-range-start').value = meetingToEdit.startDate.slice(0, 10);
+          document.getElementById('form-range-end').value = meetingToEdit.endDate.slice(0, 10);
+        } else {
+          switchFormTimeMode('single');
+          if (meetingToEdit.startDate) {
+            document.getElementById('form-single-date').value = meetingToEdit.startDate.slice(0, 10);
+          }
+        }
+      } else {
+        title.innerText = "Thêm Lịch Đi Học / Tập Huấn Mới";
+        document.getElementById('form-meeting-id').value = '';
+        document.getElementById('form-topic').value = '';
+        document.getElementById('form-location').value = '';
+        document.getElementById('form-organizer').value = '';
+        document.getElementById('form-status').value = 'Đã xếp lịch';
+
+        const todayIso = new Date().toISOString().slice(0, 10);
+        document.getElementById('form-single-date').value = todayIso;
+        document.getElementById('form-range-start').value = todayIso;
+        
+        const next2Iso = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+        document.getElementById('form-range-end').value = next2Iso;
+
+        switchFormTimeMode('single');
+      }
+
+      updateFormStaffUI();
+      updateFormPreview();
+      modal.classList.remove('hidden');
+    }
+
+    function closeMeetingModal() {
+      document.getElementById('meeting-modal').classList.add('hidden');
+    }
+
+    function switchFormTimeMode(mode) {
+      currentFormTimeMode = mode;
+      const btnSingle = document.getElementById('btn-mode-single');
+      const btnRange = document.getElementById('btn-mode-range');
+      const boxSingle = document.getElementById('form-time-box-single');
+      const boxRange = document.getElementById('form-time-box-range');
+
+      if (mode === 'single') {
+        btnSingle.className = "px-2.5 py-1 bg-amber-600 text-white rounded-lg font-bold text-[11px] shadow-xs";
+        btnRange.className = "px-2.5 py-1 bg-white text-slate-700 rounded-lg font-bold text-[11px] hover:bg-slate-200";
+        boxSingle.classList.remove('hidden');
+        boxRange.classList.add('hidden');
+      } else {
+        btnRange.className = "px-2.5 py-1 bg-amber-600 text-white rounded-lg font-bold text-[11px] shadow-xs";
+        btnSingle.className = "px-2.5 py-1 bg-white text-slate-700 rounded-lg font-bold text-[11px] hover:bg-slate-200";
+        boxRange.classList.remove('hidden');
+        boxSingle.classList.add('hidden');
+      }
+      updateFormPreview();
+    }
+
+    function onFormSessionChange() {
+      const sess = document.getElementById('form-single-session').value;
+      const customInput = document.getElementById('form-single-custom-time');
+      if (sess === 'custom') {
+        customInput.disabled = false;
+      } else if (sess === 'Cả ngày') {
+        customInput.disabled = true;
+      } else {
+        customInput.disabled = false;
+        customInput.value = sess;
+      }
+      updateFormPreview();
+    }
+
+    function fmtDateVN(iso) {
+      if (!iso) return '';
+      const p = iso.split('-');
+      return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
+    }
+
+    function getDayOfWeek(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      const days = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+      return days[d.getDay()] || '';
+    }
+
+    function updateFormPreview() {
+      const previewEl = document.getElementById('form-time-preview-text');
+      if (currentFormTimeMode === 'single') {
+        const d = document.getElementById('form-single-date').value;
+        const sess = document.getElementById('form-single-session').value;
+        const t = document.getElementById('form-single-custom-time').value;
+        if (d) {
+          const tPart = (sess === 'Cả ngày') ? 'Cả ngày' : (t || sess);
+          previewEl.innerText = `${getDayOfWeek(d)} (${fmtDateVN(d)}) - ${tPart}`;
+        } else {
+          previewEl.innerText = "Chưa chọn ngày diễn ra";
+        }
+      } else {
+        const d1 = document.getElementById('form-range-start').value;
+        const d2 = document.getElementById('form-range-end').value;
+        const note = document.getElementById('form-range-note').value.trim();
+        if (d1 && d2) {
+          let text = `Từ ngày ${fmtDateVN(d1)} đến ${fmtDateVN(d2)}`;
+          if (note) text += ` (${note})`;
+          previewEl.innerText = text;
+        } else {
+          previewEl.innerText = "Vui lòng chọn Từ ngày & Đến ngày";
+        }
+      }
+    }
+
+    function initFormChips() {
+      const topContainer = document.getElementById('topic-chips-container');
+      topContainer.innerHTML = PRESET_SUGGESTIONS.topics.map(t => `
+        <span onclick="document.getElementById('form-topic').value = '${t.replace(/'/g, "\\'")}'" class="px-2 py-0.5 bg-slate-100 hover:bg-amber-100 hover:text-amber-900 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-semibold cursor-pointer transition">
+          + ${t.length > 35 ? t.slice(0, 35) + '...' : t}
+        </span>
+      `).join('');
+
+      const locContainer = document.getElementById('location-chips-container');
+      locContainer.innerHTML = PRESET_SUGGESTIONS.locations.map(l => `
+        <span onclick="document.getElementById('form-location').value = '${l.replace(/'/g, "\\'")}'" class="px-2 py-0.5 bg-slate-100 hover:bg-sky-100 hover:text-sky-900 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-semibold cursor-pointer transition">
+          + ${l.length > 28 ? l.slice(0, 28) + '...' : l}
+        </span>
+      `).join('');
+
+      const orgContainer = document.getElementById('organizer-chips-container');
+      orgContainer.innerHTML = PRESET_SUGGESTIONS.organizers.map(o => `
+        <span onclick="document.getElementById('form-organizer').value = '${o.replace(/'/g, "\\'")}'" class="px-2 py-0.5 bg-slate-100 hover:bg-teal-100 hover:text-teal-900 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-semibold cursor-pointer transition">
+          + ${o}
+        </span>
+      `).join('');
+    }
+
+    function toggleStaffDirectoryModal() {
+      const modal = document.getElementById('staff-directory-modal');
+      const isHidden = modal.classList.contains('hidden');
+      if (isHidden) {
+        modal.classList.remove('hidden');
+        renderStaffDirectoryItems();
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function closeStaffDirectoryModal() {
+      document.getElementById('staff-directory-modal').classList.add('hidden');
+      updateFormStaffUI();
+    }
+
+    function renderStaffDirectoryItems() {
+      const container = document.getElementById('staff-directory-list-container');
+      const search = (document.getElementById('staff-search-input')?.value || '').toLowerCase().trim();
+      const staffList = getLiveStaffList();
+
+      const filtered = staffList.filter(s => 
+        s.name.toLowerCase().includes(search) || 
+        (s.shortName && s.shortName.toLowerCase().includes(search)) ||
+        (s.point && s.point.toLowerCase().includes(search))
+      );
+
+      const groups = {};
+      filtered.forEach(s => {
+        if (!groups[s.point]) groups[s.point] = [];
+        groups[s.point].push(s);
+      });
+
+      let html = '';
+      for (const pt in groups) {
+        html += `
+          <div class="space-y-1">
+            <div class="text-[10.5px] font-black uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
+              ${pt} (${groups[pt].length})
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
+              ${groups[pt].map(stf => {
+                const isSelected = formSelectedStaff.includes(stf.name);
+                return `
+                  <div onclick="toggleSelectStaff('${stf.name.replace(/'/g, "\\'")}')" class="p-2 rounded-xl border flex items-center justify-between cursor-pointer transition ${
+                    isSelected ? 'bg-amber-50 border-amber-300 text-amber-900 font-bold' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }">
+                    <div class="flex items-center gap-1.5 truncate">
+                      <span class="w-2 h-2 rounded-full ${isSelected ? 'bg-amber-600' : 'bg-slate-300'}"></span>
+                      <span class="truncate">${stf.name}</span>
+                    </div>
+                    <span class="text-[10px] font-bold text-amber-700 bg-amber-100/70 px-1.5 py-0.2 rounded">
+                      ${stf.shortName || 'CB'}
+                    </span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+      document.getElementById('modal-selected-count').innerText = formSelectedStaff.length;
+    }
+
+    function filterStaffDirectoryList() {
+      renderStaffDirectoryItems();
+    }
+
+    function toggleSelectStaff(name) {
+      const idx = formSelectedStaff.indexOf(name);
+      if (idx === -1) {
+        formSelectedStaff.push(name);
+      } else {
+        formSelectedStaff.splice(idx, 1);
+      }
+      renderStaffDirectoryItems();
+      updateFormStaffUI();
+    }
+
+    function removeFormStaff(name) {
+      const idx = formSelectedStaff.indexOf(name);
+      if (idx !== -1) {
+        formSelectedStaff.splice(idx, 1);
+        updateFormStaffUI();
+      }
+    }
+
+    function updateFormStaffUI() {
+      const chipsBox = document.getElementById('form-selected-staff-chips');
+      const input = document.getElementById('form-staff-input');
+
+      input.value = formSelectedStaff.join(', ');
+
+      if (formSelectedStaff.length === 0) {
+        chipsBox.innerHTML = '<span class="text-slate-400 italic text-[11px] p-1">Chưa chọn cán bộ nào</span>';
+      } else {
+        chipsBox.innerHTML = formSelectedStaff.map(name => `
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold text-[11px] border border-amber-200">
+            <span>${name}</span>
+            <span onclick="removeFormStaff('${name.replace(/'/g, "\\'")}')" class="cursor-pointer text-amber-700 hover:text-rose-600 font-black">✕</span>
+          </span>
+        `).join('');
+      }
+    }
+
+    function handleSaveMeetingSubmit(e) {
+      e.preventDefault();
+
+      const editId = document.getElementById('form-meeting-id').value;
+      const topic = document.getElementById('form-topic').value.trim();
+      const location = document.getElementById('form-location').value.trim();
+      const organizer = document.getElementById('form-organizer').value.trim() || 'Sở Y tế / UBND';
+      const status = document.getElementById('form-status').value;
+
+      let category = 'taphuan';
+      const radios = document.getElementsByName('form-event-category');
+      for (const r of radios) {
+        if (r.checked) category = r.value;
+      }
+
+      const staff = formSelectedStaff.join(', ');
+
+      if (!topic || !location || formSelectedStaff.length === 0) {
+        showToast('Vui lòng điền đủ Tên chuyên đề, Cán bộ tham dự và Địa điểm!', 'warning');
+        return;
+      }
+
+      let timeText = '';
+      let startIso = '';
+      let endIso = '';
+
+      if (currentFormTimeMode === 'single') {
+        const d = document.getElementById('form-single-date').value;
+        if (!d) {
+          showToast('Vui lòng chọn ngày diễn ra!', 'warning');
+          return;
+        }
+        const sess = document.getElementById('form-single-session').value;
+        const t = document.getElementById('form-single-custom-time').value || '08:00';
+        const tPart = (sess === 'Cả ngày') ? 'Cả ngày' : t;
+
+        timeText = `${getDayOfWeek(d)} (${fmtDateVN(d)}) - ${tPart}`;
+        startIso = `${d}T${(sess === 'Cả ngày') ? '08:00:00' : (t + ':00')}`;
+        endIso = `${d}T23:59:59`;
+      } else {
+        const d1 = document.getElementById('form-range-start').value;
+        const d2 = document.getElementById('form-range-end').value;
+        const note = document.getElementById('form-range-note').value.trim();
+
+        if (!d1 || !d2) {
+          showToast('Vui lòng chọn đủ Từ ngày và Đến ngày!', 'warning');
+          return;
+        }
+        if (new Date(d1) > new Date(d2)) {
+          showToast('Ngày bắt đầu không được sau ngày kết thúc!', 'warning');
+          return;
+        }
+
+        timeText = `Từ ngày ${fmtDateVN(d1)} đến ${fmtDateVN(d2)}${note ? ` (${note})` : ''}`;
+        startIso = `${d1}T07:30:00`;
+        endIso = `${d2}T23:59:59`;
+      }
+
+      if (editId) {
+        const target = meetingsList.find(m => m.tempId === editId);
+        if (target) {
+          target.category = category;
+          target.topic = topic;
+          target.staff = staff;
+          target.location = location;
+          target.organizer = organizer;
+          target.status = status;
+          target.time = timeText;
+          target.startDate = startIso;
+          target.endDate = endIso;
+          showToast('Đã cập nhật lịch thành công!', 'success');
+        }
+      } else {
+        const newMeeting = {
+          tempId: `m_${Date.now()}`,
+          category,
+          topic,
+          staff,
+          location,
+          organizer,
+          status,
+          time: timeText,
+          startDate: startIso,
+          endDate: endIso
+        };
+        meetingsList.unshift(newMeeting);
+        showToast('Đã thêm lịch mới thành công!', 'success');
+      }
+
+      saveMeetingsToStorage();
+      closeMeetingModal();
+      processMeetingsData();
+    }
+
+    function handleEditMeeting(tempId) {
+      const item = (window.__ACTIVE_MEETINGS || []).find(m => m.tempId === tempId) ||
+                   (window.__ARCHIVED_MEETINGS || []).find(m => m.tempId === tempId);
+      if (item) {
+        openMeetingModal(item);
+      }
+    }
+
+    function handleDeleteMeeting(tempId) {
+      const item = (window.__ACTIVE_MEETINGS || []).find(m => m.tempId === tempId) ||
+                   (window.__ARCHIVED_MEETINGS || []).find(m => m.tempId === tempId);
+      if (!item) return;
+
+      showConfirmModal(
+        'Xác nhận xóa lịch',
+        `Bạn có chắc chắn muốn xóa sự kiện này khỏi lịch:\n"${item.topic}"?`,
+        () => {
+          meetingsList = meetingsList.filter(m => m.tempId !== tempId);
+          saveMeetingsToStorage();
+          processMeetingsData();
+          showToast('Đã xóa sự kiện thành công!', 'info');
+        }
+      );
+    }
+
+    function openDutyAssignmentModal(meetingId = null) {
+      const select = document.getElementById('duty-source-meeting');
+      const allMeetings = [...(window.__ACTIVE_MEETINGS || []), ...(window.__ARCHIVED_MEETINGS || [])];
+
+      if (allMeetings.length === 0) {
+        showToast('Hiện chưa có dữ liệu sự kiện nào để tạo phân công!', 'warning');
+        return;
+      }
+
+      select.innerHTML = allMeetings.map(m => `
+        <option value="${m.tempId}" ${m.tempId === meetingId ? 'selected' : ''}>
+          ${m.time} - ${m.topic.length > 55 ? m.topic.slice(0, 55) + '...' : m.topic}
+        </option>
+      `).join('');
+
+      const targetMeeting = allMeetings.find(m => m.tempId === meetingId) || allMeetings[0];
+      populateDutyFormData(targetMeeting);
+
+      document.getElementById('duty-assignment-modal').classList.remove('hidden');
+    }
+
+    function closeDutyAssignmentModal() {
+      document.getElementById('duty-assignment-modal').classList.add('hidden');
+    }
+
+    function onDutySourceMeetingChange() {
+      const selectedId = document.getElementById('duty-source-meeting').value;
+      const allMeetings = [...(window.__ACTIVE_MEETINGS || []), ...(window.__ARCHIVED_MEETINGS || [])];
+      const targetMeeting = allMeetings.find(m => m.tempId === selectedId);
+      if (targetMeeting) {
+        populateDutyFormData(targetMeeting);
+      }
+    }
+
+    function populateDutyFormData(meeting) {
+      currentDutyMeeting = meeting;
+      const now = new Date();
+
+      const docNumSeq = Math.floor(Math.random() * 40) + 10;
+      document.getElementById('duty-doc-number').value = `${docNumSeq}/TB-TYT`;
+
+      let issueDateStr = `${now.getDate()} tháng ${now.getMonth() + 1} năm ${now.getFullYear()}`;
+      if (meeting.start && !isNaN(meeting.start.getTime())) {
+        const leadDate = new Date(meeting.start.getTime() - (2 * 86400000));
+        if (leadDate <= now) {
+          issueDateStr = `${now.getDate()} tháng ${now.getMonth() + 1} năm ${now.getFullYear()}`;
+        } else {
+          issueDateStr = `${leadDate.getDate()} tháng ${leadDate.getMonth() + 1} năm ${leadDate.getFullYear()}`;
+        }
+      }
+      document.getElementById('duty-doc-date').value = issueDateStr;
+
+      let vVText = `V/v cử cán bộ tham gia tham dự ${meeting.topic}`;
+      if (meeting.category === 'dihoc') {
+        vVText = `V/v cử cán bộ y tế tham gia khóa đào tạo ${meeting.topic}`;
+      }
+      document.getElementById('duty-doc-subject').value = vVText;
+
+      const basisDate = new Date(now.getTime() - (3 * 86400000));
+      const basisDateStr = `${basisDate.getDate() < 10 ? '0' + basisDate.getDate() : basisDate.getDate()}/${basisDate.getMonth() + 1 < 10 ? '0' + (basisDate.getMonth() + 1) : (basisDate.getMonth() + 1)}/${basisDate.getFullYear()}`;
+      const randomDocNum = Math.floor(Math.random() * 4000) + 1000;
+      const organizer = meeting.organizer || 'Sở Y tế tỉnh Quảng Ngãi';
+      document.getElementById('duty-doc-basis').value = `Căn cứ Công văn số ${randomDocNum}/SYT-NV ngày ${basisDateStr} của ${organizer} về việc mời tham dự ${meeting.topic}.`;
+
+      const staffList = (meeting.staff || '').split(',').map(s => s.trim()).filter(Boolean);
+      document.getElementById('duty-doc-staff').value = staffList.join('\n');
+
+      document.getElementById('duty-doc-time').value = meeting.time || '';
+      document.getElementById('duty-doc-location').value = meeting.location || '';
+
+      updateDutyPreview();
+    }
+
+    function buildDutyDocumentHtml() {
+      const docNum = (document.getElementById('duty-doc-number')?.value || '26/TB-TYT').trim();
+      const docDate = (document.getElementById('duty-doc-date')?.value || '16 tháng 9 năm 2026').trim();
+      const docSubject = (document.getElementById('duty-doc-subject')?.value || '').trim();
+      const docBasis = (document.getElementById('duty-doc-basis')?.value || '').trim();
+      const staffRaw = (document.getElementById('duty-doc-staff')?.value || '').trim();
+      const docTime = (document.getElementById('duty-doc-time')?.value || '').trim();
+      const docLocation = (document.getElementById('duty-doc-location')?.value || '').trim();
+      const signerRole = (document.getElementById('duty-signer-role')?.value || 'GIÁM ĐỐC').trim();
+      const signerName = (document.getElementById('duty-signer-name')?.value || 'Phạm Minh Đức').trim();
+
+      const staffLines = staffRaw.split('\n').map(s => s.trim()).filter(Boolean);
+
+      return `
+        <!-- Tiêu đề 2 cột: Cơ quan & Quốc hiệu -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+          <tr>
+            <td style="width: 45%; text-align: center; vertical-align: top; line-height: 1.3;">
+              <div style="font-size: 11pt; text-transform: uppercase;">UBND XÃ MỘ ĐỨC</div>
+              <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">TRẠM Y TẾ</div>
+              <div style="width: 60px; height: 1px; background-color: black; margin: 3px auto 4px auto;"></div>
+              <div style="font-size: 11pt; margin-top: 3px;">Số: <b>${docNum}</b></div>
+            </td>
+            <td style="width: 55%; text-align: center; vertical-align: top; line-height: 1.3;">
+              <div style="font-size: 11.5pt; font-weight: bold; text-transform: uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+              <div style="font-size: 12pt; font-weight: bold;">Độc lập - Tự do - Hạnh phúc</div>
+              <div style="width: 120px; height: 1px; background-color: black; margin: 3px auto 6px auto;"></div>
+              <div style="font-size: 11.5pt; font-style: italic;">Mộ Đức, ngày ${docDate}.</div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Tiêu đề văn bản phân công -->
+        <div style="text-align: center; margin-top: 12px; margin-bottom: 14px;">
+          <div style="font-size: 14pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">PHÂN CÔNG NHIỆM VỤ</div>
+          <div style="font-size: 12pt; font-style: italic; max-width: 90%; margin: 4px auto 0 auto; line-height: 1.35;">
+            ${docSubject}
+          </div>
+        </div>
+
+        <!-- Căn cứ công văn triệu tập -->
+        <p style="text-align: justify; margin-bottom: 10px; text-indent: 28px; line-height: 1.4;">
+          ${docBasis}
+        </p>
+
+        <!-- Nội dung cử cán bộ -->
+        <p style="text-align: justify; margin-bottom: 8px; text-indent: 28px; line-height: 1.4;">
+          Trạm Y tế xã Mộ Đức phân công cán bộ tham gia có tên sau:
+        </p>
+
+        <!-- Danh sách cán bộ -->
+        <div style="margin-left: 36px; margin-bottom: 12px; line-height: 1.45; font-weight: bold;">
+          ${staffLines.map((s, idx) => `<div>${staffLines.length > 1 ? `${idx + 1}. ` : ''}${s}</div>`).join('')}
+        </div>
+
+        <!-- Thời gian & Địa điểm -->
+        <div style="margin-left: 28px; margin-bottom: 12px; line-height: 1.45;">
+          <div style="margin-bottom: 4px;">
+            <b>Thời gian:</b> ${docTime}
+          </div>
+          <div>
+            <b>Địa điểm:</b> ${docLocation}
+          </div>
+        </div>
+
+        <!-- Điều khoản trách nhiệm -->
+        <p style="text-align: justify; margin-bottom: 22px; text-indent: 28px; line-height: 1.4;">
+          Các ông (bà) phụ trách điểm y tế thuộc Trạm y tế xã Mộ Đức và cá nhân cán bộ y tế có tên trên chịu trách nhiệm thi hành thông báo này./.
+        </p>
+
+        <!-- Chân trang 2 cột: Nơi nhận & Chữ ký Giám Đốc -->
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px; page-break-inside: avoid;">
+          <tr>
+            <td style="width: 55%; vertical-align: top; font-size: 10pt; line-height: 1.35; padding-top: 4px;">
+              <div style="font-weight: bold; font-style: italic; font-size: 11pt; margin-bottom: 3px;">Nơi nhận:</div>
+              <div>- GĐ, PGĐ TYT;</div>
+              <div>- Cá nhân có tên trên;</div>
+              <div>- Phụ trách các điểm y tế;</div>
+              <div>- Lưu: HC;</div>
+            </td>
+            <td style="width: 45%; text-align: center; vertical-align: top; line-height: 1.3;">
+              <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">${signerRole}</div>
+              <div style="font-size: 9.5pt; font-style: italic; margin-top: 2px; margin-bottom: 60px;">(Ký, đóng dấu)</div>
+              <div style="font-size: 12.5pt; font-weight: bold;">${signerName}</div>
+            </td>
+          </tr>
+        </table>
+      `;
+    }
+
+    function updateDutyPreview() {
+      const previewEl = document.getElementById('duty-preview-paper');
+      if (previewEl) {
+        previewEl.innerHTML = buildDutyDocumentHtml();
+      }
+    }
+
+    function printDutyAssignment() {
+      document.body.classList.remove('print-schedule-mode');
+      document.body.classList.add('print-assignment-mode');
+      setPagePrintOrientation('portrait');
+
+      const printContainer = document.getElementById('print-assignment-container');
+      printContainer.innerHTML = buildDutyDocumentHtml();
+
+      setTimeout(() => {
+        window.print();
+      }, 300);
+    }
+
+    function downloadDutyWordDoc() {
+      const docNum = (document.getElementById('duty-doc-number')?.value || '26_TB_TYT').trim();
+      const topic = (currentDutyMeeting ? currentDutyMeeting.topic : 'PhanCong').replace(/[^a-zA-Z0-9\p{L}]/gu, '_').slice(0, 40);
+      const innerHtml = buildDutyDocumentHtml();
+
+      const docContent = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset='utf-8'>
+          <title>Phan_cong_nhiem_vu_${docNum}</title>
+          <!--[if gte mso 9]>
+          <xml>
+            <w:WordDocument>
+              <w:View>Print</w:View>
+              <w:Zoom>100</w:Zoom>
+              <w:DoNotOptimizeForBrowser/>
+            </w:WordDocument>
+          </xml>
+          <![endif]-->
+          <style>
+            @page {
+              size: 21.0cm 29.7cm;
+              margin: 2.0cm 1.5cm 2.0cm 2.5cm;
+              mso-page-orientation: portrait;
+            }
+            body {
+              font-family: 'Times New Roman', Times, serif;
+              font-size: 13pt;
+              line-height: 1.38;
+              color: #000000;
+            }
+            table {
+              border-collapse: collapse;
+              width: 100%;
+            }
+            td {
+              vertical-align: top;
+            }
+            p {
+              margin-top: 0;
+              margin-bottom: 6pt;
+              text-align: justify;
+            }
+          </style>
+        </head>
+        <body>
+          ${innerHtml}
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob(['\ufeff', docContent], { type: 'application/msword;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Phan_cong_nhiem_vu_${docNum.replace(/[\/\\:]/g, '_')}_${topic}.doc`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast('Đã xuất file Word (.doc) Phân công nhiệm vụ thành công!', 'success');
+    }
+
+    function copyDutyAssignmentText() {
+      const previewEl = document.getElementById('duty-preview-paper');
+      if (!previewEl) return;
+
+      const range = document.createRange();
+      range.selectNode(previewEl);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          showToast('Đã sao chép nội dung văn bản vào clipboard!', 'success');
+        } else {
+          showToast('Không thể tự sao chép, vui lòng dùng Ctrl+C', 'warning');
+        }
+      } catch (err) {
+        showToast('Trình duyệt không hỗ trợ lệnh sao chép', 'error');
+      }
+      window.getSelection().removeAllRanges();
+    }
+
+    function populateDutyDocDropdown() {
+      const select = document.getElementById('direct-doc-source-select');
+      if (!select) return;
+
+      const all = window.__ACTIVE_MEETINGS || [];
+      if (all.length === 0) {
+        select.innerHTML = '<option value="">(Không có sự kiện sắp tới)</option>';
+        return;
+      }
+
+      select.innerHTML = all.map(m => `
+        <option value="${m.tempId}">
+          ${m.topic.length > 40 ? m.topic.slice(0, 40) + '...' : m.topic}
+        </option>
+      `).join('');
+    }
+
+    function onDirectDocSourceChange(meetingId) {
+      renderDirectA4Paper(meetingId);
+    }
+
+    function renderDirectA4Paper(meetingId = null) {
+      const paper = document.getElementById('direct-a4-paper');
+      if (!paper) return;
+
+      const all = window.__ACTIVE_MEETINGS || [];
+      const m = (meetingId ? all.find(x => x.tempId === meetingId) : null) || all[0] || INITIAL_MEETINGS[0];
+      const now = new Date();
+
+      const staffList = (m.staff || '').split(',').map(s => s.trim()).filter(Boolean);
+
+      paper.innerHTML = `
+        <!-- Tiêu đề 2 cột -->
+        <table class="w-full border-collapse mb-3" style="width: 100%;">
+          <tr>
+            <td style="width: 45%; vertical-align: top; text-align: center; line-height: 1.3;">
+              <div class="text-[11.5pt] uppercase tracking-normal" data-field="unit-parent">UBND XÃ MỘ ĐỨC</div>
+              <div class="text-[12.5pt] font-bold uppercase tracking-normal" data-field="unit-name">TRẠM Y TẾ</div>
+              <div style="width: 75px; height: 1px; background-color: #000; margin: 3px auto 5px auto;"></div>
+              <div class="text-[12pt] mt-1">
+                Số: <b data-field="doc-number">26/TB-TYT</b>
+              </div>
+            </td>
+            <td style="width: 55%; vertical-align: top; text-align: center; line-height: 1.3;">
+              <div class="text-[12pt] font-bold uppercase tracking-tight">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+              <div class="text-[12.5pt] font-bold tracking-normal">Độc lập - Tự do - Hạnh phúc</div>
+              <div style="width: 140px; height: 1px; background-color: #000; margin: 4px auto 6px auto;"></div>
+              <div class="text-[12pt] italic mt-1" data-field="doc-date">
+                Mộ Đức, ngày ${now.getDate()} tháng ${now.getMonth() + 1} năm ${now.getFullYear()}.
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Tên loại văn bản -->
+        <section class="text-center mt-4 mb-4">
+          <h2 class="text-[14.5pt] font-bold uppercase tracking-wide mb-1.5" data-field="doc-heading">
+            PHÂN CÔNG NHIỆM VỤ
+          </h2>
+          <div class="text-[12.5pt] italic max-w-[92%] mx-auto leading-snug font-medium" data-field="doc-subject">
+            V/v cử cán bộ tham gia tham dự ${m.topic}
+          </div>
+        </section>
+
+        <!-- Căn cứ -->
+        <p class="text-justify mb-3 indent-7" data-field="doc-basis">
+          Căn cứ Thông báo số 5133/SYT-NV ngày 14/09/2026 của ${m.organizer || 'Sở Y tế tỉnh Quảng Ngãi'} về việc mời tham dự ${m.topic}.
+        </p>
+
+        <!-- Cử cán bộ -->
+        <p class="text-justify mb-2 indent-7">
+          Trạm Y tế xã Mộ Đức phân công cán bộ tham gia có tên sau:
+        </p>
+
+        <!-- Danh sách cán bộ -->
+        <div class="ml-10 mb-3.5 space-y-1 font-bold text-[13pt]" id="direct-staff-container">
+          ${staffList.map((s, idx) => `<div>${staffList.length > 1 ? `${idx + 1}. ` : ''}${s}</div>`).join('')}
+        </div>
+
+        <!-- Thời gian & Địa điểm -->
+        <div class="ml-7 mb-4 space-y-1.5">
+          <div>
+            <b>Thời gian:</b> <span data-field="doc-time">${m.time}</span>
+          </div>
+          <div>
+            <b>Địa điểm:</b> <span data-field="doc-location">${m.location}</span>
+          </div>
+        </div>
+
+        <!-- Điều khoản thực hiện -->
+        <p class="text-justify mb-8 indent-7 leading-relaxed" data-field="doc-clause">
+          Các ông (bà) phụ trách điểm y tế thuộc Trạm y tế xã Mộ Đức và cá nhân cán bộ y tế có tên trên chịu trách nhiệm thi hành thông báo này./.
+        </p>
+
+        <!-- Chân trang 2 cột -->
+        <table class="w-full border-collapse mt-6" style="width: 100%; page-break-inside: avoid;">
+          <tr>
+            <td style="width: 55%; vertical-align: top; font-size: 10.5pt; line-height: 1.4; padding-top: 4px;">
+              <div class="font-bold italic text-[11pt] mb-1">Nơi nhận:</div>
+              <div>- GĐ, PGĐ TYT;</div>
+              <div>- Cá nhân có tên trên;</div>
+              <div>- Phụ trách các điểm y tế;</div>
+              <div>- Lưu: HC.</div>
+            </td>
+            <td style="width: 45%; text-align: center; vertical-align: top; line-height: 1.3;">
+              <div class="text-[13pt] font-bold uppercase tracking-wide">GIÁM ĐỐC</div>
+              <div class="text-[10pt] italic text-slate-500 mt-1 mb-16">(Ký, đóng dấu)</div>
+              <div class="text-[13.5pt] font-bold tracking-tight text-slate-950">Phạm Minh Đức</div>
+            </td>
+          </tr>
+        </table>
+      `;
+
+      if (isDirectEditActive) {
+        enableDirectEditAttributes();
+      }
+    }
+
+    function toggleDirectEditMode() {
+      isDirectEditActive = !isDirectEditActive;
+      const paper = document.getElementById('direct-a4-paper');
+      const btn = document.getElementById('btn-direct-edit');
+      const label = document.getElementById('btn-direct-edit-label');
+
+      if (isDirectEditActive) {
+        paper.classList.add('editable-active');
+        enableDirectEditAttributes();
+        btn.className = "px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white border border-sky-400 rounded-xl text-xs font-bold transition flex items-center gap-1.5";
+        label.innerText = "Đang mở sửa (Bấm để khóa)";
+        showToast("Đã bật chế độ chỉnh sửa! Bạn hãy nhấp chuột trực tiếp vào dòng chữ trên giấy để gõ.");
+      } else {
+        paper.classList.remove('editable-active');
+        disableDirectEditAttributes();
+        btn.className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5";
+        label.innerText = "Chỉnh sửa trực tiếp";
+        showToast("Đã khóa văn bản. Các thay đổi đã được áp dụng vào bản in.");
+      }
+    }
+
+    function enableDirectEditAttributes() {
+      const paper = document.getElementById('direct-a4-paper');
+      const editables = paper.querySelectorAll('[data-field], #direct-staff-container div, p');
+      editables.forEach(el => el.setAttribute('contenteditable', 'true'));
+    }
+
+    function disableDirectEditAttributes() {
+      const paper = document.getElementById('direct-a4-paper');
+      const editables = paper.querySelectorAll('[contenteditable]');
+      editables.forEach(el => el.setAttribute('contenteditable', 'false'));
+    }
+
+    function downloadDirectWordDoc() {
+      const paper = document.getElementById('direct-a4-paper');
+      const innerHtml = paper.innerHTML;
+      const numRaw = (paper.querySelector('[data-field="doc-number"]')?.innerText || '26_TB_TYT').replace(/[\/\\:]/g, '_');
+
+      const wordTemplate = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset='utf-8'>
+          <title>Phan_cong_nhiem_vu_${numRaw}</title>
+          <!--[if gte mso 9]>
+          <xml>
+            <w:WordDocument>
+              <w:View>Print</w:View>
+              <w:Zoom>100</w:Zoom>
+              <w:DoNotOptimizeForBrowser/>
+            </w:WordDocument>
+          </xml>
+          <![endif]-->
+          <style>
+            @page {
+              size: 21.0cm 29.7cm;
+              margin: 2.0cm 1.5cm 2.0cm 2.5cm;
+              mso-page-orientation: portrait;
+            }
+            body {
+              font-family: 'Times New Roman', Times, serif;
+              font-size: 13pt;
+              line-height: 1.4;
+              color: #000000;
+            }
+            table { border-collapse: collapse; width: 100%; }
+            td { vertical-align: top; }
+            p { margin-top: 0; margin-bottom: 6pt; text-align: justify; }
+          </style>
+        </head>
+        <body>
+          ${innerHtml}
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob(['\ufeff', wordTemplate], { type: 'application/msword;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Phan_cong_nhiem_vu_${numRaw}.doc`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast("Đã xuất file Word (.doc) thành công!");
+    }
+
+    function printDirectDoc() {
+      document.body.classList.remove('print-schedule-mode');
+      document.body.classList.add('print-assignment-mode');
+      setPagePrintOrientation('portrait');
+
+      const printContainer = document.getElementById('print-assignment-container');
+      const paper = document.getElementById('direct-a4-paper');
+      printContainer.innerHTML = paper.innerHTML;
+
+      setTimeout(() => {
+        window.print();
+      }, 300);
+    }
+
+    function setPagePrintOrientation(orientation) {
+      let styleEl = document.getElementById('dynamic-print-page-style');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'dynamic-print-page-style';
+        document.head.appendChild(styleEl);
+      }
+      if (orientation === 'portrait') {
+        styleEl.innerHTML = `@media print { @page { size: A4 portrait; margin: 18mm 15mm 18mm 20mm; } }`;
+      } else {
+        styleEl.innerHTML = `@media print { @page { size: A4 landscape; margin: 8mm 6mm 8mm 6mm; } }`;
+      }
+    }
+
+    function printMeetingSchedule() {
+      document.body.classList.remove('print-assignment-mode');
+      document.body.classList.add('print-schedule-mode');
+      setPagePrintOrientation('landscape');
+
+      const tbody = document.getElementById('print-table-body');
+      const list = window.__ACTIVE_MEETINGS || [];
+
+      document.getElementById('print-sub-title').innerText = `Lịch Đi Học, Đi Họp & Tập Huấn • Cập nhật ngày ${new Date().toLocaleDateString('vi-VN')}`;
+
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 15px; font-style: italic;">Không có lịch nào sắp tới.</td></tr>';
+      } else {
+        tbody.innerHTML = list.map((item, idx) => `
+          <tr>
+            <td style="text-align: center; font-weight: bold;">${idx + 1}</td>
+            <td style="font-weight: bold; font-family: monospace;">${item.time}</td>
+            <td style="font-weight: bold;">${item.topic}</td>
+            <td>${item.staff}</td>
+            <td>${item.location}</td>
+            <td>${item.organizer || '---'}</td>
+            <td style="text-align: center;">${item.status || 'Đã xếp lịch'}</td>
+          </tr>
+        `).join('');
+      }
+
+      const now = new Date();
+      document.getElementById('print-footer-date').innerText = `Mộ Đức, ngày ${now.getDate()} tháng ${now.getMonth() + 1} năm ${now.getFullYear()}`;
+
+      setTimeout(() => { window.print(); }, 350);
+    }
+
+    function exportToExcel() {
+      const list = window.__ACTIVE_MEETINGS || [];
+      const wsData = [
+        ['TRẠM Y TẾ XÃ MỘ ĐỨC', '', '', '', '', '', ''],
+        ['LỊCH ĐI HỌC, ĐI HỌP & TẬP HUẤN CHUYÊN MÔN NĂM 2026'],
+        [`Thời điểm xuất: ${new Date().toLocaleDateString('vi-VN')}`],
+        [],
+        ['TT', 'Loại Hình', 'Thời Gian', 'Nội Dung / Lớp Học / Chuyên Đề', 'Cán Bộ Cử Đi', 'Địa Điểm', 'Đơn Vị Tổ Chức', 'Trạng Thái']
+      ];
+
+      list.forEach((m, idx) => {
+        let catText = 'Tập huấn';
+        if (m.category === 'dihoc') catText = 'Đi học / CME';
+        if (m.category === 'hop') catText = 'Họp / Giao ban';
+
+        wsData.push([
+          idx + 1,
+          catText,
+          m.time,
+          m.topic,
+          m.staff,
+          m.location,
+          m.organizer,
+          m.status
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      ws['!cols'] = [
+        { wch: 5 }, { wch: 14 }, { wch: 22 }, { wch: 45 }, { wch: 30 }, { wch: 30 }, { wch: 22 }, { wch: 14 }
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'LichDiHocTapHuan');
+      XLSX.writeFile(wb, `LichDiHoc_TapHuan_TYTMoDuc_${Date.now()}.xlsx`);
+    }
+
+    function openApiConfigModal() {
+      document.getElementById('cloud-api-url-input').value = GOOGLE_SHEET_HOP_URL;
+      document.getElementById('api-config-modal').classList.remove('hidden');
+    }
+
+    function closeApiConfigModal() {
+      document.getElementById('api-config-modal').classList.add('hidden');
+    }
+
+    function saveCloudApiUrl() {
+      const url = document.getElementById('cloud-api-url-input').value.trim();
+      GOOGLE_SHEET_HOP_URL = url || DEFAULT_GOOGLE_SHEET_HOP_URL;
+      localStorage.setItem('TYT_MEETINGS_API_URL', GOOGLE_SHEET_HOP_URL);
+      closeApiConfigModal();
+      showToast('Đã lưu cấu hình Google Apps Script Cloud URL!', 'success');
+      fetchMeetingsFromCloud();
+    }
+
+    async function saveMeetingsToCloud() {
+      if (!GOOGLE_SHEET_HOP_URL) {
+        showToast("Vui lòng cấu hình URL Google Sheets trước!", "warning");
+        return;
+      }
+      showLoading("Đang lưu lịch đi học & tập huấn lên Google Sheets...");
+      try {
+        const payload = {
+          action: "saveMeetings",
+          data: {
+            records: meetingsList.map(m => ({
+              tempId: m.tempId || `m_${Date.now()}`,
+              category: m.category || "taphuan",
+              time: m.time || "",
+              topic: m.topic || "",
+              staff: m.staff || "",
+              location: m.location || "",
+              organizer: m.organizer || "",
+              status: m.status || "Đã xếp lịch",
+              startDate: m.startDate || "",
+              endDate: m.endDate || ""
+            }))
+          }
+        };
+        const response = await fetch(GOOGLE_SHEET_HOP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        const res = await response.json();
+        if (res && res.status === "success") {
+          showToast(res.message || "Đã lưu thành công lịch lên Google Sheets!", "success");
+        } else {
+          showToast("Lỗi lưu dữ liệu: " + (res.message || "Không xác định"), "error");
+        }
+      } catch (err) {
+        console.error("Lỗi khi lưu lên Cloud:", err);
+        showToast("Lỗi kết nối khi gửi dữ liệu lên Google Sheet.", "error");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function fetchMeetingsFromCloud(isAuto = false) {
+      if (!GOOGLE_SHEET_HOP_URL) {
+        if (!isAuto) showToast('Chưa cấu hình Web App URL. Đang dùng dữ liệu cục bộ.', 'info');
+        return;
+      }
+
+      if (!isAuto) showLoading('Đang đồng bộ lịch từ Google Sheets...');
+      try {
+        const url = GOOGLE_SHEET_HOP_URL + (GOOGLE_SHEET_HOP_URL.includes('?') ? '&' : '?') + `action=load&t=${Date.now()}`;
+        const response = await fetch(url, { method: 'GET', cache: 'no-store' });
+        const res = await response.json();
+
+        if (res.status === 'success' && res.data && res.data.length > 0) {
+          meetingsList = res.data.map(item => ({
+            ...item,
+            tempId: item.tempId || `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
+          }));
+          saveMeetingsToStorage(false);
+          processMeetingsData();
+          if (!isAuto) showToast(`Đã đồng bộ thành công ${meetingsList.length} lịch từ Google Sheets!`, 'success');
+        } else {
+          if (!isAuto) showToast('Không có dữ liệu mới trên Google Sheets.', 'info');
+        }
+      } catch (err) {
+        console.warn('Lỗi kết nối Google Sheets:', err);
+        if (!isAuto) showToast('Không thể kết nối đến Google Sheets. Đang dùng dữ liệu trên máy.', 'warning');
+      } finally {
+        if (!isAuto) hideLoading();
+      }
+    }
+
+    function showLoading(text) {
+      document.getElementById('loading-text').innerText = text;
+      document.getElementById('loading-overlay').style.display = 'flex';
+    }
+
+    function hideLoading() {
+      document.getElementById('loading-overlay').style.display = 'none';
+    }
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      const colors = {
+        success: 'bg-emerald-600 text-white shadow-emerald-600/30',
+        error: 'bg-rose-600 text-white shadow-rose-600/30',
+        warning: 'bg-amber-500 text-white shadow-amber-500/30',
+        info: 'bg-slate-800 text-white shadow-slate-800/30'
+      };
+
+      const icons = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-xmark',
+        warning: 'fa-triangle-exclamation',
+        info: 'fa-circle-info'
+      };
+
+      toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2.5 text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i> <span>${msg}</span>`;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function showConfirmModal(title, msg, onConfirm) {
+      document.getElementById('confirm-modal-title').innerText = title;
+      document.getElementById('confirm-modal-msg').innerText = msg;
+      document.getElementById('confirm-modal').classList.remove('hidden');
+      confirmCallback = onConfirm;
+    }
+
+    function closeConfirmModal(accepted) {
+      document.getElementById('confirm-modal').classList.add('hidden');
+      if (accepted && typeof confirmCallback === 'function') {
+        confirmCallback();
+      }
+      confirmCallback = null;
+    }
+  </script>
+</body>
+</html>
