@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Lịch Đi Học, Đi Họp & Tập Huấn - Trạm Y Tế Xã Mộ Đức</title>
+
+  <!-- Tailwind CSS & FontAwesome & Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Times+New+Roman&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+    }
+    
+    .font-times {
+      font-family: 'Times New Roman', Times, serif;
+    }
+
+    /* Thanh cuộn mềm mại */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    #loading-overlay { display: none; }
+    .loader {
+      border: 4px solid #f1f5f9; border-top: 4px solid #d97706;
+      border-radius: 50%; width: 40px; height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Mô phỏng khổ A4 chuẩn Nghị định 30/2020 */
+    .a4-simulation-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 20mm 15mm 20mm 25mm; /* Trái 25mm, phải 15mm, trên 20mm, dưới 20mm */
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.15), 0 4px 6px -2px rgba(0,0,0,0.05);
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    @media print {
+      body {
+        background-color: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      
+      body > *:not(#print-assignment-container) { display: none !important; }
+
+      #print-assignment-container {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-family: 'Times New Roman', Times, serif;
+        color: black;
+        line-height: 1.45;
+      }
+    }
+    #print-assignment-container { display: none; }
+  </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col bg-slate-50 antialiased selection:bg-amber-100 selection:text-amber-900">
+
+  <!-- OVERLAY LOADING -->
+  <div id="loading-overlay" class="fixed inset-0 bg-white/85 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+    <div class="loader mb-3.5"></div>
+    <p class="text-amber-700 font-bold text-sm" id="loading-text">Đang đồng bộ lịch đi học & tập huấn...</p>
+  </div>
+
+  <!-- TOAST THÔNG BÁO -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- HEADER DÀNH CHO CÁN BỘ & NHÂN VIÊN -->
+  <header class="flex-none p-3 md:p-5 pb-2">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-3.5 md:p-4 mb-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-l-4 border-l-amber-600">
+      
+      <!-- Thông tin đơn vị & Tiêu đề -->
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-700 flex items-center justify-center transition shrink-0" title="Về trang chủ">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center">
+              <i class="fa-solid fa-graduation-cap text-amber-600 mr-2"></i>Lịch Đi Học, Đi Họp & Tập Huấn
+            </h1>
+            <span class="bg-amber-100 text-amber-900 text-[11px] px-2.5 py-0.5 rounded-full font-bold border border-amber-300">Dành Cho Cán Bộ</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">Tra cứu lịch cử đi học (CME), tập huấn và giao ban • 04 Điểm trạm • Vào phòng online Zoom/Meet • Tải văn bản A4</p>
+        </div>
+      </div>
+
+      <!-- CÁC NÚT THAO TÁC TIỆN ÍCH -->
+      <div class="flex flex-wrap items-center gap-2 self-end md:self-auto">
+        <button onclick="fetchMeetingsFromCloud(false)" class="px-3 py-2 bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-amber-800 border border-slate-200 rounded-xl font-bold transition text-xs flex items-center gap-1.5 shadow-xs" title="Làm mới dữ liệu từ Google Sheets">
+          <i class="fa-solid fa-arrows-rotate text-amber-600"></i>
+          <span>Cập nhật mới</span>
+        </button>
+
+        <a href="quan-ly-hop-tap-huan.html" class="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl transition text-xs flex items-center gap-1.5 shadow-sm shadow-amber-600/30" title="Chuyển sang phân hệ Quản lý & Lập lịch">
+          <i class="fa-solid fa-sliders"></i>
+          <span class="hidden sm:inline">Phân hệ Quản lý</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- THANH TRA CỨU CÁ NHÂN: "TÌM LỊCH CỦA TÔI" (TIỆN LỢI CHO NHÂN VIÊN) -->
+    <div class="bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-2xl p-3 md:p-4 mb-3 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center text-lg shrink-0 backdrop-blur-xs">
+          <i class="fa-solid fa-user-check"></i>
+        </div>
+        <div>
+          <div class="font-black text-sm md:text-base leading-tight">Tra Cứu Nhanh Lịch Được Cử Tham Gia</div>
+          <p class="text-[11.5px] text-amber-100 mt-0.5">Chọn tên của bạn để chỉ hiển thị các khóa học, lớp tập huấn hoặc cuộc họp được phân công</p>
+        </div>
+      </div>
+
+      <!-- Ô chọn tên cán bộ từ danh bạ 29 người -->
+      <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md p-1.5 rounded-xl border border-white/20">
+        <label for="personal-staff-select" class="text-xs font-bold whitespace-nowrap pl-2 text-amber-100 flex items-center gap-1">
+          <i class="fa-solid fa-id-card-clip text-amber-300"></i>
+          <span>Cán bộ:</span>
+        </label>
+        <select id="personal-staff-select" onchange="onPersonalStaffFilterChange(this.value)" class="bg-white text-slate-900 border-none rounded-lg px-3 py-1.5 text-xs font-bold outline-none cursor-pointer shadow-xs max-w-[220px] sm:max-w-[260px] truncate">
+          <option value="all">-- Xem tất cả cán bộ --</option>
+          <!-- Nạp động bằng JavaScript -->
+        </select>
+        <button onclick="resetPersonalFilter()" id="btn-reset-personal" class="hidden px-2 py-1 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs font-bold transition" title="Xóa lọc cá nhân">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- THẺ THỐNG KÊ NHANH 4 CHỈ SỐ -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-2.5">
+      
+      <div class="bg-white p-3 rounded-2xl border border-rose-200 bg-gradient-to-r from-rose-50/70 to-white shadow-xs flex items-center justify-between">
+        <div>
+          <div class="text-[10.5px] font-bold text-rose-600 uppercase tracking-wide">Hôm Nay / Đang Diễn Ra</div>
+          <div class="text-xl font-black text-rose-700 mt-0.5" id="stat-count-today">0</div>
+          <div class="text-[10px] text-rose-500 font-semibold">Tham gia đúng giờ quy định</div>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-bell animate-bounce"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-3 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50/70 to-white shadow-xs flex items-center justify-between">
+        <div>
+          <div class="text-[10.5px] font-bold text-amber-700 uppercase tracking-wide">Ngày Mai / 1-2 Ngày Tới</div>
+          <div class="text-xl font-black text-amber-800 mt-0.5" id="stat-count-tomorrow">0</div>
+          <div class="text-[10px] text-amber-600 font-semibold">Chuẩn bị hồ sơ, tài liệu</div>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-clock"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-3 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50/70 to-white shadow-xs flex items-center justify-between">
+        <div>
+          <div class="text-[10.5px] font-bold text-sky-700 uppercase tracking-wide">Trong Tuần Này</div>
+          <div class="text-xl font-black text-sky-800 mt-0.5" id="stat-count-week">0</div>
+          <div class="text-[10px] text-sky-600 font-semibold">Kế hoạch công tác tuần</div>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-calendar-week"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div>
+          <div class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide">Tổng Sự Kiện Sắp Tới</div>
+          <div class="text-xl font-black text-slate-800 mt-0.5" id="stat-count-total">0</div>
+          <div class="text-[10px] text-emerald-600 font-semibold" id="stat-hidden-past">Đã tự động ẩn lịch cũ</div>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-calendar-check"></i>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BỘ LỌC DANH MỤC & THỜI GIAN & Ô TÌM KIẾM -->
+    <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-2 mb-1">
+      
+      <div class="flex flex-wrap items-center gap-1.5">
+        
+        <!-- Lọc theo loại hình: Tất cả | Đi học | Tập huấn | Cuộc họp -->
+        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs overflow-x-auto custom-scrollbar">
+          <button onclick="filterByCategory('all')" id="btn-cat-all" class="px-2.5 py-1 rounded-lg text-xs font-bold transition bg-amber-600 text-white shadow-xs whitespace-nowrap">
+            Tất cả (<span id="count-cat-all">0</span>)
+          </button>
+          <button onclick="filterByCategory('dihoc')" id="btn-cat-dihoc" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap flex items-center gap-1">
+            <i class="fa-solid fa-book-open-reader text-indigo-600"></i> Đi Học / Đào Tạo (<span id="count-cat-dihoc">0</span>)
+          </button>
+          <button onclick="filterByCategory('taphuan')" id="btn-cat-taphuan" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap flex items-center gap-1">
+            <i class="fa-solid fa-chalkboard-user text-amber-600"></i> Tập Huấn (<span id="count-cat-taphuan">0</span>)
+          </button>
+          <button onclick="filterByCategory('hop')" id="btn-cat-hop" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap flex items-center gap-1">
+            <i class="fa-solid fa-users text-teal-600"></i> Họp / Giao Ban (<span id="count-cat-hop">0</span>)
+          </button>
+        </div>
+
+        <!-- Lọc theo thời gian -->
+        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs">
+          <button onclick="filterByTime('all')" id="btn-time-all" class="px-2 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white transition">Tất cả thời gian</button>
+          <button onclick="filterByTime('urgent')" id="btn-time-urgent" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Hôm nay / Ngày mai</button>
+          <button onclick="filterByTime('week')" id="btn-time-week" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Trong tuần này</button>
+          <button onclick="filterByTime('month')" id="btn-time-month" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Trong tháng</button>
+        </div>
+
+      </div>
+
+      <!-- Ô tìm kiếm lịch thông minh -->
+      <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs flex-1 lg:max-w-xs">
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+        <input type="text" id="search-meeting-input" placeholder="Tìm tên chuyên đề, cán bộ, địa điểm..." class="w-full bg-transparent border-none outline-none text-xs text-slate-700 focus:ring-0" onkeyup="renderMeetingsList()">
+      </div>
+
+    </div>
+  </header>
+
+  <!-- NỘI DUNG CHÍNH: DANH SÁCH LỊCH SẮP TỚI & KHO LỊCH SỬ ĐÃ QUA -->
+  <main class="flex-1 overflow-hidden p-3 md:p-5 pt-0 flex flex-col">
+    
+    <div class="flex-1 flex flex-col overflow-hidden space-y-3">
+      
+      <!-- Thông báo lọc cá nhân nếu có -->
+      <div id="personal-filter-notice" class="hidden bg-amber-50 border border-amber-200 p-2.5 rounded-xl flex items-center justify-between text-xs font-bold text-amber-900">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-lg bg-amber-600 text-white flex items-center justify-center text-xs">
+            <i class="fa-solid fa-user"></i>
+          </span>
+          <span>Đang hiển thị lịch của cán bộ: <b id="personal-filter-name" class="text-amber-800 text-sm">---</b></span>
+          <span class="text-slate-400 font-normal">• (<span id="personal-filter-count">0</span> sự kiện)</span>
+        </div>
+        <button onclick="resetPersonalFilter()" class="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition">
+          Xem tất cả cán bộ
+        </button>
+      </div>
+
+      <!-- Khung danh sách thẻ lịch -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar pr-1 space-y-2.5" id="meetings-list-container">
+        <!-- Render sống động qua JavaScript -->
+      </div>
+
+      <!-- Khu vực lịch sử đã qua (Tự động ẩn) -->
+      <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row justify-between items-center gap-2 text-xs">
+        <div class="text-slate-500 font-medium flex items-center gap-1.5">
+          <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+          <span>Các sự kiện đã qua hạn chót được tự động đưa vào kho lưu trữ để bạn không bị nhầm lẫn.</span>
+        </div>
+        <button onclick="toggleArchivedMeetings()" id="btn-toggle-archive" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-clock-rotate-left text-slate-500"></i>
+          <span>Xem lịch sử đã qua (<span id="count-archived-num">0</span>)</span>
+        </button>
+      </div>
+
+      <!-- Danh sách lịch đã kết thúc (Mặc định ẩn) -->
+      <div id="archived-meetings-container" class="hidden max-h-48 overflow-y-auto custom-scrollbar space-y-2 p-3 bg-slate-100 rounded-2xl border border-slate-200 text-xs">
+        <!-- Render qua JS khi người dùng cần xem -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL XEM TRƯỚC VĂN BẢN PHÂN CÔNG NHIỆM VỤ A4 (CHUẨN NGHỊ ĐỊNH 30) -->
+  <div id="doc-preview-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl border border-slate-200 overflow-hidden my-auto flex flex-col max-h-[92vh]">
+      
+      <!-- Header Modal -->
+      <div class="p-3.5 bg-slate-900 text-white flex justify-between items-center flex-none">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black">
+            <i class="fa-solid fa-file-contract"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base leading-tight">Văn Bản Phân Công Nhiệm Vụ Tham Gia</h3>
+            <p class="text-[11px] text-slate-300">Thể thức hành chính Nghị định 30/2020/NĐ-CP • Khổ A4 Dọc • Phông chữ Times New Roman</p>
+          </div>
+        </div>
+        <button onclick="closeDocPreviewModal()" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Khung xem trước mặt giấy A4 -->
+      <div class="flex-1 bg-slate-200/90 p-3 sm:p-6 overflow-y-auto custom-scrollbar flex justify-center">
+        <article id="modal-a4-paper" class="a4-simulation-sheet font-times text-black text-[13pt] leading-[1.4] select-text shadow-xl">
+          <!-- Render động qua JavaScript -->
+        </article>
+      </div>
+
+      <!-- Footer Modal: Tải Word & In PDF -->
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex flex-wrap gap-2 justify-between items-center flex-none text-xs">
+        <div class="text-[11.5px] text-slate-500 hidden sm:flex items-center gap-1.5 font-medium">
+          <i class="fa-solid fa-circle-check text-emerald-600"></i>
+          <span>Bạn có thể tải file Word (.doc) hoặc In PDF để làm thủ tục cử cán bộ công tác.</span>
+        </div>
+        <div class="flex items-center gap-2 ml-auto">
+          <button type="button" onclick="closeDocPreviewModal()" class="px-3 py-1.5 rounded-xl font-bold text-slate-600 hover:bg-slate-200 transition">
+            Đóng
+          </button>
+          <button type="button" onclick="copyCurrentDocText()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition flex items-center gap-1">
+            <i class="fa-solid fa-copy"></i> Sao chép
+          </button>
+          <button type="button" onclick="downloadCurrentWordDoc()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-sm flex items-center gap-1.5">
+            <i class="fa-solid fa-file-word"></i> Tải File Word (.doc)
+          </button>
+          <button type="button" onclick="printCurrentAssignmentDoc()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold transition shadow-sm shadow-amber-600/30 flex items-center gap-1.5">
+            <i class="fa-solid fa-print"></i> In Văn Bản A4 (PDF)
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- KHUNG IN VĂN BẢN A4 CHO TRÌNH DUYỆT -->
+  <div id="print-assignment-container" class="w-full text-black font-times">
+    <!-- Render động khi in -->
+  </div>
+
+  <script>
+    // URL GOOGLE APPS SCRIPT WEB APP MẶC ĐỊNH MỚI (BẢO TOÀN 12 CỘT CHUẨN CÓ LINK ONLINE)
+    const DEFAULT_GOOGLE_SHEET_HOP_URL = "https://script.google.com/macros/s/AKfycbw9IDJhGC2UQ6mKnn1NjlTIiZACzj8uvwZJj28dgpbSVWREHqljf3aYC6ihmbslqg_jUg/exec";
+    const PREVIOUS_GOOGLE_SHEET_HOP_URLS = [
+      "https://script.google.com/macros/s/AKfycbxXEckUzIAPzXan6uJfx0J_MPB_DKQFBP-50wVY_2s8-HXSuCm0qnkdPz0B8q-ww3c3dA/exec",
+      "https://script.google.com/macros/s/AKfycbwXpFjMyBife5Yi0zeVRCqXZM-c-nPEfSYJVrT15K62gS5Z0v1gjrCL0f-II4mfwVw3IQ/exec"
+    ];
+    
+    // Tự động nâng cấp URL trong localStorage nếu đang lưu các URL cũ
+    const savedApiUrl = localStorage.getItem('TYT_MEETINGS_API_URL');
+    let GOOGLE_SHEET_HOP_URL = DEFAULT_GOOGLE_SHEET_HOP_URL;
+    if (savedApiUrl && savedApiUrl.trim() !== "" && !PREVIOUS_GOOGLE_SHEET_HOP_URLS.includes(savedApiUrl)) {
+      GOOGLE_SHEET_HOP_URL = savedApiUrl;
+    } else {
+      localStorage.setItem('TYT_MEETINGS_API_URL', DEFAULT_GOOGLE_SHEET_HOP_URL);
+      GOOGLE_SHEET_HOP_URL = DEFAULT_GOOGLE_SHEET_HOP_URL;
+    }
+
+    // 29 cán bộ theo 4 điểm trạm chuẩn xác (chuẩn hóa ĐD Việt)
+    const DEFAULT_STAFF_29 = [
+      // 1. Đức Tân - 10 cán bộ
+      { name: "Trần Thị Lệ Thy", shortName: "NHS Thy", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Trịnh Thị Minh Tuệ", shortName: "Ys Tuệ", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Huỳnh Thị Thuỳ Yên", shortName: "DS Yên", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Võ Thị Thanh Thùy", shortName: "NHS Thuỳ", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Bùi Đạt Hiếu", shortName: "DS Hiếu", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Nguyễn Thị Như Nguyện", shortName: "BS Nguyện", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Võ Thị Thanh Thuyên", shortName: "Bs Thuyên", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Lê Thị Thủy", shortName: "Ys Thủy", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Trần Thị Việt Châu", shortName: "CN Châu", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Võ Quang Vinh", shortName: "ĐD Vinh", point: "Điểm trạm chính (Đức Tân)" },
+
+      // 2. Mộ Đức - 6 cán bộ
+      { name: "Phạm Minh Đức", shortName: "BS Đức", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Đoàn Thị Diễm", shortName: "DS Diễm", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Võ Thị Thanh Việt", shortName: "ĐD Việt", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Huỳnh Thị Anh Tin", shortName: "NHS Tin", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Nguyễn Thị Thu Nguyệt", shortName: "ĐD Nguyệt", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Trần Thị Lài", shortName: "ĐD Lài", point: "Điểm y tế số 1 (Mộ Đức)" },
+
+      // 3. Đức Hòa - 6 cán bộ
+      { name: "Trần Thị Kim Thanh", shortName: "ĐD Thanh", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Nguyễn Thị Phương Thảo", shortName: "DS Thảo", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Cao Thị Ánh Trúc", shortName: "ĐD Trúc", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Huỳnh Văn Phương", shortName: "Ys Phương", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Nguyễn Thị Kiều Thắm", shortName: "NHS Thắm", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Nguyễn Phu", shortName: "BS Phu", point: "Điểm y tế số 2 (Đức Hòa)" },
+
+      // 4. Đức Phú - 7 cán bộ
+      { name: "Phạm Trần Thị Hoà", shortName: "DS Hoà", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Nguyễn Thị Ánh Thu", shortName: "CN Thu", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Nguyễn Thị Bé", shortName: "NHS Bé", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Nguyễn Anh Vũ", shortName: "Ys Vũ", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Phạm Thị Mỹ Trâm", shortName: "NHS Trâm", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Lê Thị Tố Lan", shortName: "NHS Lan", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Nguyễn Thị Ly Va", shortName: "ĐD Ly Va", point: "Điểm y tế số 3 (Đức Phú)" }
+    ];
+
+    // Dữ liệu mẫu ban đầu
+    const INITIAL_MEETINGS = [
+      {
+        tempId: "m_danso_2026",
+        category: "taphuan",
+        time: "Ngày 01 – 02/10/2026",
+        topic: "Lớp tập huấn chuyên môn, nghiệp vụ dân số và phát triển năm 2026",
+        staff: "CN. Nguyễn Thị Ánh Thu, HS. Nguyễn Thị Bé",
+        location: "Khách sạn Hùng Vương (Số 45 đường Hùng Vương, phường Cẩm Thành, Quảng Ngãi)",
+        organizer: "Chi cục Dân số - KHHGĐ tỉnh",
+        status: "Đã xếp lịch",
+        startDate: "2026-10-01T08:00:00",
+        endDate: "2026-10-02T17:00:00",
+        meetingLink: ""
+      },
+      {
+        tempId: "m_online_cme_2026",
+        category: "dihoc",
+        time: "Thứ 6 (25/09/2026) - 14:00",
+        topic: "Tập huấn trực tuyến cập nhật chẩn đoán & điều trị Sốt xuất huyết Dengue",
+        staff: "BS. Võ Thị Thanh Thuyên, BS. Phạm Minh Đức, YS. Trịnh Thị Minh Tuệ",
+        location: "Trực tuyến qua Google Meet",
+        organizer: "Bệnh viện Đa khoa tỉnh & Sở Y tế",
+        status: "Sắp diễn ra",
+        startDate: "2026-09-25T14:00:00",
+        endDate: "2026-09-25T17:00:00",
+        meetingLink: "https://meet.google.com/abc-defg-hij"
+      },
+      {
+        tempId: "m_cme_phanve_2026",
+        category: "dihoc",
+        time: "Từ ngày 24/09/2026 đến 26/09/2026",
+        topic: "Khóa đào tạo liên tục (CME) kỹ năng cấp cứu ban đầu, chẩn đoán & xử trí sốc phản vệ theo Thông tư 51/2017/TT-BYT",
+        staff: "BS. Võ Thị Thanh Thuyên, YS. Trịnh Thị Minh Tuệ, ĐD. Võ Quang Vinh",
+        location: "Hội trường Bệnh viện Đa khoa tỉnh Quảng Ngãi",
+        organizer: "Sở Y tế tỉnh Quảng Ngãi",
+        status: "Đã xếp lịch",
+        startDate: "2026-09-24T07:30:00",
+        endDate: "2026-09-26T17:00:00",
+        meetingLink: ""
+      },
+      {
+        tempId: "m_tiemchung_2026",
+        category: "taphuan",
+        time: "Thứ 2 (21/09/2026) - 08:00",
+        topic: "Tập huấn triển khai phân hệ phần mềm quản lý tiêm chủng mở rộng quốc gia V2.0",
+        staff: "BS. Phạm Minh Đức, NHS. Huỳnh Thị Anh Tin, ĐD. Nguyễn Thị Thu Nguyệt",
+        location: "Hội trường Trung tâm Kiểm soát Bệnh tật tỉnh (CDC Quảng Ngãi)",
+        organizer: "CDC Tỉnh Quảng Ngãi",
+        status: "Sắp diễn ra",
+        startDate: "2026-09-21T08:00:00",
+        endDate: "2026-09-21T17:00:00",
+        meetingLink: ""
+      },
+      {
+        tempId: "m_giaoban_q3_2026",
+        category: "hop",
+        time: "Thứ 3 (22/09/2026) - 13:30",
+        topic: "Cuộc họp giao ban chuyên môn y tế cơ sở & đánh giá Bộ tiêu chí quốc gia y tế xã Quý 3/2026",
+        staff: "BS. Nguyễn Thị Như Nguyện, BS. Nguyễn Phu, CN. Trần Thị Việt Châu",
+        location: "Phòng họp số 2 - UBND Xã Mộ Đức",
+        organizer: "UBND Xã Mộ Đức",
+        status: "Đã xếp lịch",
+        startDate: "2026-09-22T13:30:00",
+        endDate: "2026-09-22T17:00:00",
+        meetingLink: ""
+      },
+      {
+        tempId: "m_duoc_bv_2026",
+        category: "taphuan",
+        time: "Thứ 4 (14/10/2026) - 08:30",
+        topic: "Tập huấn công tác Dược lâm sàng, kiểm soát kê đơn và thanh quyết toán BHYT trạm y tế",
+        staff: "DS. Huỳnh Thị Thuỳ Yên, DS. Bùi Đạt Hiếu, DS. Đoàn Thị Diễm",
+        location: "Hội trường Sở Y tế Quảng Ngãi",
+        organizer: "Sở Y tế Quảng Ngãi",
+        status: "Đã xếp lịch",
+        startDate: "2026-10-14T08:30:00",
+        endDate: "2026-10-14T16:30:00",
+        meetingLink: ""
+      },
+      // Sự kiện trong quá khứ (sẽ được tự động ẩn vào kho lưu trữ)
+      {
+        tempId: "m_past_1",
+        category: "hop",
+        time: "Thứ 5 (10/09/2026) - 08:00",
+        topic: "Họp triển khai công tác phòng chống sốt xuất huyết tháng 9",
+        staff: "BS. Phạm Minh Đức, NHS. Võ Thị Thanh Việt",
+        location: "Điểm y tế số 1 (Mộ Đức)",
+        organizer: "Trạm Y tế Mộ Đức",
+        status: "Đã hoàn thành",
+        startDate: "2026-09-10T08:00:00",
+        endDate: "2026-09-10T11:30:00",
+        meetingLink: ""
+      }
+    ];
+
+    let meetingsList = [];
+    let currentCategoryFilter = 'all';
+    let currentTimeFilter = 'all';
+    let selectedPersonalStaff = 'all';
+    let activePreviewMeeting = null;
+
+    // Lấy danh bạ nhân sự tập trung từ LocalStorage nếu có
+    function getLiveStaffList() {
+      const stored = localStorage.getItem('TYT_STAFF_LIST');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          const active = parsed.filter(s => s.status !== 'inactive');
+          if (active.length > 0) {
+            return active.map(item => ({
+              name: item.name,
+              shortName: item.shortName || item.name,
+              point: item.point || 'Điểm trạm chính'
+            }));
+          }
+        } catch(e) {}
+      }
+      return DEFAULT_STAFF_29;
+    }
+
+    window.onload = function() {
+      initAppStorage();
+      populatePersonalStaffDropdown();
+      processMeetingsData();
+      if (GOOGLE_SHEET_HOP_URL) {
+        fetchMeetingsFromCloud(true);
+      }
+    };
+
+    function initAppStorage() {
+      const saved = localStorage.getItem('TYT_MEETINGS_DATA');
+      if (saved) {
+        try {
+          meetingsList = JSON.parse(saved);
+        } catch(e) {
+          meetingsList = [...INITIAL_MEETINGS];
+        }
+      } else {
+        meetingsList = [...INITIAL_MEETINGS];
+      }
+    }
+
+    function populatePersonalStaffDropdown() {
+      const select = document.getElementById('personal-staff-select');
+      if (!select) return;
+
+      const staffList = getLiveStaffList();
+      const groups = {};
+      staffList.forEach(s => {
+        if (!groups[s.point]) groups[s.point] = [];
+        groups[s.point].push(s);
+      });
+
+      let html = '<option value="all">-- Xem tất cả cán bộ --</option>';
+      for (const pt in groups) {
+        html += `<optgroup label="${pt}">`;
+        groups[pt].forEach(stf => {
+          html += `<option value="${stf.name}">${stf.name} (${stf.shortName || ''})</option>`;
+        });
+        html += '</optgroup>';
+      }
+      select.innerHTML = html;
+    }
+
+    function onPersonalStaffFilterChange(staffName) {
+      selectedPersonalStaff = staffName;
+      const resetBtn = document.getElementById('btn-reset-personal');
+      const noticeBar = document.getElementById('personal-filter-notice');
+      const nameEl = document.getElementById('personal-filter-name');
+
+      if (staffName !== 'all') {
+        resetBtn.classList.remove('hidden');
+        noticeBar.classList.remove('hidden');
+        nameEl.innerText = staffName;
+      } else {
+        resetBtn.classList.add('hidden');
+        noticeBar.classList.add('hidden');
+      }
+
+      renderMeetingsList();
+    }
+
+    function resetPersonalFilter() {
+      const select = document.getElementById('personal-staff-select');
+      if (select) select.value = 'all';
+      onPersonalStaffFilterChange('all');
+    }
+
+    function parseDateTime(item) {
+      let start = null;
+      let end = null;
+
+      if (item.startDate) start = new Date(item.startDate);
+      if (item.endDate) end = new Date(item.endDate);
+
+      // Nếu không có ISO, bóc tách từ chuỗi hiển thị
+      if (!start || isNaN(start.getTime())) {
+        const matches = (item.time || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/g);
+        if (matches && matches.length > 0) {
+          const p1 = matches[0].split('/');
+          start = new Date(parseInt(p1[2], 10), parseInt(p1[1], 10) - 1, parseInt(p1[0], 10), 8, 0, 0);
+
+          if (matches.length > 1) {
+            const p2 = matches[1].split('/');
+            end = new Date(parseInt(p2[2], 10), parseInt(p2[1], 10) - 1, parseInt(p2[0], 10), 17, 0, 0);
+          } else {
+            end = new Date(start.getTime());
+            end.setHours(23, 59, 59);
+          }
+        }
+      }
+
+      if (!end || isNaN(end.getTime())) {
+        if (start && !isNaN(start.getTime())) {
+          end = new Date(start.getTime());
+          end.setHours(23, 59, 59);
+        } else {
+          start = new Date(2099, 0, 1);
+          end = new Date(2099, 0, 1);
+        }
+      }
+
+      return { start, end };
+    }
+
+    function processMeetingsData() {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+
+      const parsed = meetingsList.map((item, idx) => {
+        const { start, end } = parseDateTime(item);
+        
+        // Hết hạn = Thời điểm kết thúc nhỏ hơn hiện tại
+        const isExpired = end.getTime() < now.getTime();
+
+        // Tính khoảng cách ngày so với hôm nay
+        const diffMs = start.getTime() - todayStart.getTime();
+        const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+
+        // 5 CẤP ĐỘ MÀU KHẨN CẤP
+        let level = 5;
+        let levelBadge = '';
+        let levelText = '';
+        let colorTheme = {};
+
+        if (isExpired) {
+          level = 0;
+        } else if (diffDays <= 0 && end.getTime() >= now.getTime()) {
+          // CẤP 1: HÔM NAY / ĐANG DIỄN RA
+          level = 1;
+          levelBadge = 'bg-rose-600 text-white animate-pulse';
+          levelText = diffDays < 0 ? '⚡ ĐANG DIỄN RA' : '🔴 HÔM NAY';
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-rose-600 border-rose-200 bg-gradient-to-r from-rose-50/80 to-white',
+            badgeBg: 'bg-rose-100 text-rose-800 border border-rose-300',
+            dateBox: 'bg-rose-600 text-white',
+            tag: 'Hôm nay'
+          };
+        } else if (diffDays === 1 || diffDays === 2) {
+          // CẤP 2: NGÀY MAI / CÒN 1-2 NGÀY
+          level = 2;
+          levelBadge = 'bg-amber-500 text-white';
+          levelText = diffDays === 1 ? '🟠 NGÀY MAI' : '🟠 CÒN 2 NGÀY';
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-amber-500 border-amber-200 bg-gradient-to-r from-amber-50/70 to-white',
+            badgeBg: 'bg-amber-100 text-amber-900 border border-amber-300',
+            dateBox: 'bg-amber-500 text-white',
+            tag: diffDays === 1 ? 'Ngày mai' : 'Còn 2 ngày'
+          };
+        } else if (diffDays <= 7) {
+          // CẤP 3: TRONG TUẦN NÀY
+          level = 3;
+          levelBadge = 'bg-sky-600 text-white';
+          levelText = `🔵 CÒN ${diffDays} NGÀY (Tuần này)`;
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-sky-500 border-sky-200 bg-gradient-to-r from-sky-50/60 to-white',
+            badgeBg: 'bg-sky-100 text-sky-900 border border-sky-300',
+            dateBox: 'bg-sky-600 text-white',
+            tag: `Còn ${diffDays} ngày`
+          };
+        } else if (diffDays <= 14) {
+          // CẤP 4: TUẦN TỚI
+          level = 4;
+          levelBadge = 'bg-teal-600 text-white';
+          levelText = `🟢 CÒN ${diffDays} NGÀY (Tuần tới)`;
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-teal-500 border-teal-200 bg-gradient-to-r from-teal-50/50 to-white',
+            badgeBg: 'bg-teal-100 text-teal-900 border border-teal-300',
+            dateBox: 'bg-teal-600 text-white',
+            tag: `Còn ${diffDays} ngày`
+          };
+        } else {
+          // CẤP 5: TRÊN 2 TUẦN
+          level = 5;
+          levelBadge = 'bg-slate-500 text-white';
+          levelText = `⚪ CÒN ${diffDays} NGÀY`;
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-slate-400 border-slate-200 bg-white',
+            badgeBg: 'bg-slate-100 text-slate-700 border border-slate-300',
+            dateBox: 'bg-slate-700 text-white',
+            tag: `Còn ${diffDays} ngày`
+          };
+        }
+
+        return {
+          ...item,
+          tempId: item.tempId || `m_${idx}_${Date.now()}`,
+          category: item.category || 'taphuan',
+          meetingLink: (item.meetingLink || '').trim(),
+          start,
+          end,
+          diffDays,
+          isExpired,
+          level,
+          levelBadge,
+          levelText,
+          colorTheme
+        };
+      });
+
+      // TỰ ĐỘNG BỎ QUA NGÀY HẾT HẠN
+      const activeUpcoming = parsed.filter(m => !m.isExpired);
+      const archivedPast = parsed.filter(m => m.isExpired);
+
+      // SẮP XẾP NGÀY GẦN NHẤT ĐẦU TIÊN
+      activeUpcoming.sort((a, b) => a.start.getTime() - b.start.getTime());
+      archivedPast.sort((a, b) => b.end.getTime() - a.end.getTime());
+
+      window.__ACTIVE_MEETINGS = activeUpcoming;
+      window.__ARCHIVED_MEETINGS = archivedPast;
+
+      updateStatistics();
+      renderMeetingsList();
+      renderArchivedList();
+    }
+
+    function updateStatistics() {
+      const active = window.__ACTIVE_MEETINGS || [];
+      const archived = window.__ARCHIVED_MEETINGS || [];
+
+      const todayCount = active.filter(m => m.diffDays <= 0).length;
+      const tomorrowCount = active.filter(m => m.diffDays === 1 || m.diffDays === 2).length;
+      const weekCount = active.filter(m => m.diffDays <= 7).length;
+
+      document.getElementById('stat-count-today').innerText = todayCount;
+      document.getElementById('stat-count-tomorrow').innerText = tomorrowCount;
+      document.getElementById('stat-count-week').innerText = weekCount;
+      document.getElementById('stat-count-total').innerText = active.length;
+      document.getElementById('stat-hidden-past').innerText = `Đã ẩn ${archived.length} lịch cũ`;
+
+      const diHocCount = active.filter(m => m.category === 'dihoc').length;
+      const tapHuanCount = active.filter(m => m.category === 'taphuan').length;
+      const hopCount = active.filter(m => m.category === 'hop').length;
+
+      document.getElementById('count-cat-all').innerText = active.length;
+      document.getElementById('count-cat-dihoc').innerText = diHocCount;
+      document.getElementById('count-cat-taphuan').innerText = tapHuanCount;
+      document.getElementById('count-cat-hop').innerText = hopCount;
+
+      document.getElementById('count-archived-num').innerText = archived.length;
+    }
+
+    function renderMeetingsList() {
+      const container = document.getElementById('meetings-list-container');
+      const search = (document.getElementById('search-meeting-input')?.value || '').toLowerCase().trim();
+      const list = window.__ACTIVE_MEETINGS || [];
+
+      const filtered = list.filter(item => {
+        const matchSearch = item.topic.toLowerCase().includes(search) ||
+                            item.staff.toLowerCase().includes(search) ||
+                            item.location.toLowerCase().includes(search) ||
+                            (item.organizer || '').toLowerCase().includes(search) ||
+                            item.time.toLowerCase().includes(search);
+
+        let matchCat = true;
+        if (currentCategoryFilter !== 'all') {
+          matchCat = item.category === currentCategoryFilter;
+        }
+
+        let matchTime = true;
+        if (currentTimeFilter === 'urgent') matchTime = item.diffDays <= 2;
+        else if (currentTimeFilter === 'week') matchTime = item.diffDays <= 7;
+        else if (currentTimeFilter === 'month') matchTime = item.diffDays <= 30;
+
+        let matchPersonal = true;
+        if (selectedPersonalStaff !== 'all') {
+          const staffLower = item.staff.toLowerCase();
+          const targetLower = selectedPersonalStaff.toLowerCase();
+          matchPersonal = staffLower.includes(targetLower);
+        }
+
+        return matchSearch && matchCat && matchTime && matchPersonal;
+      });
+
+      const personalCountEl = document.getElementById('personal-filter-count');
+      if (personalCountEl) personalCountEl.innerText = filtered.length;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="p-10 text-center bg-white rounded-2xl border border-dashed border-slate-300">
+            <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xl mx-auto mb-2.5">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div class="font-extrabold text-slate-800 text-sm">Không Tìm Thấy Lịch Nào Phù Hợp</div>
+            <div class="text-xs text-slate-400 mt-1">Các lịch cũ đã hết hạn đều đã được tự động đưa vào kho lưu trữ.</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const staffArr = (item.staff || '').split(',').map(s => s.trim()).filter(Boolean);
+
+        let catBadge = '';
+        if (item.category === 'dihoc') {
+          catBadge = '<span class="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200 text-[10.5px] font-bold"><i class="fa-solid fa-book-open-reader mr-1"></i> Đi Học / Đào Tạo</span>';
+        } else if (item.category === 'taphuan') {
+          catBadge = '<span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200 text-[10.5px] font-bold"><i class="fa-solid fa-chalkboard-user mr-1"></i> Tập Huấn</span>';
+        } else {
+          catBadge = '<span class="px-2 py-0.5 rounded-md bg-teal-100 text-teal-800 border border-teal-200 text-[10.5px] font-bold"><i class="fa-solid fa-users mr-1"></i> Họp / Giao Ban</span>';
+        }
+
+        return `
+          <div class="bg-white p-3.5 sm:p-4 rounded-2xl border shadow-xs transition hover:shadow-md ${item.colorTheme.cardBorder}">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-100">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2.5 py-1 rounded-lg text-[11px] font-black shadow-xs ${item.levelBadge}">
+                  ${item.levelText}
+                </span>
+                ${catBadge}
+                <span class="font-extrabold text-slate-800 text-xs sm:text-sm font-mono flex items-center gap-1.5">
+                  <i class="fa-regular fa-clock text-amber-600"></i> ${item.time}
+                </span>
+              </div>
+
+              <div class="flex items-center gap-1.5 self-end sm:self-auto">
+                <span class="px-2 py-0.5 rounded-full text-[10.5px] font-bold ${item.colorTheme.badgeBg}">
+                  ${item.status || 'Đã xếp lịch'}
+                </span>
+                
+                <button onclick="openDocPreviewModal('${item.tempId}')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-[11px] flex items-center gap-1 transition shadow-xs" title="Xem văn bản phân công nhiệm vụ của Giám đốc">
+                  <i class="fa-solid fa-file-contract text-amber-700"></i>
+                  <span>Văn Bản A4</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tên chuyên đề / lớp học -->
+            <div class="text-sm sm:text-base font-black text-slate-900 mb-2 leading-snug">
+              ${item.topic}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-600 pt-1">
+              <div class="space-y-1">
+                ${renderStaffLocationOrMeetingLink(item)}
+                <div class="flex items-start gap-1.5">
+                  <i class="fa-solid fa-building-flag text-indigo-500 mt-0.5 text-[11px] shrink-0"></i>
+                  <span><b>Tổ chức:</b> <span class="text-slate-800 font-semibold">${item.organizer || '---'}</span></span>
+                </div>
+              </div>
+
+              <!-- Cán bộ tham gia -->
+              <div>
+                <div class="font-bold text-slate-700 mb-1 flex items-center gap-1">
+                  <i class="fa-solid fa-users text-teal-600"></i>
+                  <span>Cán bộ cử tham gia (${staffArr.length}):</span>
+                </div>
+                <div class="flex flex-wrap gap-1">
+                  ${staffArr.map(s => {
+                    const isMe = (selectedPersonalStaff !== 'all' && s.toLowerCase().includes(selectedPersonalStaff.toLowerCase()));
+                    return `
+                      <span class="px-2 py-0.5 rounded-md text-[11px] font-bold shadow-xs ${
+                        isMe 
+                          ? 'bg-amber-500 text-white border border-amber-600 animate-pulse' 
+                          : 'bg-slate-100 border border-slate-200 text-teal-900'
+                      }">
+                        ${isMe ? '★ ' : ''}${s}
+                      </span>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            </div>
+
+            <!-- Thanh nút tiện ích phía dưới mỗi thẻ (Cho nhân viên) -->
+            <div class="flex flex-wrap items-center justify-end gap-1.5 pt-2.5 mt-2.5 border-t border-slate-100 text-xs">
+              <button onclick="downloadICS('${item.tempId}')" class="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg font-semibold transition flex items-center gap-1" title="Tải file nhắc lịch (.ics) vào điện thoại hoặc máy tính">
+                <i class="fa-solid fa-calendar-plus text-amber-600"></i>
+                <span>Thêm vào Lịch</span>
+              </button>
+
+              <button onclick="shareViaZalo('${item.tempId}')" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-lg font-semibold transition flex items-center gap-1" title="Sao chép nội dung tóm tắt để gửi Zalo nhắc đồng nghiệp">
+                <i class="fa-solid fa-comment-dots text-blue-600"></i>
+                <span>Nhắc qua Zalo</span>
+              </button>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderArchivedList() {
+      const container = document.getElementById('archived-meetings-container');
+      const list = window.__ARCHIVED_MEETINGS || [];
+
+      if (list.length === 0) {
+        container.innerHTML = '<div class="text-center text-slate-400 py-3 italic">Không có lịch nào trong quá khứ.</div>';
+        return;
+      }
+
+      container.innerHTML = list.map(item => `
+        <div class="p-2.5 bg-white rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 text-xs opacity-75">
+          <div>
+            <div class="font-bold text-slate-800">${item.topic}</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">
+              <span><i class="fa-regular fa-clock"></i> ${item.time}</span> • 
+              <span><i class="fa-solid fa-location-dot"></i> ${item.location}</span> • 
+              <span><i class="fa-solid fa-users"></i> ${item.staff}</span>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 bg-slate-200 text-slate-600 rounded-md font-bold text-[10px] whitespace-nowrap">
+            Đã kết thúc
+          </span>
+        </div>
+      `).join('');
+    }
+
+    function toggleArchivedMeetings() {
+      const box = document.getElementById('archived-meetings-container');
+      const btn = document.getElementById('btn-toggle-archive');
+      const isHidden = box.classList.contains('hidden');
+
+      if (isHidden) {
+        box.classList.remove('hidden');
+        btn.innerHTML = `<i class="fa-solid fa-chevron-up"></i> <span>Ẩn lịch sử đã qua</span>`;
+      } else {
+        box.classList.add('hidden');
+        const count = (window.__ARCHIVED_MEETINGS || []).length;
+        btn.innerHTML = `<i class="fa-solid fa-clock-rotate-left"></i> <span>Xem lịch sử đã qua (${count})</span>`;
+      }
+    }
+
+    function filterByCategory(cat) {
+      currentCategoryFilter = cat;
+      const btns = [
+        { id: 'btn-cat-all', cat: 'all' },
+        { id: 'btn-cat-dihoc', cat: 'dihoc' },
+        { id: 'btn-cat-taphuan', cat: 'taphuan' },
+        { id: 'btn-cat-hop', cat: 'hop' }
+      ];
+      btns.forEach(b => {
+        const el = document.getElementById(b.id);
+        if (b.cat === cat) {
+          el.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition bg-amber-600 text-white shadow-xs whitespace-nowrap";
+        } else {
+          el.className = "px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap";
+        }
+      });
+      renderMeetingsList();
+    }
+
+    function filterByTime(type) {
+      currentTimeFilter = type;
+      const btns = [
+        { id: 'btn-time-all', type: 'all' },
+        { id: 'btn-time-urgent', type: 'urgent' },
+        { id: 'btn-time-week', type: 'week' },
+        { id: 'btn-time-month', type: 'month' }
+      ];
+      btns.forEach(b => {
+        const el = document.getElementById(b.id);
+        if (b.type === type) {
+          el.className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white transition";
+        } else {
+          el.className = "px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition";
+        }
+      });
+      renderMeetingsList();
+    }
+
+    function openDocPreviewModal(tempId) {
+      const allMeetings = [...(window.__ACTIVE_MEETINGS || []), ...(window.__ARCHIVED_MEETINGS || [])];
+      const m = allMeetings.find(x => x.tempId === tempId) || allMeetings[0];
+      if (!m) return;
+
+      activePreviewMeeting = m;
+      const modalPaper = document.getElementById('modal-a4-paper');
+      modalPaper.innerHTML = buildAssignmentDocHtml(m);
+
+      document.getElementById('doc-preview-modal').classList.remove('hidden');
+    }
+
+    function closeDocPreviewModal() {
+      document.getElementById('doc-preview-modal').classList.add('hidden');
+      activePreviewMeeting = null;
+    }
+
+    function buildAssignmentDocHtml(m) {
+      const now = new Date();
+      const staffList = (m.staff || '').split(',').map(s => s.trim()).filter(Boolean);
+      const organizer = m.organizer || 'Sở Y tế tỉnh Quảng Ngãi';
+      const randomDocNum = Math.floor(Math.random() * 40) + 10;
+      const rawLink = (m.meetingLink || '').trim();
+
+      return `
+        <!-- Tiêu đề 2 cột: Cơ quan ban hành & Quốc hiệu -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+          <tr>
+            <td style="width: 45%; text-align: center; vertical-align: top; line-height: 1.3;">
+              <div style="font-size: 11pt; text-transform: uppercase;">UBND XÃ MỘ ĐỨC</div>
+              <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">TRẠM Y TẾ</div>
+              <div style="width: 60px; height: 1px; background-color: black; margin: 3px auto 4px auto;"></div>
+              <div style="font-size: 11pt; margin-top: 3px;">Số: <b>${randomDocNum}/TB-TYT</b></div>
+            </td>
+            <td style="width: 55%; text-align: center; vertical-align: top; line-height: 1.3;">
+              <div style="font-size: 11.5pt; font-weight: bold; text-transform: uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+              <div style="font-size: 12pt; font-weight: bold;">Độc lập - Tự do - Hạnh phúc</div>
+              <div style="width: 120px; height: 1px; background-color: black; margin: 3px auto 6px auto;"></div>
+              <div style="font-size: 11.5pt; font-style: italic;">Mộ Đức, ngày ${now.getDate()} tháng ${now.getMonth() + 1} năm ${now.getFullYear()}.</div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Tiêu đề văn bản phân công -->
+        <div style="text-align: center; margin-top: 14px; margin-bottom: 16px;">
+          <div style="font-size: 14pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">PHÂN CÔNG NHIỆM VỤ</div>
+          <div style="font-size: 12pt; font-style: italic; max-width: 90%; margin: 4px auto 0 auto; line-height: 1.35;">
+            V/v cử cán bộ tham gia ${m.topic}
+          </div>
+        </div>
+
+        <!-- Căn cứ công văn triệu tập -->
+        <p style="text-align: justify; margin-bottom: 10px; text-indent: 28px; line-height: 1.45;">
+          Căn cứ Thông báo / Công văn mời của ${organizer} về việc tham dự ${m.topic}.
+        </p>
+
+        <!-- Nội dung cử cán bộ -->
+        <p style="text-align: justify; margin-bottom: 8px; text-indent: 28px; line-height: 1.45;">
+          Trạm Y tế xã Mộ Đức phân công cán bộ y tế tham gia có tên sau:
+        </p>
+
+        <!-- Danh sách cán bộ -->
+        <div style="margin-left: 36px; margin-bottom: 12px; line-height: 1.45; font-weight: bold;">
+          ${staffList.map((s, idx) => `<div>${staffList.length > 1 ? `${idx + 1}. ` : ''}${s}</div>`).join('')}
+        </div>
+
+        <!-- Thời gian & Địa điểm / Link trực tuyến -->
+        <div style="margin-left: 28px; margin-bottom: 14px; line-height: 1.45;">
+          <div style="margin-bottom: 4px;">
+            <b>Thời gian:</b> ${m.time}
+          </div>
+          <div>
+            <b>${rawLink ? 'Hình thức / Địa điểm:' : 'Địa điểm:'}</b> ${m.location}${rawLink ? ` (Link: ${rawLink})` : ''}
+          </div>
+        </div>
+
+        <!-- Điều khoản trách nhiệm -->
+        <p style="text-align: justify; margin-bottom: 25px; text-indent: 28px; line-height: 1.45;">
+          Các ông (bà) phụ trách điểm y tế thuộc Trạm y tế xã Mộ Đức và cá nhân cán bộ y tế có tên trên chịu trách nhiệm thi hành thông báo này./.
+        </p>
+
+        <!-- Chân trang 2 cột: Nơi nhận & Chữ ký Giám Đốc -->
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px; page-break-inside: avoid;">
+          <tr>
+            <td style="width: 55%; vertical-align: top; font-size: 10pt; line-height: 1.35; padding-top: 4px;">
+              <div style="font-weight: bold; font-style: italic; font-size: 11pt; margin-bottom: 3px;">Nơi nhận:</div>
+              <div>- GĐ, PGĐ TYT;</div>
+              <div>- Cá nhân có tên trên;</div>
+              <div>- Phụ trách các điểm y tế;</div>
+              <div>- Lưu: HC.</div>
+            </td>
+            <td style="width: 45%; text-align: center; vertical-align: top; line-height: 1.3;">
+              <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">GIÁM ĐỐC</div>
+              <div style="font-size: 9.5pt; font-style: italic; margin-top: 2px; margin-bottom: 60px;">(Ký, đóng dấu)</div>
+              <div style="font-size: 12.5pt; font-weight: bold;">BS. Phạm Minh Đức</div>
+            </td>
+          </tr>
+        </table>
+      `;
+    }
+
+    function renderStaffLocationOrMeetingLink(item) {
+      const rawLink = (item.meetingLink || '').trim();
+      const isOnline = Boolean(rawLink) || /zoom|meet\.google|teams|trực tuyến|online|webinar/i.test(item.location || '');
+      
+      let meetingUrl = rawLink;
+      if (!meetingUrl) {
+        const urlMatch = (item.location || '').match(/(https?:\/\/[^\s]+)/i);
+        if (urlMatch) meetingUrl = urlMatch[0];
+      }
+
+      // NẾU LÀ TẬP HUẤN TRỰC TUYẾN QUA ZOOM / GOOGLE MEET: HIỂN THỊ NÚT TRUY CẬP PHÒNG HỌP THAY VÌ BẢN ĐỒ
+      if (isOnline) {
+        return `
+          <div class="flex items-start gap-1.5">
+            <i class="fa-solid fa-video text-emerald-600 mt-0.5 text-[12px] shrink-0"></i>
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <b>Hình thức:</b>
+                <span class="text-emerald-900 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  <i class="fa-solid fa-wifi mr-1 text-emerald-600"></i>${item.location}
+                </span>
+              </div>
+              ${meetingUrl ? `
+                <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  <a href="${meetingUrl}" target="_blank" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] inline-flex items-center gap-1.5 shadow-xs transition hover:scale-105" title="Bấm để vào phòng tập huấn trực tuyến ngay">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    <span>Vào Phòng Tập Huấn (Zoom/Meet)</span>
+                  </a>
+                  <button type="button" onclick="copyStaffMeetingUrl('${encodeURIComponent(meetingUrl)}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[10.5px] transition inline-flex items-center gap-1" title="Sao chép đường link phòng học">
+                    <i class="fa-regular fa-copy"></i> Copy Link
+                  </button>
+                </div>
+              ` : `
+                <div class="text-[11px] text-amber-700 font-medium italic mt-1 flex items-center gap-1">
+                  <i class="fa-solid fa-clock-rotate-left"></i> Link phòng học trực tuyến sẽ được cập nhật trước giờ học
+                </div>
+              `}
+            </div>
+          </div>
+        `;
+      }
+
+      // NẾU LÀ ĐỊA ĐIỂM TRỰC TIẾP: HIỂN THỊ ĐỊA CHỈ VÀ NÚT CHỈ ĐƯỜNG GOOGLE MAPS
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`;
+      return `
+        <div class="flex items-start gap-1.5">
+          <i class="fa-solid fa-location-dot text-rose-500 mt-0.5 text-[11px] shrink-0"></i>
+          <div>
+            <b>Địa điểm:</b> <span class="text-slate-800 font-semibold">${item.location}</span>
+            <a href="${mapsUrl}" target="_blank" class="ml-1 text-sky-600 hover:underline font-bold text-[11px] inline-flex items-center gap-0.5" title="Mở bản đồ chỉ đường Google Maps">
+              <i class="fa-solid fa-map-location-dot"></i> Bản đồ
+            </a>
+          </div>
+        </div>
+      `;
+    }
+
+    function copyStaffMeetingUrl(encodedUrl) {
+      const url = decodeURIComponent(encodedUrl);
+      if (!url) return;
+      const textarea = document.createElement('textarea');
+      textarea.value = url;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showToast('Đã sao chép đường link phòng tập huấn vào Clipboard!', 'success');
+    }
+
+    function printCurrentAssignmentDoc() {
+      if (!activePreviewMeeting) return;
+      const printContainer = document.getElementById('print-assignment-container');
+      printContainer.innerHTML = buildAssignmentDocHtml(activePreviewMeeting);
+
+      let styleEl = document.getElementById('dynamic-print-page-style');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'dynamic-print-page-style';
+        document.head.appendChild(styleEl);
+      }
+      styleEl.innerHTML = `@media print { @page { size: A4 portrait; margin: 18mm 15mm 18mm 20mm; } }`;
+
+      setTimeout(() => {
+        window.print();
+      }, 300);
+    }
+
+    function downloadCurrentWordDoc() {
+      if (!activePreviewMeeting) return;
+      const m = activePreviewMeeting;
+      const topicSafe = m.topic.replace(/[^a-zA-Z0-9\p{L}]/gu, '_').slice(0, 35);
+      const innerHtml = buildAssignmentDocHtml(m);
+
+      const docContent = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset='utf-8'>
+          <title>Phan_cong_${topicSafe}</title>
+          <style>
+            @page {
+              size: 21.0cm 29.7cm;
+              margin: 2.0cm 1.5cm 2.0cm 2.5cm;
+              mso-page-orientation: portrait;
+            }
+            body {
+              font-family: 'Times New Roman', Times, serif;
+              font-size: 13pt;
+              line-height: 1.4;
+              color: #000000;
+            }
+            table { border-collapse: collapse; width: 100%; }
+            td { vertical-align: top; }
+            p { margin-top: 0; margin-bottom: 6pt; text-align: justify; }
+          </style>
+        </head>
+        <body>
+          ${innerHtml}
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob(['\ufeff', docContent], { type: 'application/msword;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Phan_cong_nhiem_vu_${topicSafe}.doc`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast('Đã tải file Word (.doc) Phân công nhiệm vụ!', 'success');
+    }
+
+    function copyCurrentDocText() {
+      const paperEl = document.getElementById('modal-a4-paper');
+      if (!paperEl) return;
+
+      const range = document.createRange();
+      range.selectNode(paperEl);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          showToast('Đã sao chép nội dung văn bản vào Clipboard!', 'success');
+        } else {
+          showToast('Vui lòng dùng Ctrl+C để sao chép', 'warning');
+        }
+      } catch (err) {
+        showToast('Trình duyệt không hỗ trợ lệnh sao chép tự động', 'error');
+      }
+      window.getSelection().removeAllRanges();
+    }
+
+    function downloadICS(tempId) {
+      const allMeetings = [...(window.__ACTIVE_MEETINGS || []), ...(window.__ARCHIVED_MEETINGS || [])];
+      const m = allMeetings.find(x => x.tempId === tempId);
+      if (!m) return;
+
+      const { start, end } = parseDateTime(m);
+      const formatICSDate = (d) => {
+        return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      };
+
+      const dtStart = formatICSDate(start);
+      const dtEnd = formatICSDate(end);
+      const now = formatICSDate(new Date());
+
+      const icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//TYT Mo Duc//Lich Hop Tap Huan//VI',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        `UID:${m.tempId}@tytmoduc.quangngai.gov.vn`,
+        `DTSTAMP:${now}`,
+        `DTSTART:${dtStart}`,
+        `DTEND:${dtEnd}`,
+        `SUMMARY:${m.topic}`,
+        `DESCRIPTION:Cán bộ tham gia: ${m.staff}\\nĐơn vị tổ chức: ${m.organizer || '---'}`,
+        `LOCATION:${m.location}`,
+        'STATUS:CONFIRMED',
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
+
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Lich_${m.topic.slice(0, 25).replace(/[^a-zA-Z0-9\p{L}]/gu, '_')}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast('Đã tải file lịch (.ics)! Bạn hãy mở file để thêm vào lịch điện thoại.', 'success');
+    }
+
+    function shareViaZalo(tempId) {
+      const allMeetings = [...(window.__ACTIVE_MEETINGS || []), ...(window.__ARCHIVED_MEETINGS || [])];
+      const m = allMeetings.find(x => x.tempId === tempId);
+      if (!m) return;
+
+      const rawLink = (m.meetingLink || '').trim();
+      const locText = rawLink ? `Hình thức: ${m.location}\n🔗 Link tham gia: ${rawLink}` : `Địa điểm: ${m.location}`;
+      const textToShare = `📅 [THÔNG BÁO LỊCH CÔNG TÁC]\n📌 Nội dung: ${m.topic}\n⏰ Thời gian: ${m.time}\n📍 ${locText}\n👥 Cán bộ tham gia: ${m.staff}\n🏢 Đơn vị tổ chức: ${m.organizer || 'Trạm Y Tế Mộ Đức'}`;
+
+      const textarea = document.createElement('textarea');
+      textarea.value = textToShare;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+
+      showToast('Đã sao chép nội dung tóm tắt! Bạn hãy dán vào Zalo để gửi cho đồng nghiệp.', 'info');
+    }
+
+    async function fetchMeetingsFromCloud(isAuto = false) {
+      if (!GOOGLE_SHEET_HOP_URL) return;
+
+      if (!isAuto) showLoading('Đang đồng bộ dữ liệu mới nhất...');
+      try {
+        const url = GOOGLE_SHEET_HOP_URL + (GOOGLE_SHEET_HOP_URL.includes('?') ? '&' : '?') + `action=load&t=${Date.now()}`;
+        const response = await fetch(url, { method: 'GET', cache: 'no-store' });
+        const rawText = await response.text();
+        let res;
+        try {
+          res = JSON.parse(rawText);
+        } catch (e) {
+          console.warn("Phản hồi không phải JSON:", rawText);
+          return;
+        }
+
+        if (res.status === 'success' && res.data && res.data.length > 0) {
+          meetingsList = res.data.map(item => ({
+            ...item,
+            tempId: item.tempId || `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            meetingLink: (item.meetingLink || '').trim()
+          }));
+          localStorage.setItem('TYT_MEETINGS_DATA', JSON.stringify(meetingsList));
+          processMeetingsData();
+          if (!isAuto) showToast(`Đã đồng bộ thành công ${meetingsList.length} lịch từ Google Sheets!`, 'success');
+        } else {
+          if (!isAuto) showToast('Dữ liệu trên máy đang là mới nhất.', 'info');
+        }
+      } catch (err) {
+        console.warn('Lỗi kết nối Google Sheets:', err);
+        if (!isAuto) showToast('Không thể kết nối đến máy chủ. Đang hiển thị dữ liệu đã lưu trên máy.', 'warning');
+      } finally {
+        if (!isAuto) hideLoading();
+      }
+    }
+
+    function showLoading(text) {
+      document.getElementById('loading-text').innerText = text;
+      document.getElementById('loading-overlay').style.display = 'flex';
+    }
+
+    function hideLoading() {
+      document.getElementById('loading-overlay').style.display = 'none';
+    }
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      const colors = {
+        success: 'bg-emerald-600 text-white shadow-emerald-600/30',
+        error: 'bg-rose-600 text-white shadow-rose-600/30',
+        warning: 'bg-amber-500 text-white shadow-amber-500/30',
+        info: 'bg-slate-800 text-white shadow-slate-800/30'
+      };
+
+      const icons = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-xmark',
+        warning: 'fa-triangle-exclamation',
+        info: 'fa-circle-info'
+      };
+
+      toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2.5 text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i> <span>${msg}</span>`;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+  </script>
+</body>
+</html>
