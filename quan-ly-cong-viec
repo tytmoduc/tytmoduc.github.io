@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quản Lý Công Việc & Nhiệm Vụ - Trạm Y Tế Xã Mộ Đức</title>
+
+  <!-- Tailwind CSS & SheetJS & FontAwesome & Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Times+New+Roman&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+    }
+    
+    .font-times {
+      font-family: 'Times New Roman', Times, serif;
+    }
+
+    /* Thanh cuộn mềm mại */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    #loading-overlay { display: none; }
+    .loader {
+      border: 4px solid #f1f5f9; border-top: 4px solid #0284c7;
+      border-radius: 50%; width: 42px; height: 42px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Mô phỏng khổ giấy A4 chuẩn Nghị định 30/2020/NĐ-CP */
+    .a4-simulation-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 20mm 15mm 20mm 25mm; /* Trái 25mm, phải 15mm, trên 20mm, dưới 20mm */
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.15), 0 4px 6px -2px rgba(0,0,0,0.05);
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .editable-active [contenteditable="true"] {
+      outline: 1.5px dashed #0284c7;
+      background-color: #f0f9ff;
+      border-radius: 3px;
+      padding: 1px 3px;
+    }
+
+    /* Cấu hình in ấn PDF theo chuẩn hành chính */
+    @media print {
+      body {
+        background-color: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      
+      body.print-table-mode > *:not(#print-table-container) { display: none !important; }
+      body.print-doc-mode > *:not(#print-doc-container) { display: none !important; }
+
+      #print-table-container {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-family: 'Times New Roman', Times, serif;
+        color: black;
+      }
+
+      #print-doc-container {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-family: 'Times New Roman', Times, serif;
+        color: black;
+        line-height: 1.45;
+      }
+
+      #print-table-container table {
+        page-break-inside: auto;
+        border-collapse: collapse !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+      }
+      
+      #print-table-container tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+      
+      #print-table-container thead { display: table-header-group; }
+      
+      #print-table-container th, #print-table-container td {
+        border: 0.5pt solid black !important;
+        padding: 4px 3px !important;
+        vertical-align: middle !important;
+        font-size: 8pt !important;
+      }
+    }
+    #print-table-container { display: none; }
+    #print-doc-container { display: none; }
+  </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col bg-slate-50 antialiased selection:bg-sky-100 selection:text-sky-900">
+
+  <!-- OVERLAY LOADING -->
+  <div id="loading-overlay" class="fixed inset-0 bg-white/85 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+    <div class="loader mb-4"></div>
+    <p class="text-sky-700 font-bold text-base" id="loading-text">Đang đồng bộ danh mục công việc...</p>
+  </div>
+
+  <!-- TOAST THÔNG BÁO -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <header class="flex-none p-3 md:p-5 pb-2">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-3 flex flex-col md:flex-row justify-between items-center gap-3 border-l-4 border-l-sky-600">
+      
+      <!-- Thông tin đơn vị & Tiêu đề -->
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-sky-50 text-slate-600 hover:text-sky-700 flex items-center justify-center transition" title="Về trang chủ">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg sm:text-xl md:text-2xl font-black text-slate-800 tracking-tight flex items-center">
+              <i class="fa-solid fa-list-check text-sky-600 mr-2"></i>Quản Lý Công Việc & Nhiệm Vụ
+            </h1>
+            <span class="bg-sky-50 text-sky-800 text-[11px] px-2.5 py-0.5 rounded-full font-bold border border-sky-200">TYT Xã Mộ Đức</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">Sắp xếp theo hạn chót gần nhất • Giảm dần cấp độ màu • Tự động ẩn việc đã hết hạn • Xuất Phiếu giao việc A4</p>
+        </div>
+      </div>
+
+      <!-- CÁC NÚT HÀNH ĐỘNG CHÍNH -->
+      <div class="flex flex-wrap gap-2 justify-end items-center">
+        
+        <a href="cong-viec-nhiem-vu.html" class="px-3 py-2 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 font-bold rounded-xl transition text-xs flex items-center gap-1.5 shadow-sm" title="Chuyển sang giao diện tra cứu dành cho cán bộ nhân viên">
+          <i class="fa-solid fa-user-check text-sky-600"></i>
+          <span>Trang Nhân Viên</span>
+        </a>
+
+        <!-- Chuyển Tab: Danh Sách Công Việc <-> Phiếu Giao Việc A4 -->
+        <div class="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200 shadow-xs">
+          <button id="tab-btn-tasks" onclick="switchMainTab('tasks')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-800 shadow-xs flex items-center gap-1.5">
+            <i class="fa-solid fa-bars-progress text-sky-600"></i>
+            <span>Công Việc Sắp Tới</span>
+          </button>
+          <button id="tab-btn-doc" onclick="switchMainTab('doc')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-file-signature text-amber-600"></i>
+            <span>Phiếu Giao Việc A4</span>
+          </button>
+        </div>
+
+        <button onclick="openTaskModal()" class="px-3.5 py-2 bg-sky-600 text-white font-bold rounded-xl hover:bg-sky-700 transition text-xs flex items-center gap-1.5 shadow-sm shadow-sky-600/30">
+          <i class="fa-solid fa-plus"></i> Giao Việc Mới
+        </button>
+
+        <button onclick="saveTasksToCloud()" class="px-3.5 py-2 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition text-xs flex items-center gap-1.5 shadow-sm shadow-emerald-600/30" title="Lưu và đồng bộ công việc lên Google Sheets">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Lưu Cloud
+        </button>
+
+        <button onclick="exportToExcel()" class="px-3 py-2 bg-green-50 text-green-700 border border-green-200 font-bold rounded-xl hover:bg-green-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-file-excel"></i> Xuất Excel
+        </button>
+
+        <button onclick="printTaskSummary()" class="px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded-xl hover:bg-rose-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-print"></i> In Báo Cáo
+        </button>
+
+        <button onclick="openApiConfigModal()" class="px-3 py-2 bg-slate-100 text-slate-700 border border-slate-200 font-bold rounded-xl hover:bg-slate-200 transition text-xs flex items-center gap-1.5 shadow-sm" title="Cấu hình Google Sheets Apps Script API">
+          <i class="fa-solid fa-gear"></i> Cấu Hình Cloud
+        </button>
+
+        <button onclick="fetchTasksFromCloud()" class="px-3 py-2 bg-sky-50 text-sky-700 border border-sky-200 font-bold rounded-xl hover:bg-sky-100 transition text-xs flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-rotate text-sky-600"></i> Tải lại
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-2.5">
+      
+      <div class="bg-white p-3 rounded-2xl border border-rose-200 bg-gradient-to-r from-rose-50/70 to-white shadow-xs flex items-center justify-between">
+        <div>
+          <div class="text-[10.5px] font-bold text-rose-600 uppercase tracking-wide">Hạn Hôm Nay / Khẩn</div>
+          <div class="text-xl font-black text-rose-700 mt-0.5" id="stat-count-today">0</div>
+          <div class="text-[10px] text-rose-500 font-semibold">Cần hoàn thành ngay trong ngày</div>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-fire animate-bounce"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-3 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50/70 to-white shadow-xs flex items-center justify-between">
+        <div>
+          <div class="text-[10.5px] font-bold text-amber-700 uppercase tracking-wide">Hạn Ngày Mai / 1-2 Ngày</div>
+          <div class="text-xl font-black text-amber-800 mt-0.5" id="stat-count-tomorrow">0</div>
+          <div class="text-[10px] text-amber-600 font-semibold">Đang đôn đốc hoàn tất</div>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-stopwatch"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-3 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50/70 to-white shadow-xs flex items-center justify-between">
+        <div>
+          <div class="text-[10.5px] font-bold text-sky-700 uppercase tracking-wide">Hạn Trong Tuần Này</div>
+          <div class="text-xl font-black text-sky-800 mt-0.5" id="stat-count-week">0</div>
+          <div class="text-[10px] text-sky-600 font-semibold">Nhiệm vụ trọng tâm tuần</div>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-calendar-check"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div>
+          <div class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide">Tổng Việc Đang Chạy</div>
+          <div class="text-xl font-black text-slate-800 mt-0.5" id="stat-count-total">0</div>
+          <div class="text-[10px] text-emerald-600 font-semibold" id="stat-hidden-past">Đã tự động ẩn việc cũ</div>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-briefcase"></i>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-2 mb-1">
+      
+      <div class="flex flex-wrap items-center gap-1.5">
+        
+        <!-- Lọc theo tiến độ / phân loại -->
+        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs overflow-x-auto custom-scrollbar">
+          <button onclick="filterByStatus('all')" id="btn-status-all" class="px-2.5 py-1 rounded-lg text-xs font-bold transition bg-sky-600 text-white shadow-xs whitespace-nowrap">
+            Tất cả việc (<span id="count-status-all">0</span>)
+          </button>
+          <button onclick="filterByStatus('Chưa thực hiện')" id="btn-status-todo" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap flex items-center gap-1">
+            <i class="fa-regular fa-circle-pause text-rose-500"></i> Chưa thực hiện (<span id="count-status-todo">0</span>)
+          </button>
+          <button onclick="filterByStatus('Đang tiến hành')" id="btn-status-progress" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap flex items-center gap-1">
+            <i class="fa-solid fa-spinner text-amber-500"></i> Đang tiến hành (<span id="count-status-progress">0</span>)
+          </button>
+          <button onclick="filterByStatus('Sắp hoàn thành')" id="btn-status-review" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap flex items-center gap-1">
+            <i class="fa-solid fa-hourglass-half text-teal-600"></i> Sắp hoàn thành (<span id="count-status-review">0</span>)
+          </button>
+        </div>
+
+        <!-- Lọc theo thời hạn -->
+        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs">
+          <button onclick="filterByTime('all')" id="btn-time-all" class="px-2 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white transition">Tất cả hạn</button>
+          <button onclick="filterByTime('urgent')" id="btn-time-urgent" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Hôm nay / Mai</button>
+          <button onclick="filterByTime('week')" id="btn-time-week" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Tuần này</button>
+          <button onclick="filterByTime('month')" id="btn-time-month" class="px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Trong tháng</button>
+        </div>
+
+      </div>
+
+      <!-- Ô tìm kiếm công việc -->
+      <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs flex-1 lg:max-w-xs">
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+        <input type="text" id="search-task-input" placeholder="Tìm tên công việc, cán bộ, hạn chót..." class="w-full bg-transparent border-none outline-none text-xs text-slate-700 focus:ring-0" onkeyup="renderTasksList()">
+      </div>
+
+    </div>
+  </header>
+
+  <main class="flex-1 overflow-hidden p-3 md:p-5 pt-0 flex flex-col">
+    
+    <!-- TAB 1: DANH SÁCH CÔNG VIỆC THEO CẤP ĐỘ MÀU KHẨN CẤP -->
+    <div id="view-tab-tasks" class="flex-1 flex flex-col overflow-hidden space-y-3">
+      
+      <!-- Khung danh sách thẻ công việc -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar pr-1 space-y-2.5" id="tasks-list-container">
+        <!-- Render sống động qua JavaScript -->
+      </div>
+
+      <!-- Khu vực công việc đã hoàn thành hoặc hết hạn (Tự động ẩn) -->
+      <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row justify-between items-center gap-2 text-xs">
+        <div class="text-slate-500 font-medium flex items-center gap-1.5">
+          <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+          <span>Các công việc đã qua hạn chót được tự động đưa vào kho lưu trữ để bạn tập trung việc hiện tại.</span>
+        </div>
+        <button onclick="toggleArchivedTasks()" id="btn-toggle-archive" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-clock-rotate-left text-slate-500"></i>
+          <span>Xem việc đã kết thúc / hết hạn (<span id="count-archived-num">0</span>)</span>
+        </button>
+      </div>
+
+      <!-- Danh sách việc đã hoàn thành hoặc quá hạn (Mặc định ẩn) -->
+      <div id="archived-tasks-container" class="hidden max-h-48 overflow-y-auto custom-scrollbar space-y-2 p-3 bg-slate-100 rounded-2xl border border-slate-200 text-xs">
+        <!-- Render bằng JS khi mở -->
+      </div>
+    </div>
+
+    <div id="view-tab-doc" class="hidden flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 bg-slate-200/80 rounded-2xl border border-slate-300 flex flex-col items-center justify-start space-y-4">
+      
+      <!-- Thanh công cụ nổi phía trên bản in A4 -->
+      <div class="w-full max-w-4xl bg-slate-900 text-white p-3 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-xl bg-sky-500 text-slate-950 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-file-contract"></i>
+          </span>
+          <div>
+            <div class="font-extrabold text-sm flex items-center gap-2">
+              <span>Phiếu Giao Nhiệm Vụ & Phân Công Công Việc (Khổ A4)</span>
+              <span class="bg-sky-400/20 text-sky-300 border border-sky-400/30 text-[10px] px-2 py-0.2 rounded-full font-bold">NĐ 30/2020/NĐ-CP</span>
+            </div>
+            <div class="text-[11px] text-slate-400">Chọn công việc nguồn bên dưới để tự động tạo mẫu văn bản giao việc chuẩn</div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Chọn nhanh công việc nguồn -->
+          <select id="direct-doc-source-select" onchange="onDirectDocSourceChange(this.value)" class="bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl px-2.5 py-1.5 outline-none hover:bg-slate-700 cursor-pointer max-w-xs truncate">
+            <!-- Điền động qua JS -->
+          </select>
+
+          <!-- Bật tắt sửa trực tiếp -->
+          <button id="btn-direct-edit" onclick="toggleDirectEditMode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-pen-to-square text-sky-400"></i>
+            <span id="btn-direct-edit-label">Chỉnh sửa trực tiếp</span>
+          </button>
+
+          <!-- Tải Word -->
+          <button onclick="downloadDirectWordDoc()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shadow-blue-600/30">
+            <i class="fa-solid fa-file-word"></i>
+            <span>Tải File Word (.doc)</span>
+          </button>
+
+          <!-- In / Xuất PDF -->
+          <button onclick="printDirectDoc()" class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shadow-sky-600/30">
+            <i class="fa-solid fa-print"></i>
+            <span>In / Xuất PDF A4</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TỜ GIẤY A4 TRỰC DIỆN (ĐÚNG TỈ LỆ 210mm x 297mm) -->
+      <article id="direct-a4-paper" class="a4-simulation-sheet font-times text-black text-[13pt] leading-[1.4] select-text">
+        <!-- Render sống động qua JS -->
+      </article>
+
+    </div>
+
+  </main>
+
+  <div id="task-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-slate-200 overflow-hidden transform transition-all my-auto">
+      
+      <!-- Header Modal -->
+      <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-sky-500 text-slate-950 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base leading-tight" id="task-modal-title">Giao Nhiệm Vụ / Công Việc Mới</h3>
+            <p class="text-[11px] text-slate-400">Thiết lập nội dung, thời hạn hoàn thành và chọn cán bộ phụ trách từ danh bạ</p>
+          </div>
+        </div>
+        <button onclick="closeTaskModal()" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Form nhập liệu công việc -->
+      <form onsubmit="handleSaveTaskSubmit(event)" class="p-4 sm:p-5 space-y-3 text-xs max-h-[80vh] overflow-y-auto custom-scrollbar">
+        <input type="hidden" id="form-task-id">
+
+        <!-- Mức độ ưu tiên -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Mức độ ưu tiên / Tính chất công việc: <span class="text-rose-500">*</span></label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer font-bold hover:bg-rose-50 peer-checked:border-rose-500 transition">
+              <input type="radio" name="form-task-priority" value="urgent" class="text-rose-600 focus:ring-rose-500">
+              <span class="text-rose-600">⚡ Khẩn cấp / Trọng tâm</span>
+            </label>
+            <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer font-bold hover:bg-sky-50 transition">
+              <input type="radio" name="form-task-priority" value="normal" checked class="text-sky-600 focus:ring-sky-500">
+              <span class="text-sky-700">📋 Bình thường / Định kỳ</span>
+            </label>
+            <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer font-bold hover:bg-teal-50 transition">
+              <input type="radio" name="form-task-priority" value="followup" class="text-teal-600 focus:ring-teal-500">
+              <span class="text-teal-700">🔍 Phối hợp / Giám sát</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Tên nội dung công việc -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="font-bold text-slate-700">Nội dung công việc / Nhiệm vụ cụ thể: <span class="text-rose-500">*</span></label>
+            <span class="text-[10.5px] text-slate-400">Bấm gợi ý nhanh dưới</span>
+          </div>
+          <input type="text" id="form-task-title" required placeholder="Nhập tóm tắt tên nhiệm vụ, chỉ tiêu cần đạt được..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-sky-500">
+          
+          <!-- Chips gợi ý nhanh công việc y tế -->
+          <div class="flex flex-wrap gap-1 mt-1.5" id="task-chips-container">
+            <!-- Render động qua JS -->
+          </div>
+        </div>
+
+        <!-- Chi tiết yêu cầu / Chỉ đạo thực hiện -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Yêu cầu chất lượng, kết quả đầu ra & Ghi chú thực hiện:</label>
+          <textarea id="form-task-desc" rows="2" placeholder="Nêu rõ yêu cầu về số liệu báo cáo, chỉ tiêu kỹ thuật hoặc tài liệu cần nộp..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-sky-500"></textarea>
+        </div>
+
+        <!-- Thời hạn hoàn thành -->
+        <div class="bg-slate-100 p-2.5 rounded-xl border border-slate-200 space-y-2">
+          <div class="font-bold text-slate-700 flex items-center justify-between">
+            <span>Thời hạn hoàn thành (Hạn chót): <span class="text-rose-500">*</span></span>
+            <span class="text-[11px] text-slate-500 font-normal">Hệ thống sẽ tô màu cảnh báo theo hạn này</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Ngày hết hạn:</label>
+              <input type="date" id="form-deadline-date" required class="w-full p-2 bg-white border border-slate-300 rounded-lg font-bold text-slate-800 outline-none focus:ring-1 focus:ring-sky-500" onchange="updateFormDeadlinePreview()">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Giờ hết hạn:</label>
+              <input type="time" id="form-deadline-time" value="17:00" class="w-full p-2 bg-white border border-slate-300 rounded-lg font-bold text-slate-800 outline-none focus:ring-1 focus:ring-sky-500" onchange="updateFormDeadlinePreview()">
+            </div>
+          </div>
+
+          <!-- Dòng xem trước thời hạn -->
+          <div class="p-2 bg-sky-50/80 border border-sky-200 rounded-lg text-[11px] text-sky-900 font-bold flex items-center gap-1.5">
+            <i class="fa-regular fa-clock text-sky-600"></i>
+            <span id="form-deadline-preview-text">Chưa chọn ngày hết hạn</span>
+          </div>
+        </div>
+
+        <!-- Người được giao nhiệm vụ (Danh bạ 29 cán bộ 4 điểm trạm) -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="font-bold text-slate-700">Cán bộ được giao thực hiện: <span class="text-rose-500">*</span></label>
+            <button type="button" onclick="toggleStaffDirectoryModal()" class="text-sky-700 font-bold hover:underline text-[11px] flex items-center gap-1">
+              <i class="fa-solid fa-users text-sky-600"></i> Mở danh bạ 29 cán bộ (Tích chọn)
+            </button>
+          </div>
+
+          <!-- Thẻ các cán bộ đã chọn -->
+          <div id="form-selected-staff-chips" class="flex flex-wrap gap-1.5 mb-1.5 min-h-[30px] p-1.5 bg-slate-50 border border-slate-200 rounded-xl">
+            <!-- Render động bằng JS -->
+          </div>
+
+          <input type="text" id="form-staff-input" readonly onclick="toggleStaffDirectoryModal()" placeholder="Bấm vào đây để chọn cán bộ phụ trách từ danh bạ 4 điểm trạm..." class="w-full p-2 bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 cursor-pointer">
+        </div>
+
+        <!-- Người giao việc & Trạng thái -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Người giao nhiệm vụ / Chỉ đạo:</label>
+            <input type="text" id="form-task-assigner" value="BS. Phạm Minh Đức (Giám đốc)" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-sky-500">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Trạng thái tiến độ:</label>
+            <select id="form-task-status" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-sky-500">
+              <option value="Chưa thực hiện">Chưa thực hiện</option>
+              <option value="Đang tiến hành" selected>Đang tiến hành</option>
+              <option value="Sắp hoàn thành">Sắp hoàn thành</option>
+              <option value="Đã hoàn thành">Đã hoàn thành</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Footer Modal -->
+        <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
+          <button type="button" onclick="closeTaskModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+            Hủy Bỏ
+          </button>
+          <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-sky-600/30">
+            Lưu Nhiệm Vụ
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="staff-directory-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
+      
+      <div class="p-3.5 bg-slate-900 text-white flex justify-between items-center flex-none">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-sky-500 text-slate-950 flex items-center justify-center font-bold text-xs">
+            <i class="fa-solid fa-users"></i>
+          </span>
+          <h3 class="font-extrabold text-sm">Chọn Cán Bộ Phụ Trách Thực Hiện</h3>
+        </div>
+        <button onclick="closeStaffDirectoryModal()" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-3 border-b border-slate-200 bg-slate-50 flex-none">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="staff-search-input" placeholder="Tìm kiếm theo họ tên, viết tắt (VD: Bs Thuyên, Đức)..." class="w-full pl-8 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs outline-none focus:ring-1 focus:ring-sky-500" oninput="filterStaffDirectoryList()">
+        </div>
+      </div>
+
+      <!-- Danh sách cán bộ nhóm theo 4 điểm trạm -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3" id="staff-directory-list-container">
+        <!-- Render bằng JS -->
+      </div>
+
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center flex-none text-xs">
+        <span class="text-slate-500 font-bold">Đã chọn: <b id="modal-selected-count" class="text-sky-600 font-black">0</b> cán bộ</span>
+        <button type="button" onclick="closeStaffDirectoryModal()" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl shadow-xs transition">
+          Xác Nhận Cán Bộ
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="api-config-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 overflow-hidden">
+      <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-sky-500 text-slate-950 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-cloud-bolt"></i>
+          </div>
+          <h3 class="font-extrabold text-sm">Cấu Hình Google Sheets Cloud API (Công Việc)</h3>
+        </div>
+        <button onclick="closeApiConfigModal()" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs">
+        <p class="text-slate-600 leading-relaxed">
+          Dán đường dẫn Web App URL của Google Apps Script để tự động lưu và đồng bộ danh mục công việc 2 chiều:
+        </p>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Google Apps Script Web App URL:</label>
+          <input type="text" id="cloud-api-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl font-mono text-xs text-slate-800 outline-none focus:ring-2 focus:ring-sky-500">
+        </div>
+
+        <div class="p-3 bg-sky-50 rounded-xl border border-sky-200 text-[11px] text-sky-800 space-y-1">
+          <div class="font-bold flex items-center gap-1">
+            <i class="fa-solid fa-lightbulb text-sky-600"></i> Lưu ý tự động:
+          </div>
+          <p>Dữ liệu công việc cũng đồng thời được lưu cục bộ trên trình duyệt để bạn vẫn theo dõi được khi mất kết nối mạng.</p>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2 justify-end">
+        <button onclick="closeApiConfigModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+          Hủy Bỏ
+        </button>
+        <button onclick="saveCloudApiUrl()" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-sky-600/30">
+          Lưu & Đồng Bộ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 p-5">
+      <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg mb-3">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 class="font-bold text-slate-800 text-sm mb-1.5" id="confirm-modal-title">Xác nhận</h3>
+      <p class="text-xs text-slate-600 mb-4 whitespace-pre-line" id="confirm-modal-msg"></p>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeConfirmModal(false)" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+          Hủy bỏ
+        </button>
+        <button onclick="closeConfirmModal(true)" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition">
+          Đồng ý
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="print-doc-container" class="w-full text-black font-times"></div>
+
+  <div id="print-table-container" class="w-full text-black font-times">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+      <div style="text-align: left; line-height: 1.25;">
+        <div style="font-size: 8.5pt;">UBND XÃ MỘ ĐỨC</div>
+        <div style="font-weight: bold; font-size: 9pt;">TRẠM Y TẾ</div>
+      </div>
+      <div style="text-align: right; line-height: 1.25;">
+        <div style="font-weight: bold; font-size: 9pt;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+        <div style="font-weight: bold; font-size: 8pt;">Độc lập - Tự do - Hạnh phúc</div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 4px; margin-bottom: 8px;">
+      <div style="font-weight: bold; font-size: 13pt;">BẢNG THEO DÕI TIẾN ĐỘ CÔNG VIỆC & NHIỆM VỤ ĐƯỢC GIAO</div>
+      <div style="font-style: italic; font-size: 8pt;" id="print-table-sub-title">Trạm Y Tế Xã Mộ Đức</div>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+      <thead>
+        <tr style="background-color: #f1f5f9; font-weight: bold; text-align: center;">
+          <th style="width: 28px;">TT</th>
+          <th style="width: 120px;">Hạn Hoàn Thành</th>
+          <th>Nội Dung Nhiệm Vụ Được Giao</th>
+          <th style="width: 160px;">Cán Bộ Thực Hiện</th>
+          <th style="width: 120px;">Người Chỉ Đạo</th>
+          <th style="width: 90px;">Mức Độ</th>
+          <th style="width: 85px;">Trạng Thái</th>
+        </tr>
+      </thead>
+      <tbody id="print-table-body"></tbody>
+    </table>
+
+    <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 8.5pt;">
+      <div style="width: 45%;"></div>
+      <div style="width: 55%; text-align: right; font-style: italic;" id="print-table-footer-date">
+        Mộ Đức, ngày ... tháng ... năm ...
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; margin-top: 10px; text-align: center; font-size: 9pt;">
+      <div style="width: 45%;">
+        <div style="font-weight: bold;">Người Lập Báo Cáo</div>
+        <div style="font-style: italic; font-size: 7.5pt; margin-top: 2px; margin-bottom: 45px;">(Ký, ghi rõ họ tên)</div>
+      </div>
+      <div style="width: 45%;">
+        <div style="font-weight: bold;">Giám Đốc Trạm Y Tế</div>
+        <div style="font-style: italic; font-size: 7.5pt; margin-top: 2px; margin-bottom: 45px;">(Ký, đóng dấu)</div>
+        <div style="font-weight: bold;">BS. Phạm Minh Đức</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // URL GOOGLE APPS SCRIPT WEB APP MẶC ĐỊNH MỚI (QUẢN LÝ CÔNG VIỆC & NHIỆM VỤ)
+    const DEFAULT_GOOGLE_SHEET_TASKS_URL = "https://script.google.com/macros/s/AKfycbzm7GcXOJnmCzFvp1WHy1TCex45KocdorP2wYkizmXnOffD4mwBPq3HAse3ak-4ibsS/exec";
+    
+    // Tự động nâng cấp URL trong localStorage nếu đang để trống hoặc dùng URL cũ
+    const savedTasksApiUrl = localStorage.getItem('TYT_TASKS_API_URL');
+    let GOOGLE_SHEET_TASKS_URL = DEFAULT_GOOGLE_SHEET_TASKS_URL;
+    if (savedTasksApiUrl && savedTasksApiUrl.trim() !== "") {
+      GOOGLE_SHEET_TASKS_URL = savedTasksApiUrl;
+    } else {
+      localStorage.setItem('TYT_TASKS_API_URL', DEFAULT_GOOGLE_SHEET_TASKS_URL);
+      GOOGLE_SHEET_TASKS_URL = DEFAULT_GOOGLE_SHEET_TASKS_URL;
+    }
+
+    // 29 cán bộ y tế chuẩn mực theo 4 điểm trạm (chuẩn hóa ĐD Việt)
+    const DEFAULT_STAFF_29 = [
+      // 1. Đức Tân - 10 cán bộ
+      { name: "Trần Thị Lệ Thy", shortName: "NHS Thy", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Trịnh Thị Minh Tuệ", shortName: "Ys Tuệ", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Huỳnh Thị Thuỳ Yên", shortName: "DS Yên", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Võ Thị Thanh Thùy", shortName: "NHS Thuỳ", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Bùi Đạt Hiếu", shortName: "DS Hiếu", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Nguyễn Thị Như Nguyện", shortName: "BS Nguyện", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Võ Thị Thanh Thuyên", shortName: "Bs Thuyên", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Lê Thị Thủy", shortName: "Ys Thủy", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Trần Thị Việt Châu", shortName: "CN Châu", point: "Điểm trạm chính (Đức Tân)" },
+      { name: "Võ Quang Vinh", shortName: "ĐD Vinh", point: "Điểm trạm chính (Đức Tân)" },
+
+      // 2. Mộ Đức - 6 cán bộ
+      { name: "Phạm Minh Đức", shortName: "BS Đức", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Đoàn Thị Diễm", shortName: "DS Diễm", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Võ Thị Thanh Việt", shortName: "ĐD Việt", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Huỳnh Thị Anh Tin", shortName: "NHS Tin", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Nguyễn Thị Thu Nguyệt", shortName: "ĐD Nguyệt", point: "Điểm y tế số 1 (Mộ Đức)" },
+      { name: "Trần Thị Lài", shortName: "ĐD Lài", point: "Điểm y tế số 1 (Mộ Đức)" },
+
+      // 3. Đức Hòa - 6 cán bộ
+      { name: "Trần Thị Kim Thanh", shortName: "ĐD Thanh", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Nguyễn Thị Phương Thảo", shortName: "DS Thảo", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Cao Thị Ánh Trúc", shortName: "ĐD Trúc", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Huỳnh Văn Phương", shortName: "Ys Phương", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Nguyễn Thị Kiều Thắm", shortName: "NHS Thắm", point: "Điểm y tế số 2 (Đức Hòa)" },
+      { name: "Nguyễn Phu", shortName: "BS Phu", point: "Điểm y tế số 2 (Đức Hòa)" },
+
+      // 4. Đức Phú - 7 cán bộ
+      { name: "Phạm Trần Thị Hoà", shortName: "DS Hoà", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Nguyễn Thị Ánh Thu", shortName: "CN Thu", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Nguyễn Thị Bé", shortName: "NHS Bé", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Nguyễn Anh Vũ", shortName: "Ys Vũ", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Phạm Thị Mỹ Trâm", shortName: "NHS Trâm", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Lê Thị Tố Lan", shortName: "NHS Lan", point: "Điểm y tế số 3 (Đức Phú)" },
+      { name: "Nguyễn Thị Ly Va", shortName: "ĐD Ly Va", point: "Điểm y tế số 3 (Đức Phú)" }
+    ];
+
+    // Dữ liệu công việc mẫu thực tế tại trạm y tế
+    const INITIAL_TASKS = [
+      {
+        tempId: "t_capcuu_2026",
+        title: "Kiểm tra, rà soát tủ thuốc cấp cứu và hạn sử dụng vật tư y tế tại 04 điểm trạm",
+        desc: "Lập biên bản kiểm kê danh mục thuốc hồi sức cấp cứu theo Quyết định của Bộ Y tế, niêm phong thay thế các lọ thuốc cận hạn dưới 3 tháng.",
+        staff: "DS. Huỳnh Thị Thuỳ Yên, DS. Bùi Đạt Hiếu, DS. Đoàn Thị Diễm",
+        assigner: "BS. Phạm Minh Đức (Giám đốc)",
+        priority: "urgent",
+        status: "Đang tiến hành",
+        deadlineIso: "2026-10-10T17:00:00"
+      },
+      {
+        tempId: "t_tiemchung_v2_2026",
+        title: "Hoàn tất đối soát danh sách tiêm chủng mở rộng và cập nhật lên phần mềm quốc gia V2.0",
+        desc: "Nhập liệu toàn bộ danh sách trẻ tiêm vắc xin đợt tháng 10/2026, rà soát mã định danh công dân và đối chiếu sổ tiêm chủng.",
+        staff: "BS. Phạm Minh Đức, NHS. Huỳnh Thị Anh Tin, ĐD. Nguyễn Thị Thu Nguyệt",
+        assigner: "BS. Phạm Minh Đức (Giám đốc)",
+        priority: "urgent",
+        status: "Đang tiến hành",
+        deadlineIso: "2026-10-11T17:00:00"
+      },
+      {
+        tempId: "t_sotxuathuyet_2026",
+        title: "Phun hóa chất diệt muỗi, xử lý ổ bọ gậy phòng chống sốt xuất huyết tại thôn 2 & thôn 3",
+        desc: "Phối hợp với Tổ y tế thôn bản tổ chức thả cá bảy màu diệt lăng quăng bọ gậy, cấp phát tờ rơi truyền thông phòng bệnh tại các hộ gia đình có nguy cơ cao.",
+        staff: "YS. Lê Thị Thủy, YS. Nguyễn Anh Vũ, NHS. Nguyễn Thị Ánh Thu",
+        assigner: "BS. Nguyễn Thị Như Nguyện (Phó GĐ)",
+        priority: "normal",
+        status: "Chưa thực hiện",
+        deadlineIso: "2026-10-15T11:30:00"
+      },
+      {
+        tempId: "t_bhyt_q3_2026",
+        title: "Tổng hợp hồ sơ bệnh án khám chữa bệnh BHYT Quý 3 gửi cơ quan BHXH thanh quyết toán",
+        desc: "Rà soát đối chiếu danh mục thuốc, công khám và dịch vụ kỹ thuật đã chỉ định tại 4 điểm trạm theo Quyết định 130/QĐ-BYT.",
+        staff: "CN. Trần Thị Việt Châu, BS. Võ Thị Thanh Thuyên, BS. Nguyễn Phu",
+        assigner: "BS. Phạm Minh Đức (Giám đốc)",
+        priority: "normal",
+        status: "Đang tiến hành",
+        deadlineIso: "2026-10-20T16:30:00"
+      },
+      {
+        tempId: "t_y_te_hoc_duong_2026",
+        title: "Lập kế hoạch khám sức khỏe định kỳ học sinh mầm non và tiểu học đầu năm học mới",
+        desc: "Xây dựng lịch phối hợp với các trường học trên địa bàn xã, phân công y bác sĩ kiểm tra thị lực, nha khoa và thể lực học sinh.",
+        staff: "YS. Huỳnh Văn Phương, ĐD. Võ Quang Vinh, NHS. Võ Thị Thanh Thùy",
+        assigner: "BS. Nguyễn Phu (Phó GĐ)",
+        priority: "followup",
+        status: "Chưa thực hiện",
+        deadlineIso: "2026-10-28T17:00:00"
+      },
+      {
+        tempId: "t_past_1",
+        title: "Tổng kết công tác phòng chống dịch bệnh tháng 9/2026",
+        desc: "Báo cáo số liệu dịch bệnh truyền nhiễm gửi Trung tâm Y tế huyện.",
+        staff: "YS. Lê Thị Thủy",
+        assigner: "BS. Phạm Minh Đức (Giám đốc)",
+        priority: "normal",
+        status: "Đã hoàn thành",
+        deadlineIso: "2026-10-02T17:00:00"
+      }
+    ];
+
+    const PRESET_TASK_SUGGESTIONS = [
+      "Kiểm tra tủ thuốc cấp cứu & hạn sử dụng vật tư y tế tại 04 điểm trạm",
+      "Hoàn tất cập nhật hồ sơ tiêm chủng mở rộng lên hệ thống V2.0",
+      "Phun hóa chất diệt muỗi, dọn dẹp vệ sinh phòng chống sốt xuất huyết",
+      "Tổng hợp số liệu khám chữa bệnh BHYT chuyển cơ quan BHXH thanh quyết toán",
+      "Lập kế hoạch khám sức khỏe định kỳ học sinh đầu năm học",
+      "Báo cáo thống kê chuyên môn y tế dự phòng & dân số phát triển"
+    ];
+
+    let tasksList = [];
+    let currentStatusFilter = 'all';
+    let currentTimeFilter = 'all';
+    let formSelectedStaff = [];
+    let confirmCallback = null;
+    let isDirectEditActive = false;
+
+    function getLiveStaffList() {
+      const stored = localStorage.getItem('TYT_STAFF_LIST');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          const active = parsed.filter(s => s.status !== 'inactive');
+          if (active.length > 0) {
+            return active.map(item => ({
+              name: item.name,
+              shortName: item.shortName || item.name,
+              point: item.point || 'Điểm trạm chính'
+            }));
+          }
+        } catch(e) {}
+      }
+      return DEFAULT_STAFF_29;
+    }
+
+    window.onload = function() {
+      initAppStorage();
+      processTasksData();
+      initTaskSuggestions();
+      populateDutyDocDropdown();
+      if (GOOGLE_SHEET_TASKS_URL) {
+        fetchTasksFromCloud(true);
+      }
+    };
+
+    function initAppStorage() {
+      const saved = localStorage.getItem('TYT_TASKS_DATA');
+      if (saved) {
+        try {
+          tasksList = JSON.parse(saved);
+        } catch(e) {
+          tasksList = [...INITIAL_TASKS];
+        }
+      } else {
+        tasksList = [...INITIAL_TASKS];
+        saveTasksToStorage(false);
+      }
+    }
+
+    function saveTasksToStorage(notify = true) {
+      localStorage.setItem('TYT_TASKS_DATA', JSON.stringify(tasksList));
+      if (notify) {
+        showToast('Đã lưu dữ liệu công việc vào bộ nhớ!');
+      }
+    }
+
+    function parseTaskDeadline(item) {
+      let deadline = null;
+      if (item.deadlineIso) {
+        deadline = new Date(item.deadlineIso);
+      }
+      if (!deadline || isNaN(deadline.getTime())) {
+        deadline = new Date(2099, 0, 1);
+      }
+      return deadline;
+    }
+
+    function processTasksData() {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+
+      const parsed = tasksList.map((item, idx) => {
+        const deadline = parseTaskDeadline(item);
+        const isExpired = deadline.getTime() < now.getTime();
+        const diffMs = deadline.getTime() - todayStart.getTime();
+        const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+
+        let level = 5;
+        let levelBadge = '';
+        let levelText = '';
+        let colorTheme = {};
+
+        if (isExpired) {
+          level = 0;
+        } else if (diffDays <= 0) {
+          level = 1;
+          levelBadge = 'bg-rose-600 text-white animate-pulse';
+          levelText = '🔴 HẠN HÔM NAY';
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-rose-600 border-rose-200 bg-gradient-to-r from-rose-50/80 to-white',
+            badgeBg: 'bg-rose-100 text-rose-800 border border-rose-300',
+            dateBox: 'bg-rose-600 text-white',
+            tag: 'Hôm nay'
+          };
+        } else if (diffDays === 1 || diffDays === 2) {
+          level = 2;
+          levelBadge = 'bg-amber-500 text-white';
+          levelText = diffDays === 1 ? '🟠 HẠN NGÀY MAI' : '🟠 CÒN 2 NGÀY';
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-amber-500 border-amber-200 bg-gradient-to-r from-amber-50/70 to-white',
+            badgeBg: 'bg-amber-100 text-amber-900 border border-amber-300',
+            dateBox: 'bg-amber-500 text-white',
+            tag: diffDays === 1 ? 'Ngày mai' : 'Còn 2 ngày'
+          };
+        } else if (diffDays <= 7) {
+          level = 3;
+          levelBadge = 'bg-sky-600 text-white';
+          levelText = `🔵 CÒN ${diffDays} NGÀY (Tuần này)`;
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-sky-500 border-sky-200 bg-gradient-to-r from-sky-50/60 to-white',
+            badgeBg: 'bg-sky-100 text-sky-900 border border-sky-300',
+            dateBox: 'bg-sky-600 text-white',
+            tag: `Còn ${diffDays} ngày`
+          };
+        } else if (diffDays <= 14) {
+          level = 4;
+          levelBadge = 'bg-teal-600 text-white';
+          levelText = `🟢 CÒN ${diffDays} NGÀY (Tuần tới)`;
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-teal-500 border-teal-200 bg-gradient-to-r from-teal-50/50 to-white',
+            badgeBg: 'bg-teal-100 text-teal-900 border border-teal-300',
+            dateBox: 'bg-teal-600 text-white',
+            tag: `Còn ${diffDays} ngày`
+          };
+        } else {
+          level = 5;
+          levelBadge = 'bg-slate-500 text-white';
+          levelText = `⚪ CÒN ${diffDays} NGÀY`;
+          colorTheme = {
+            cardBorder: 'border-l-[6px] border-l-slate-400 border-slate-200 bg-white',
+            badgeBg: 'bg-slate-100 text-slate-700 border border-slate-300',
+            dateBox: 'bg-slate-700 text-white',
+            tag: `Còn ${diffDays} ngày`
+          };
+        }
+
+        return {
+          ...item,
+          tempId: item.tempId || `task_${idx}_${Date.now()}`,
+          deadline,
+          diffDays,
+          isExpired,
+          level,
+          levelBadge,
+          levelText,
+          colorTheme
+        };
+      });
+
+      const activeUpcoming = parsed.filter(t => !t.isExpired && t.status !== 'Đã hoàn thành');
+      const archivedPast = parsed.filter(t => t.isExpired || t.status === 'Đã hoàn thành');
+
+      activeUpcoming.sort((a, b) => a.deadline.getTime() - b.deadline.getTime());
+      archivedPast.sort((a, b) => b.deadline.getTime() - a.deadline.getTime());
+
+      window.__ACTIVE_TASKS = activeUpcoming;
+      window.__ARCHIVED_TASKS = archivedPast;
+
+      updateStatistics();
+      renderTasksList();
+      renderArchivedTasksList();
+      populateDutyDocDropdown();
+    }
+
+    function updateStatistics() {
+      const active = window.__ACTIVE_TASKS || [];
+      const archived = window.__ARCHIVED_TASKS || [];
+
+      const todayCount = active.filter(t => t.diffDays <= 0).length;
+      const tomorrowCount = active.filter(t => t.diffDays === 1 || t.diffDays === 2).length;
+      const weekCount = active.filter(t => t.diffDays <= 7).length;
+
+      document.getElementById('stat-count-today').innerText = todayCount;
+      document.getElementById('stat-count-tomorrow').innerText = tomorrowCount;
+      document.getElementById('stat-count-week').innerText = weekCount;
+      document.getElementById('stat-count-total').innerText = active.length;
+      document.getElementById('stat-hidden-past').innerText = `Đã ẩn ${archived.length} việc cũ/xong`;
+
+      const todoCount = active.filter(t => t.status === 'Chưa thực hiện').length;
+      const progressCount = active.filter(t => t.status === 'Đang tiến hành').length;
+      const reviewCount = active.filter(t => t.status === 'Sắp hoàn thành').length;
+
+      document.getElementById('count-status-all').innerText = active.length;
+      document.getElementById('count-status-todo').innerText = todoCount;
+      document.getElementById('count-status-progress').innerText = progressCount;
+      document.getElementById('count-status-review').innerText = reviewCount;
+      document.getElementById('count-archived-num').innerText = archived.length;
+    }
+
+    function formatDateTimeDisplay(date) {
+      if (!date || isNaN(date.getTime())) return '';
+      const days = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+      const dayOfWeek = days[date.getDay()];
+      const d = String(date.getDate()).padStart(2, '0');
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const y = date.getFullYear();
+      const hh = String(date.getHours()).padStart(2, '0');
+      const mm = String(date.getMinutes()).padStart(2, '0');
+      return `${dayOfWeek} (${d}/${m}/${y}) - ${hh}:${mm}`;
+    }
+
+    function renderTasksList() {
+      const container = document.getElementById('tasks-list-container');
+      const search = (document.getElementById('search-task-input')?.value || '').toLowerCase().trim();
+      const list = window.__ACTIVE_TASKS || [];
+
+      const filtered = list.filter(item => {
+        const matchSearch = item.title.toLowerCase().includes(search) ||
+                            item.staff.toLowerCase().includes(search) ||
+                            (item.desc || '').toLowerCase().includes(search) ||
+                            (item.assigner || '').toLowerCase().includes(search);
+
+        let matchStatus = true;
+        if (currentStatusFilter !== 'all') {
+          matchStatus = item.status === currentStatusFilter;
+        }
+
+        let matchTime = true;
+        if (currentTimeFilter === 'urgent') matchTime = item.diffDays <= 2;
+        else if (currentTimeFilter === 'week') matchTime = item.diffDays <= 7;
+        else if (currentTimeFilter === 'month') matchTime = item.diffDays <= 30;
+
+        return matchSearch && matchStatus && matchTime;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="p-10 text-center bg-white rounded-2xl border border-dashed border-slate-300">
+            <div class="w-12 h-12 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center text-xl mx-auto mb-2.5">
+              <i class="fa-solid fa-list-check"></i>
+            </div>
+            <div class="font-extrabold text-slate-800 text-sm">Không Tìm Thấy Công Việc Nào Phù Hợp</div>
+            <div class="text-xs text-slate-400 mt-1">Các công việc đã qua hạn chót đều đã được tự động đưa vào kho lưu trữ.</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const staffArr = (item.staff || '').split(',').map(s => s.trim()).filter(Boolean);
+
+        let priorityBadge = '';
+        if (item.priority === 'urgent') {
+          priorityBadge = '<span class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 border border-rose-200 text-[10.5px] font-bold"><i class="fa-solid fa-bolt mr-1 text-rose-600"></i> Khẩn Cấp</span>';
+        } else if (item.priority === 'normal') {
+          priorityBadge = '<span class="px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 border border-sky-200 text-[10.5px] font-bold"><i class="fa-solid fa-clipboard mr-1 text-sky-600"></i> Định Kỳ</span>';
+        } else {
+          priorityBadge = '<span class="px-2 py-0.5 rounded-md bg-teal-100 text-teal-800 border border-teal-200 text-[10.5px] font-bold"><i class="fa-solid fa-eye mr-1 text-teal-600"></i> Phối Hợp</span>';
+        }
+
+        return `
+          <div class="bg-white p-3.5 sm:p-4 rounded-2xl border shadow-xs transition hover:shadow-md ${item.colorTheme.cardBorder}">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-100">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2.5 py-1 rounded-lg text-[11px] font-black shadow-xs ${item.levelBadge}">
+                  ${item.levelText}
+                </span>
+                ${priorityBadge}
+                <span class="font-extrabold text-slate-800 text-xs sm:text-sm font-mono flex items-center gap-1.5">
+                  <i class="fa-regular fa-clock text-sky-600"></i> Hạn chót: ${formatDateTimeDisplay(item.deadline)}
+                </span>
+              </div>
+
+              <div class="flex items-center gap-1.5 self-end sm:self-auto">
+                <span class="px-2 py-0.5 rounded-full text-[10.5px] font-bold ${item.colorTheme.badgeBg}">
+                  ${item.status || 'Đang tiến hành'}
+                </span>
+
+                <button onclick="openDutyAssignmentModal('${item.tempId}')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-[11px] flex items-center gap-1 transition shadow-xs" title="Tạo văn bản Phiếu giao nhiệm vụ A4">
+                  <i class="fa-solid fa-file-signature text-amber-700"></i>
+                  <span>Phiếu Giao Việc A4</span>
+                </button>
+
+                <button onclick="markTaskCompleted('${item.tempId}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 flex items-center justify-center transition" title="Đánh dấu đã hoàn thành">
+                  <i class="fa-solid fa-check text-[12px]"></i>
+                </button>
+
+                <button onclick="handleEditTask('${item.tempId}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-600 hover:text-sky-700 flex items-center justify-center transition" title="Sửa công việc">
+                  <i class="fa-solid fa-pen text-[11px]"></i>
+                </button>
+                <button onclick="handleDeleteTask('${item.tempId}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 flex items-center justify-center transition" title="Xóa công việc">
+                  <i class="fa-solid fa-trash text-[11px]"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="text-sm sm:text-base font-black text-slate-900 mb-1.5 leading-snug">
+              ${item.title}
+            </div>
+
+            ${item.desc ? `<p class="text-xs text-slate-600 mb-2 leading-relaxed bg-slate-50/70 p-2 rounded-xl border border-slate-100">${item.desc}</p>` : ''}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-600 pt-1">
+              <div class="space-y-1">
+                <div class="flex items-start gap-1.5">
+                  <i class="fa-solid fa-user-tie text-indigo-500 mt-0.5 text-[11px]"></i>
+                  <span><b>Người giao việc:</b> <span class="text-slate-800 font-semibold">${item.assigner || 'BS. Phạm Minh Đức'}</span></span>
+                </div>
+              </div>
+
+              <div>
+                <div class="font-bold text-slate-700 mb-1 flex items-center gap-1">
+                  <i class="fa-solid fa-users text-teal-600"></i>
+                  <span>Cán bộ thực hiện (${staffArr.length}):</span>
+                </div>
+                <div class="flex flex-wrap gap-1">
+                  ${staffArr.map(s => `
+                    <span class="px-2 py-0.5 bg-slate-100 border border-slate-200 text-teal-900 rounded-md text-[11px] font-bold shadow-xs">
+                      ${s}
+                    </span>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderArchivedTasksList() {
+      const container = document.getElementById('archived-tasks-container');
+      const list = window.__ARCHIVED_TASKS || [];
+
+      if (list.length === 0) {
+        container.innerHTML = '<div class="text-center text-slate-400 py-3 italic">Không có công việc nào trong kho lưu trữ.</div>';
+        return;
+      }
+
+      container.innerHTML = list.map(item => `
+        <div class="p-2.5 bg-white rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 text-xs opacity-75">
+          <div>
+            <div class="font-bold text-slate-800">${item.title}</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">
+              <span><i class="fa-regular fa-clock"></i> Hạn: ${formatDateTimeDisplay(item.deadline)}</span> • 
+              <span><i class="fa-solid fa-users"></i> ${item.staff}</span>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 bg-slate-200 text-slate-600 rounded-md font-bold text-[10px] whitespace-nowrap">
+            ${item.status === 'Đã hoàn thành' ? '✓ Đã hoàn thành' : 'Đã qua hạn chót'}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    function toggleArchivedTasks() {
+      const box = document.getElementById('archived-tasks-container');
+      const btn = document.getElementById('btn-toggle-archive');
+      const isHidden = box.classList.contains('hidden');
+
+      if (isHidden) {
+        box.classList.remove('hidden');
+        btn.innerHTML = `<i class="fa-solid fa-chevron-up"></i> <span>Ẩn kho lưu trữ</span>`;
+      } else {
+        box.classList.add('hidden');
+        const count = (window.__ARCHIVED_TASKS || []).length;
+        btn.innerHTML = `<i class="fa-solid fa-clock-rotate-left"></i> <span>Xem việc đã kết thúc / hết hạn (${count})</span>`;
+      }
+    }
+
+    function filterByStatus(status) {
+      currentStatusFilter = status;
+      const btns = [
+        { id: 'btn-status-all', s: 'all' },
+        { id: 'btn-status-todo', s: 'Chưa thực hiện' },
+        { id: 'btn-status-progress', s: 'Đang tiến hành' },
+        { id: 'btn-status-review', s: 'Sắp hoàn thành' }
+      ];
+      btns.forEach(b => {
+        const el = document.getElementById(b.id);
+        if (b.s === status) {
+          el.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition bg-sky-600 text-white shadow-xs whitespace-nowrap";
+        } else {
+          el.className = "px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap";
+        }
+      });
+      renderTasksList();
+    }
+
+    function filterByTime(type) {
+      currentTimeFilter = type;
+      const btns = [
+        { id: 'btn-time-all', type: 'all' },
+        { id: 'btn-time-urgent', type: 'urgent' },
+        { id: 'btn-time-week', type: 'week' },
+        { id: 'btn-time-month', type: 'month' }
+      ];
+      btns.forEach(b => {
+        const el = document.getElementById(b.id);
+        if (b.type === type) {
+          el.className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white transition";
+        } else {
+          el.className = "px-2 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition";
+        }
+      });
+      renderTasksList();
+    }
+
+    function switchMainTab(tab) {
+      const btnTasks = document.getElementById('tab-btn-tasks');
+      const btnDoc = document.getElementById('tab-btn-doc');
+      const viewTasks = document.getElementById('view-tab-tasks');
+      const viewDoc = document.getElementById('view-tab-doc');
+
+      if (tab === 'tasks') {
+        btnTasks.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-800 shadow-xs flex items-center gap-1.5";
+        btnDoc.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5";
+        viewTasks.classList.remove('hidden');
+        viewDoc.classList.add('hidden');
+      } else {
+        btnDoc.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-800 shadow-xs flex items-center gap-1.5";
+        btnTasks.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5";
+        viewTasks.classList.add('hidden');
+        viewDoc.classList.remove('hidden');
+        renderDirectA4Paper();
+      }
+    }
+
+    function openTaskModal(taskToEdit = null) {
+      const modal = document.getElementById('task-modal');
+      const title = document.getElementById('task-modal-title');
+      
+      formSelectedStaff = [];
+
+      if (taskToEdit) {
+        title.innerText = "Chỉnh Sửa Nhiệm Vụ Được Giao";
+        document.getElementById('form-task-id').value = taskToEdit.tempId;
+        document.getElementById('form-task-title').value = taskToEdit.title;
+        document.getElementById('form-task-desc').value = taskToEdit.desc || '';
+        document.getElementById('form-task-assigner').value = taskToEdit.assigner || 'BS. Phạm Minh Đức (Giám đốc)';
+        document.getElementById('form-task-status').value = taskToEdit.status || 'Đang tiến hành';
+
+        const radios = document.getElementsByName('form-task-priority');
+        for (const r of radios) {
+          if (r.value === taskToEdit.priority) r.checked = true;
+        }
+
+        formSelectedStaff = (taskToEdit.staff || '').split(',').map(s => s.trim()).filter(Boolean);
+
+        if (taskToEdit.deadlineIso) {
+          document.getElementById('form-deadline-date').value = taskToEdit.deadlineIso.slice(0, 10);
+          document.getElementById('form-deadline-time').value = taskToEdit.deadlineIso.slice(11, 16) || '17:00';
+        }
+      } else {
+        title.innerText = "Giao Nhiệm Vụ / Công Việc Mới";
+        document.getElementById('form-task-id').value = '';
+        document.getElementById('form-task-title').value = '';
+        document.getElementById('form-task-desc').value = '';
+        document.getElementById('form-task-assigner').value = 'BS. Phạm Minh Đức (Giám đốc)';
+        document.getElementById('form-task-status').value = 'Đang tiến hành';
+
+        const todayIso = new Date().toISOString().slice(0, 10);
+        document.getElementById('form-deadline-date').value = todayIso;
+        document.getElementById('form-deadline-time').value = '17:00';
+      }
+
+      updateFormStaffUI();
+      updateFormDeadlinePreview();
+      modal.classList.remove('hidden');
+    }
+
+    function closeTaskModal() {
+      document.getElementById('task-modal').classList.add('hidden');
+    }
+
+    function updateFormDeadlinePreview() {
+      const d = document.getElementById('form-deadline-date').value;
+      const t = document.getElementById('form-deadline-time').value || '17:00';
+      const previewEl = document.getElementById('form-deadline-preview-text');
+      if (d) {
+        const dt = new Date(`${d}T${t}:00`);
+        previewEl.innerText = formatDateTimeDisplay(dt);
+      } else {
+        previewEl.innerText = "Chưa chọn ngày hết hạn";
+      }
+    }
+
+    function initTaskSuggestions() {
+      const container = document.getElementById('task-chips-container');
+      container.innerHTML = PRESET_TASK_SUGGESTIONS.map(t => `
+        <span onclick="document.getElementById('form-task-title').value = '${t.replace(/'/g, "\\'")}'" class="px-2 py-0.5 bg-slate-100 hover:bg-sky-100 hover:text-sky-900 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-semibold cursor-pointer transition">
+          + ${t.length > 35 ? t.slice(0, 35) + '...' : t}
+        </span>
+      `).join('');
+    }
+
+    function handleSaveTaskSubmit(e) {
+      e.preventDefault();
+
+      const editId = document.getElementById('form-task-id').value;
+      const title = document.getElementById('form-task-title').value.trim();
+      const desc = document.getElementById('form-task-desc').value.trim();
+      const assigner = document.getElementById('form-task-assigner').value.trim() || 'BS. Phạm Minh Đức (Giám đốc)';
+      const status = document.getElementById('form-task-status').value;
+
+      let priority = 'normal';
+      const radios = document.getElementsByName('form-task-priority');
+      for (const r of radios) {
+        if (r.checked) priority = r.value;
+      }
+
+      const staff = formSelectedStaff.join(', ');
+      const dDate = document.getElementById('form-deadline-date').value;
+      const dTime = document.getElementById('form-deadline-time').value || '17:00';
+
+      if (!title || !dDate || formSelectedStaff.length === 0) {
+        showToast('Vui lòng điền đủ Tên công việc, Cán bộ thực hiện và Ngày hết hạn!', 'warning');
+        return;
+      }
+
+      const deadlineIso = `${dDate}T${dTime}:00`;
+
+      if (editId) {
+        const target = tasksList.find(t => t.tempId === editId);
+        if (target) {
+          target.title = title;
+          target.desc = desc;
+          target.staff = staff;
+          target.assigner = assigner;
+          target.priority = priority;
+          target.status = status;
+          target.deadlineIso = deadlineIso;
+          showToast('Đã cập nhật công việc thành công!', 'success');
+        }
+      } else {
+        const newTask = {
+          tempId: `task_${Date.now()}`,
+          title,
+          desc,
+          staff,
+          assigner,
+          priority,
+          status,
+          deadlineIso
+        };
+        tasksList.unshift(newTask);
+        showToast('Đã giao nhiệm vụ mới thành công!', 'success');
+      }
+
+      saveTasksToStorage();
+      closeTaskModal();
+      processTasksData();
+    }
+
+    function handleEditTask(tempId) {
+      const item = (window.__ACTIVE_TASKS || []).find(t => t.tempId === tempId) ||
+                   (window.__ARCHIVED_TASKS || []).find(t => t.tempId === tempId);
+      if (item) {
+        openTaskModal(item);
+      }
+    }
+
+    function handleDeleteTask(tempId) {
+      const item = (window.__ACTIVE_TASKS || []).find(t => t.tempId === tempId) ||
+                   (window.__ARCHIVED_TASKS || []).find(t => t.tempId === tempId);
+      if (!item) return;
+
+      showConfirmModal(
+        'Xác nhận xóa nhiệm vụ',
+        `Bạn có chắc chắn muốn xóa công việc:\n"${item.title}"?`,
+        () => {
+          tasksList = tasksList.filter(t => t.tempId !== tempId);
+          saveTasksToStorage();
+          processTasksData();
+          showToast('Đã xóa công việc thành công!', 'info');
+        }
+      );
+    }
+
+    function markTaskCompleted(tempId) {
+      const item = (window.__ACTIVE_TASKS || []).find(t => t.tempId === tempId);
+      if (!item) return;
+
+      item.status = 'Đã hoàn thành';
+      saveTasksToStorage();
+      processTasksData();
+      showToast('Đã đánh dấu hoàn thành nhiệm vụ!', 'success');
+    }
+
+    function toggleStaffDirectoryModal() {
+      const modal = document.getElementById('staff-directory-modal');
+      const isHidden = modal.classList.contains('hidden');
+      if (isHidden) {
+        modal.classList.remove('hidden');
+        renderStaffDirectoryItems();
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function closeStaffDirectoryModal() {
+      document.getElementById('staff-directory-modal').classList.add('hidden');
+      updateFormStaffUI();
+    }
+
+    function renderStaffDirectoryItems() {
+      const container = document.getElementById('staff-directory-list-container');
+      const search = (document.getElementById('staff-search-input')?.value || '').toLowerCase().trim();
+      const staffList = getLiveStaffList();
+
+      const filtered = staffList.filter(s => 
+        s.name.toLowerCase().includes(search) || 
+        (s.shortName && s.shortName.toLowerCase().includes(search)) ||
+        (s.point && s.point.toLowerCase().includes(search))
+      );
+
+      const groups = {};
+      filtered.forEach(s => {
+        if (!groups[s.point]) groups[s.point] = [];
+        groups[s.point].push(s);
+      });
+
+      let html = '';
+      for (const pt in groups) {
+        html += `
+          <div class="space-y-1">
+            <div class="text-[10.5px] font-black uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
+              ${pt} (${groups[pt].length})
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
+              ${groups[pt].map(stf => {
+                const isSelected = formSelectedStaff.includes(stf.name);
+                return `
+                  <div onclick="toggleSelectStaff('${stf.name.replace(/'/g, "\\'")}')" class="p-2 rounded-xl border flex items-center justify-between cursor-pointer transition ${
+                    isSelected ? 'bg-sky-50 border-sky-300 text-sky-900 font-bold' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }">
+                    <div class="flex items-center gap-1.5 truncate">
+                      <span class="w-2 h-2 rounded-full ${isSelected ? 'bg-sky-600' : 'bg-slate-300'}"></span>
+                      <span class="truncate">${stf.name}</span>
+                    </div>
+                    <span class="text-[10px] font-bold text-sky-700 bg-sky-100/70 px-1.5 py-0.2 rounded">
+                      ${stf.shortName || 'CB'}
+                    </span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+      document.getElementById('modal-selected-count').innerText = formSelectedStaff.length;
+    }
+
+    function filterStaffDirectoryList() {
+      renderStaffDirectoryItems();
+    }
+
+    function toggleSelectStaff(name) {
+      const idx = formSelectedStaff.indexOf(name);
+      if (idx === -1) {
+        formSelectedStaff.push(name);
+      } else {
+        formSelectedStaff.splice(idx, 1);
+      }
+      renderStaffDirectoryItems();
+      updateFormStaffUI();
+    }
+
+    function removeFormStaff(name) {
+      const idx = formSelectedStaff.indexOf(name);
+      if (idx !== -1) {
+        formSelectedStaff.splice(idx, 1);
+        updateFormStaffUI();
+      }
+    }
+
+    function updateFormStaffUI() {
+      const chipsBox = document.getElementById('form-selected-staff-chips');
+      const input = document.getElementById('form-staff-input');
+
+      input.value = formSelectedStaff.join(', ');
+
+      if (formSelectedStaff.length === 0) {
+        chipsBox.innerHTML = '<span class="text-slate-400 italic text-[11px] p-1">Chưa chọn cán bộ nào</span>';
+      } else {
+        chipsBox.innerHTML = formSelectedStaff.map(name => `
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-100 text-sky-900 font-bold text-[11px] border border-sky-200">
+            <span>${name}</span>
+            <span onclick="removeFormStaff('${name.replace(/'/g, "\\'")}')" class="cursor-pointer text-sky-700 hover:text-rose-600 font-black">✕</span>
+          </span>
+        `).join('');
+      }
+    }
+
+    function populateDutyDocDropdown() {
+      const select = document.getElementById('direct-doc-source-select');
+      if (!select) return;
+
+      const all = window.__ACTIVE_TASKS || [];
+      if (all.length === 0) {
+        select.innerHTML = '<option value="">(Không có công việc đang tiến hành)</option>';
+        return;
+      }
+
+      select.innerHTML = all.map(t => `
+        <option value="${t.tempId}">
+          ${t.title.length > 40 ? t.title.slice(0, 40) + '...' : t.title}
+        </option>
+      `).join('');
+    }
+
+    function onDirectDocSourceChange(taskId) {
+      renderDirectA4Paper(taskId);
+    }
+
+    function renderDirectA4Paper(taskId = null) {
+      const paper = document.getElementById('direct-a4-paper');
+      if (!paper) return;
+
+      const all = window.__ACTIVE_TASKS || [];
+      const t = (taskId ? all.find(x => x.tempId === taskId) : null) || all[0] || INITIAL_TASKS[0];
+      const now = new Date();
+
+      const staffList = (t.staff || '').split(',').map(s => s.trim()).filter(Boolean);
+
+      paper.innerHTML = `
+        <table class="w-full border-collapse mb-3" style="width: 100%;">
+          <tr>
+            <td style="width: 45%; vertical-align: top; text-align: center; line-height: 1.3;">
+              <div class="text-[11.5pt] uppercase tracking-normal" data-field="unit-parent">UBND XÃ MỘ ĐỨC</div>
+              <div class="text-[12.5pt] font-bold uppercase tracking-normal" data-field="unit-name">TRẠM Y TẾ</div>
+              <div style="width: 75px; height: 1px; background-color: #000; margin: 3px auto 5px auto;"></div>
+              <div class="text-[12pt] mt-1">
+                Số: <b data-field="doc-number">15/PGV-TYT</b>
+              </div>
+            </td>
+            <td style="width: 55%; vertical-align: top; text-align: center; line-height: 1.3;">
+              <div class="text-[12pt] font-bold uppercase tracking-tight">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+              <div class="text-[12.5pt] font-bold tracking-normal">Độc lập - Tự do - Hạnh phúc</div>
+              <div style="width: 140px; height: 1px; background-color: #000; margin: 4px auto 6px auto;"></div>
+              <div class="text-[12pt] italic mt-1" data-field="doc-date">
+                Mộ Đức, ngày ${now.getDate()} tháng ${now.getMonth() + 1} năm ${now.getFullYear()}.
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <section class="text-center mt-4 mb-4">
+          <h2 class="text-[14.5pt] font-bold uppercase tracking-wide mb-1.5" data-field="doc-heading">
+            PHIẾU GIAO NHIỆM VỤ CÔNG VIỆC
+          </h2>
+          <div class="text-[12.5pt] italic max-w-[92%] mx-auto leading-snug font-medium" data-field="doc-subject">
+            V/v phân công thực hiện nhiệm vụ: ${t.title}
+          </div>
+        </section>
+
+        <p class="text-justify mb-3 indent-7" data-field="doc-basis">
+          Căn cứ Quy chế làm việc của Trạm Y tế xã Mộ Đức và yêu cầu triển khai nhiệm vụ chuyên môn y tế trên địa bàn xã.
+        </p>
+
+        <p class="text-justify mb-2 indent-7">
+          Trạm Y tế xã Mộ Đức phân công cán bộ phụ trách thực hiện nhiệm vụ có tên sau:
+        </p>
+
+        <div class="ml-10 mb-3.5 space-y-1 font-bold text-[13pt]" id="direct-staff-container">
+          ${staffList.map((s, idx) => `<div>${staffList.length > 1 ? `${idx + 1}. ` : ''}${s}</div>`).join('')}
+        </div>
+
+        <div class="ml-7 mb-4 space-y-2">
+          <div>
+            <b>1. Nội dung nhiệm vụ:</b> <span data-field="doc-content">${t.title}</span>
+          </div>
+          ${t.desc ? `<div><b>2. Yêu cầu kết quả:</b> <span data-field="doc-requirement">${t.desc}</span></div>` : ''}
+          <div>
+            <b>3. Thời hạn hoàn thành:</b> <span data-field="doc-deadline" class="font-bold">${formatDateTimeDisplay(t.deadline)}</span>
+          </div>
+        </div>
+
+        <p class="text-justify mb-8 indent-7 leading-relaxed" data-field="doc-clause">
+          Cá nhân cán bộ y tế được giao nhiệm vụ chủ động phối hợp với các bộ phận liên quan để triển khai hoàn thành đúng thời hạn và báo cáo kết quả về Ban Giám đốc Trạm./.
+        </p>
+
+        <table class="w-full border-collapse mt-6" style="width: 100%; page-break-inside: avoid;">
+          <tr>
+            <td style="width: 55%; vertical-align: top; font-size: 10.5pt; line-height: 1.4; padding-top: 4px;">
+              <div class="font-bold italic text-[11pt] mb-1">Nơi nhận:</div>
+              <div>- GĐ, PGĐ TYT;</div>
+              <div>- Cán bộ thực hiện (để thi hành);</div>
+              <div>- Phụ trách các điểm trạm;</div>
+              <div>- Lưu: VT.</div>
+            </td>
+            <td style="width: 45%; vertical-align: top; text-align: center; line-height: 1.3;">
+              <div class="text-[13pt] font-bold uppercase tracking-wide">GIÁM ĐỐC</div>
+              <div class="text-[10pt] italic text-slate-500 mt-1 mb-16">(Ký, đóng dấu)</div>
+              <div class="text-[13.5pt] font-bold tracking-tight text-slate-950">Phạm Minh Đức</div>
+            </td>
+          </tr>
+        </table>
+      `;
+
+      if (isDirectEditActive) {
+        enableDirectEditAttributes();
+      }
+    }
+
+    function openDutyAssignmentModal(taskId) {
+      switchMainTab('doc');
+      const select = document.getElementById('direct-doc-source-select');
+      if (select) {
+        select.value = taskId;
+      }
+      renderDirectA4Paper(taskId);
+    }
+
+    function toggleDirectEditMode() {
+      isDirectEditActive = !isDirectEditActive;
+      const paper = document.getElementById('direct-a4-paper');
+      const btn = document.getElementById('btn-direct-edit');
+      const label = document.getElementById('btn-direct-edit-label');
+
+      if (isDirectEditActive) {
+        paper.classList.add('editable-active');
+        enableDirectEditAttributes();
+        btn.className = "px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white border border-sky-400 rounded-xl text-xs font-bold transition flex items-center gap-1.5";
+        label.innerText = "Đang mở sửa (Bấm để khóa)";
+        showToast("Đã bật chỉnh sửa trực tiếp! Nhấp chuột vào bất kỳ dòng chữ nào trên giấy A4 để gõ.");
+      } else {
+        paper.classList.remove('editable-active');
+        disableDirectEditAttributes();
+        btn.className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5";
+        label.innerText = "Chỉnh sửa trực tiếp";
+        showToast("Đã khóa văn bản. Mọi chỉnh sửa đã được lưu vào bản in.");
+      }
+    }
+
+    function enableDirectEditAttributes() {
+      const paper = document.getElementById('direct-a4-paper');
+      const editables = paper.querySelectorAll('[data-field], #direct-staff-container div, p');
+      editables.forEach(el => el.setAttribute('contenteditable', 'true'));
+    }
+
+    function disableDirectEditAttributes() {
+      const paper = document.getElementById('direct-a4-paper');
+      const editables = paper.querySelectorAll('[contenteditable]');
+      editables.forEach(el => el.setAttribute('contenteditable', 'false'));
+    }
+
+    function downloadDirectWordDoc() {
+      const paper = document.getElementById('direct-a4-paper');
+      const innerHtml = paper.innerHTML;
+      const numRaw = (paper.querySelector('[data-field="doc-number"]')?.innerText || '15_PGV_TYT').replace(/[\/\\:]/g, '_');
+
+      const wordTemplate = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset='utf-8'>
+          <title>Phieu_Giao_Nhiem_Vu_${numRaw}</title>
+          <style>
+            @page {
+              size: 21.0cm 29.7cm;
+              margin: 2.0cm 1.5cm 2.0cm 2.5cm;
+              mso-page-orientation: portrait;
+            }
+            body {
+              font-family: 'Times New Roman', Times, serif;
+              font-size: 13pt;
+              line-height: 1.4;
+              color: #000000;
+            }
+            table { border-collapse: collapse; width: 100%; }
+            td { vertical-align: top; }
+            p { margin-top: 0; margin-bottom: 6pt; text-align: justify; }
+          </style>
+        </head>
+        <body>
+          ${innerHtml}
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob(['\ufeff', wordTemplate], { type: 'application/msword;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Phieu_Giao_Viec_${numRaw}.doc`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast("Đã xuất file Word (.doc) Phiếu giao việc thành công!");
+    }
+
+    function printDirectDoc() {
+      document.body.classList.remove('print-table-mode');
+      document.body.classList.add('print-doc-mode');
+      setPagePrintOrientation('portrait');
+
+      const printContainer = document.getElementById('print-doc-container');
+      const paper = document.getElementById('direct-a4-paper');
+      printContainer.innerHTML = paper.innerHTML;
+
+      setTimeout(() => {
+        window.print();
+      }, 300);
+    }
+
+    function setPagePrintOrientation(orientation) {
+      let styleEl = document.getElementById('dynamic-print-page-style');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'dynamic-print-page-style';
+        document.head.appendChild(styleEl);
+      }
+      if (orientation === 'portrait') {
+        styleEl.innerHTML = `@media print { @page { size: A4 portrait; margin: 18mm 15mm 18mm 20mm; } }`;
+      } else {
+        styleEl.innerHTML = `@media print { @page { size: A4 landscape; margin: 8mm 6mm 8mm 6mm; } }`;
+      }
+    }
+
+    function printTaskSummary() {
+      document.body.classList.remove('print-doc-mode');
+      document.body.classList.add('print-table-mode');
+      setPagePrintOrientation('landscape');
+
+      const tbody = document.getElementById('print-table-body');
+      const list = window.__ACTIVE_TASKS || [];
+
+      document.getElementById('print-table-sub-title').innerText = `Báo Cáo Tiến Độ Công Việc & Nhiệm Vụ • Ngày ${new Date().toLocaleDateString('vi-VN')}`;
+
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 15px; font-style: italic;">Hiện không có công việc nào đang tiến hành.</td></tr>';
+      } else {
+        tbody.innerHTML = list.map((item, idx) => `
+          <tr>
+            <td style="text-align: center; font-weight: bold;">${idx + 1}</td>
+            <td style="font-weight: bold; font-family: monospace;">${formatDateTimeDisplay(item.deadline)}</td>
+            <td style="font-weight: bold;">${item.title}</td>
+            <td>${item.staff}</td>
+            <td>${item.assigner || '---'}</td>
+            <td style="text-align: center;">${item.priority === 'urgent' ? 'Khẩn cấp' : (item.priority === 'normal' ? 'Định kỳ' : 'Phối hợp')}</td>
+            <td style="text-align: center;">${item.status || 'Đang tiến hành'}</td>
+          </tr>
+        `).join('');
+      }
+
+      const now = new Date();
+      document.getElementById('print-table-footer-date').innerText = `Mộ Đức, ngày ${now.getDate()} tháng ${now.getMonth() + 1} năm ${now.getFullYear()}`;
+
+      setTimeout(() => { window.print(); }, 350);
+    }
+
+    function exportToExcel() {
+      const list = window.__ACTIVE_TASKS || [];
+      const wsData = [
+        ['TRẠM Y TẾ XÃ MỘ ĐỨC', '', '', '', '', '', ''],
+        ['BẢNG THEO DÕI TIẾN ĐỘ CÔNG VIỆC & NHIỆM VỤ ĐƯỢC GIAO'],
+        [`Thời điểm xuất: ${new Date().toLocaleDateString('vi-VN')}`],
+        [],
+        ['TT', 'Hạn Hoàn Thành', 'Nội Dung Nhiệm Vụ Được Giao', 'Cán Bộ Phụ Trách', 'Người Chỉ Đạo / Giao Việc', 'Mức Độ', 'Trạng Thái']
+      ];
+
+      list.forEach((t, idx) => {
+        let prioText = 'Bình thường';
+        if (t.priority === 'urgent') prioText = 'Khẩn cấp';
+        if (t.priority === 'followup') prioText = 'Phối hợp';
+
+        wsData.push([
+          idx + 1,
+          formatDateTimeDisplay(t.deadline),
+          t.title,
+          t.staff,
+          t.assigner,
+          prioText,
+          t.status
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      ws['!cols'] = [
+        { wch: 5 }, { wch: 24 }, { wch: 45 }, { wch: 30 }, { wch: 25 }, { wch: 14 }, { wch: 15 }
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'TienDoCongViec');
+      XLSX.writeFile(wb, `QuanLy_CongViec_TYTMoDuc_${Date.now()}.xlsx`);
+    }
+
+    function openApiConfigModal() {
+      document.getElementById('cloud-api-url-input').value = GOOGLE_SHEET_TASKS_URL;
+      document.getElementById('api-config-modal').classList.remove('hidden');
+    }
+
+    function closeApiConfigModal() {
+      document.getElementById('api-config-modal').classList.add('hidden');
+    }
+
+    function saveCloudApiUrl() {
+      const url = document.getElementById('cloud-api-url-input').value.trim();
+      GOOGLE_SHEET_TASKS_URL = url;
+      localStorage.setItem('TYT_TASKS_API_URL', url);
+      closeApiConfigModal();
+      showToast('Đã lưu cấu hình Google Apps Script Cloud URL!', 'success');
+      fetchTasksFromCloud();
+    }
+
+    async function saveTasksToCloud() {
+      if (!GOOGLE_SHEET_TASKS_URL) {
+        showToast("Vui lòng cấu hình URL Google Sheets trước!", "warning");
+        openApiConfigModal();
+        return;
+      }
+
+      showLoading("Đang lưu danh sách công việc & nhiệm vụ lên Google Sheets...");
+      try {
+        const payload = {
+          action: "saveTasks",
+          data: {
+            records: tasksList.map(t => ({
+              tempId: t.tempId || `task_${Date.now()}`,
+              title: t.title || "",
+              desc: t.desc || "",
+              staff: t.staff || "",
+              assigner: t.assigner || "BS. Phạm Minh Đức (Giám đốc)",
+              priority: t.priority || "normal",
+              status: t.status || "Đang tiến hành",
+              deadlineIso: t.deadlineIso || ""
+            }))
+          }
+        };
+
+        const response = await fetch(GOOGLE_SHEET_TASKS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+
+        const rawText = await response.text();
+        let res;
+        try {
+          res = JSON.parse(rawText);
+        } catch(jsonErr) {
+          console.warn("Phản hồi không phải JSON:", rawText);
+          showToast("Đã gửi yêu cầu lưu lên Google Sheets!", "info");
+          return;
+        }
+
+        if (res && res.status === "success") {
+          showToast(res.message || "Đã lưu thành công công việc lên Google Sheets!", "success");
+        } else {
+          showToast("Lỗi lưu dữ liệu: " + (res.message || "Không xác định"), "error");
+        }
+      } catch (err) {
+        console.error("Lỗi khi lưu lên Cloud:", err);
+        showToast("Lỗi kết nối khi gửi dữ liệu lên Google Sheet.", "error");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function fetchTasksFromCloud(isAuto = false) {
+      if (!GOOGLE_SHEET_TASKS_URL) {
+        if (!isAuto) showToast('Chưa cấu hình Web App URL. Đang dùng dữ liệu cục bộ.', 'info');
+        return;
+      }
+
+      if (!isAuto) showLoading('Đang đồng bộ công việc từ Google Sheets...');
+      try {
+        const url = GOOGLE_SHEET_TASKS_URL + (GOOGLE_SHEET_TASKS_URL.includes('?') ? '&' : '?') + `action=loadTasks&t=${Date.now()}`;
+        const response = await fetch(url, { method: 'GET', cache: 'no-store' });
+        const res = await response.json();
+
+        if (res.status === 'success' && res.data && res.data.length > 0) {
+          tasksList = res.data.map(item => ({
+            ...item,
+            tempId: item.tempId || `task_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
+          }));
+          saveTasksToStorage(false);
+          processTasksData();
+          if (!isAuto) showToast(`Đã đồng bộ thành công ${tasksList.length} công việc từ Google Sheets!`, 'success');
+        } else {
+          if (!isAuto) showToast('Không có dữ liệu công việc mới trên Google Sheets.', 'info');
+        }
+      } catch (err) {
+        console.warn('Lỗi kết nối Google Sheets:', err);
+        if (!isAuto) showToast('Không thể kết nối đến Google Sheets. Đang dùng dữ liệu trên máy.', 'warning');
+      } finally {
+        if (!isAuto) hideLoading();
+      }
+    }
+
+    function showLoading(text) {
+      document.getElementById('loading-text').innerText = text;
+      document.getElementById('loading-overlay').style.display = 'flex';
+    }
+
+    function hideLoading() {
+      document.getElementById('loading-overlay').style.display = 'none';
+    }
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      const colors = {
+        success: 'bg-emerald-600 text-white shadow-emerald-600/30',
+        error: 'bg-rose-600 text-white shadow-rose-600/30',
+        warning: 'bg-amber-500 text-white shadow-amber-500/30',
+        info: 'bg-slate-800 text-white shadow-slate-800/30'
+      };
+
+      const icons = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-xmark',
+        warning: 'fa-triangle-exclamation',
+        info: 'fa-circle-info'
+      };
+
+      toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2.5 text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i> <span>${msg}</span>`;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 3500);
+      }, 3500);
+    }
+
+    function showConfirmModal(title, msg, onConfirm) {
+      document.getElementById('confirm-modal-title').innerText = title;
+      document.getElementById('confirm-modal-msg').innerText = msg;
+      document.getElementById('confirm-modal').classList.remove('hidden');
+      confirmCallback = onConfirm;
+    }
+
+    function closeConfirmModal(accepted) {
+      document.getElementById('confirm-modal').classList.add('hidden');
+      if (accepted && typeof confirmCallback === 'function') {
+        confirmCallback();
+      }
+      confirmCallback = null;
+    }
+  </script>
+</body>
+</html>
