@@ -497,13 +497,39 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block font-bold text-slate-700 mb-1">Địa điểm / Hình thức: <span class="text-rose-500">*</span></label>
-            <input type="text" id="form-location" required placeholder="Khách sạn Hùng Vương / Sở Y tế / Zoom..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-500">
+            <input type="text" id="form-location" required placeholder="Khách sạn Hùng Vương / Trực tuyến qua Google Meet..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-500" oninput="checkOnlineLocationHint(this.value)">
             <div class="flex flex-wrap gap-1 mt-1" id="location-chips-container"></div>
           </div>
           <div>
             <label class="block font-bold text-slate-700 mb-1">Đơn vị tổ chức / Triệu tập:</label>
             <input type="text" id="form-organizer" placeholder="Sở Y tế Quảng Ngãi / CDC / UBND Xã..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-500">
             <div class="flex flex-wrap gap-1 mt-1" id="organizer-chips-container"></div>
+          </div>
+        </div>
+
+        <!-- Ô NHẬP ĐƯỜNG LINK TRUY CẬP TRỰC TUYẾN (ZOOM / GOOGLE MEET) -->
+        <div id="online-link-box" class="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="font-bold text-emerald-950 flex items-center gap-1.5 text-xs">
+              <i class="fa-solid fa-video text-emerald-600"></i>
+              <span>Link phòng tập huấn / họp trực tuyến (Google Meet / Zoom / Teams):</span>
+            </label>
+            <span class="text-[10.5px] text-emerald-700 font-semibold">(Nếu học online)</span>
+          </div>
+          <input type="url" id="form-meeting-link" placeholder="https://meet.google.com/xxx-xxxx-xxx hoặc https://zoom.us/j/..." class="w-full p-2 bg-white border border-emerald-300 rounded-lg text-xs font-mono text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500">
+          
+          <!-- Chips điền nhanh định dạng link mẫu -->
+          <div class="flex flex-wrap items-center gap-1 text-[10.5px]">
+            <span class="text-slate-500 font-medium">Gợi ý nền tảng:</span>
+            <button type="button" onclick="setPresetLinkPrefix('meet')" class="px-2 py-0.5 rounded bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold transition">
+              <i class="fa-brands fa-google text-red-500 mr-0.5"></i> Google Meet
+            </button>
+            <button type="button" onclick="setPresetLinkPrefix('zoom')" class="px-2 py-0.5 rounded bg-white hover:bg-emerald-100 text-blue-800 border border-blue-200 font-bold transition">
+              <i class="fa-solid fa-video text-blue-500 mr-0.5"></i> Zoom
+            </button>
+            <button type="button" onclick="setPresetLinkPrefix('teams')" class="px-2 py-0.5 rounded bg-white hover:bg-emerald-100 text-indigo-800 border border-indigo-200 font-bold transition">
+              <i class="fa-solid fa-users-rectangle text-indigo-500 mr-0.5"></i> MS Teams
+            </button>
           </div>
         </div>
 
@@ -826,10 +852,22 @@
   </div>
 
   <script>
-    // URL GOOGLE APPS SCRIPT WEB APP MẶC ĐỊNH
-    const DEFAULT_GOOGLE_SHEET_HOP_URL = "https://script.google.com/macros/s/AKfycbxXEckUzIAPzXan6uJfx0J_MPB_DKQFBP-50wVY_2s8-HXSuCm0qnkdPz0B8q-ww3c3dA/exec";
+    // URL GOOGLE APPS SCRIPT WEB APP MẶC ĐỊNH MỚI (CÓ CỘT LINK TRỰC TUYẾN ZOOM/MEET)
+    const DEFAULT_GOOGLE_SHEET_HOP_URL = "https://script.google.com/macros/s/AKfycbw9IDJhGC2UQ6mKnn1NjlTIiZACzj8uvwZJj28dgpbSVWREHqljf3aYC6ihmbslqg_jUg/exec";
+    const PREVIOUS_GOOGLE_SHEET_HOP_URLS = [
+      "https://script.google.com/macros/s/AKfycbxXEckUzIAPzXan6uJfx0J_MPB_DKQFBP-50wVY_2s8-HXSuCm0qnkdPz0B8q-ww3c3dA/exec",
+      "https://script.google.com/macros/s/AKfycbwXpFjMyBife5Yi0zeVRCqXZM-c-nPEfSYJVrT15K62gS5Z0v1gjrCL0f-II4mfwVw3IQ/exec"
+    ];
+    
+    // Tự động nâng cấp URL trong localStorage nếu đang lưu các URL cũ
     const savedApiUrl = localStorage.getItem('TYT_MEETINGS_API_URL');
-    let GOOGLE_SHEET_HOP_URL = (savedApiUrl && savedApiUrl.trim() !== "") ? savedApiUrl : DEFAULT_GOOGLE_SHEET_HOP_URL;
+    let GOOGLE_SHEET_HOP_URL = DEFAULT_GOOGLE_SHEET_HOP_URL;
+    if (savedApiUrl && savedApiUrl.trim() !== "" && !PREVIOUS_GOOGLE_SHEET_HOP_URLS.includes(savedApiUrl)) {
+      GOOGLE_SHEET_HOP_URL = savedApiUrl;
+    } else {
+      localStorage.setItem('TYT_MEETINGS_API_URL', DEFAULT_GOOGLE_SHEET_HOP_URL);
+      GOOGLE_SHEET_HOP_URL = DEFAULT_GOOGLE_SHEET_HOP_URL;
+    }
 
     // 29 cán bộ theo 4 điểm trạm chuẩn xác
     const DEFAULT_STAFF_29 = [
@@ -883,7 +921,47 @@
         organizer: "Chi cục Dân số - KHHGĐ tỉnh",
         status: "Đã xếp lịch",
         startDate: "2026-10-01T08:00:00",
-        endDate: "2026-10-02T17:00:00"
+        endDate: "2026-10-02T17:00:00",
+        meetingLink: ""
+      },
+      {
+        tempId: "m_online_cme_2026",
+        category: "dihoc",
+        time: "Thứ 6 (25/09/2026) - 14:00",
+        topic: "Tập huấn trực tuyến cập nhật chẩn đoán & điều trị Sốt xuất huyết Dengue",
+        staff: "BS. Võ Thị Thanh Thuyên, BS. Phạm Minh Đức, YS. Trịnh Thị Minh Tuệ",
+        location: "Trực tuyến qua Google Meet",
+        organizer: "Bệnh viện Đa khoa tỉnh & Sở Y tế",
+        status: "Sắp diễn ra",
+        startDate: "2026-09-25T14:00:00",
+        endDate: "2026-09-25T17:00:00",
+        meetingLink: "https://meet.google.com/abc-defg-hij"
+      },
+      {
+        tempId: "m_cme_phanve_2026",
+        category: "dihoc",
+        time: "Từ ngày 24/09/2026 đến 26/09/2026",
+        topic: "Khóa đào tạo liên tục (CME) kỹ năng cấp cứu ban đầu, chẩn đoán & xử trí sốc phản vệ theo Thông tư 51/2017/TT-BYT",
+        staff: "BS. Võ Thị Thanh Thuyên, YS. Trịnh Thị Minh Tuệ, ĐD. Võ Quang Vinh",
+        location: "Hội trường Bệnh viện Đa khoa tỉnh Quảng Ngãi",
+        organizer: "Sở Y tế tỉnh Quảng Ngãi",
+        status: "Đã xếp lịch",
+        startDate: "2026-09-24T07:30:00",
+        endDate: "2026-09-26T17:00:00",
+        meetingLink: ""
+      },
+      {
+        tempId: "m_tiemchung_2026",
+        category: "taphuan",
+        time: "Thứ 2 (21/09/2026) - 08:00",
+        topic: "Tập huấn triển khai phân hệ phần mềm quản lý tiêm chủng mở rộng quốc gia V2.0",
+        staff: "BS. Phạm Minh Đức, NHS. Huỳnh Thị Anh Tin, ĐD. Nguyễn Thị Thu Nguyệt",
+        location: "Hội trường Trung tâm Kiểm soát Bệnh tật tỉnh (CDC Quảng Ngãi)",
+        organizer: "CDC Tỉnh Quảng Ngãi",
+        status: "Sắp diễn ra",
+        startDate: "2026-09-21T08:00:00",
+        endDate: "2026-09-21T17:00:00",
+        meetingLink: ""
       },
       {
         tempId: "m_cme_phanve_2026",
@@ -958,11 +1036,12 @@
       ],
       locations: [
         "Khách sạn Hùng Vương (45 Hùng Vương, Quảng Ngãi)",
+        "Trực tuyến qua Google Meet",
+        "Trực tuyến qua Zoom",
         "Hội trường Sở Y tế tỉnh Quảng Ngãi",
         "Trung tâm Kiểm soát Bệnh tật tỉnh (CDC)",
         "Bệnh viện Đa khoa tỉnh Quảng Ngãi",
-        "Phòng họp số 2 - UBND Xã Mộ Đức",
-        "Trực tuyến qua Zoom / Google Meet"
+        "Phòng họp số 2 - UBND Xã Mộ Đức"
       ],
       organizers: [
         "Sở Y tế tỉnh Quảng Ngãi",
@@ -1152,6 +1231,7 @@
           ...item,
           tempId: item.tempId || `m_${idx}_${Date.now()}`,
           category: item.category || 'taphuan',
+          meetingLink: (item.meetingLink || '').trim(),
           start,
           end,
           diffDays,
@@ -1295,12 +1375,9 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-600 pt-1">
               <div class="space-y-1">
+                ${renderManagerLocationInfo(item)}
                 <div class="flex items-start gap-1.5">
-                  <i class="fa-solid fa-location-dot text-rose-500 mt-0.5 text-[11px]"></i>
-                  <span><b>Địa điểm:</b> <span class="text-slate-800 font-semibold">${item.location}</span></span>
-                </div>
-                <div class="flex items-start gap-1.5">
-                  <i class="fa-solid fa-building-flag text-indigo-500 mt-0.5 text-[11px]"></i>
+                  <i class="fa-solid fa-building-flag text-indigo-500 mt-0.5 text-[11px] shrink-0"></i>
                   <span><b>Tổ chức:</b> <span class="text-slate-800 font-semibold">${item.organizer || '---'}</span></span>
                 </div>
               </div>
@@ -1435,6 +1512,7 @@
         document.getElementById('form-meeting-id').value = meetingToEdit.tempId;
         document.getElementById('form-topic').value = meetingToEdit.topic;
         document.getElementById('form-location').value = meetingToEdit.location;
+        document.getElementById('form-meeting-link').value = meetingToEdit.meetingLink || '';
         document.getElementById('form-organizer').value = meetingToEdit.organizer || '';
         document.getElementById('form-status').value = meetingToEdit.status || 'Đã xếp lịch';
 
@@ -1460,6 +1538,7 @@
         document.getElementById('form-meeting-id').value = '';
         document.getElementById('form-topic').value = '';
         document.getElementById('form-location').value = '';
+        document.getElementById('form-meeting-link').value = '';
         document.getElementById('form-organizer').value = '';
         document.getElementById('form-status').value = 'Đã xếp lịch';
 
@@ -1692,8 +1771,15 @@
       const editId = document.getElementById('form-meeting-id').value;
       const topic = document.getElementById('form-topic').value.trim();
       const location = document.getElementById('form-location').value.trim();
+      let meetingLink = document.getElementById('form-meeting-link').value.trim();
       const organizer = document.getElementById('form-organizer').value.trim() || 'Sở Y tế / UBND';
       const status = document.getElementById('form-status').value;
+
+      // Tự động trích xuất link nếu người dùng dán URL vào ô Địa điểm
+      if (!meetingLink) {
+        const urlMatch = location.match(/(https?:\/\/[^\s]+)/i);
+        if (urlMatch) meetingLink = urlMatch[0];
+      }
 
       let category = 'taphuan';
       const radios = document.getElementsByName('form-event-category');
@@ -1751,6 +1837,7 @@
           target.topic = topic;
           target.staff = staff;
           target.location = location;
+          target.meetingLink = meetingLink;
           target.organizer = organizer;
           target.status = status;
           target.time = timeText;
@@ -1765,6 +1852,7 @@
           topic,
           staff,
           location,
+          meetingLink,
           organizer,
           status,
           time: timeText,
@@ -1778,6 +1866,79 @@
       saveMeetingsToStorage();
       closeMeetingModal();
       processMeetingsData();
+    }
+
+    function checkOnlineLocationHint(val) {
+      const isOnline = /zoom|meet|trực tuyến|online|teams/i.test(val);
+      const linkInput = document.getElementById('form-meeting-link');
+      if (isOnline && linkInput && !linkInput.value) {
+        if (/meet/i.test(val)) linkInput.placeholder = "https://meet.google.com/xxx-xxxx-xxx";
+        else if (/zoom/i.test(val)) linkInput.placeholder = "https://zoom.us/j/1234567890";
+      }
+    }
+
+    function setPresetLinkPrefix(type) {
+      const input = document.getElementById('form-meeting-link');
+      if (type === 'meet') input.value = "https://meet.google.com/";
+      else if (type === 'zoom') input.value = "https://zoom.us/j/";
+      else if (type === 'teams') input.value = "https://teams.microsoft.com/l/meetup-join/";
+      input.focus();
+    }
+
+    function renderManagerLocationInfo(item) {
+      const rawLink = (item.meetingLink || '').trim();
+      const isOnline = Boolean(rawLink) || /zoom|meet\.google|teams|trực tuyến|online/i.test(item.location || '');
+      let finalLink = rawLink;
+      if (!finalLink) {
+        const urlMatch = (item.location || '').match(/(https?:\/\/[^\s]+)/i);
+        if (urlMatch) finalLink = urlMatch[0];
+      }
+
+      if (isOnline) {
+        return `
+          <div class="flex items-start gap-1.5">
+            <i class="fa-solid fa-video text-emerald-600 mt-0.5 text-[11px] shrink-0"></i>
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <b>Hình thức:</b> <span class="text-emerald-800 font-bold bg-emerald-50 px-2 py-0.2 rounded border border-emerald-200">${item.location}</span>
+              </div>
+              ${finalLink ? `
+                <div class="mt-1 flex flex-wrap items-center gap-1.5">
+                  <a href="${finalLink}" target="_blank" class="px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10.5px] inline-flex items-center gap-1 shadow-xs transition">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Vào phòng
+                  </a>
+                  <button type="button" onclick="copyRawMeetingUrl('${encodeURIComponent(finalLink)}')" class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10.5px] transition">
+                    <i class="fa-regular fa-copy"></i> Sao chép link
+                  </button>
+                </div>
+              ` : `
+                <span class="text-[10.5px] text-amber-700 italic mt-0.5 block">Chưa gắn link truy cập (Bấm 'Sửa' để thêm)</span>
+              `}
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="flex items-start gap-1.5">
+          <i class="fa-solid fa-location-dot text-rose-500 mt-0.5 text-[11px] shrink-0"></i>
+          <div>
+            <b>Địa điểm:</b> <span class="text-slate-800 font-semibold">${item.location}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function copyRawMeetingUrl(encodedUrl) {
+      const url = decodeURIComponent(encodedUrl);
+      if (!url) return;
+      const textarea = document.createElement('textarea');
+      textarea.value = url;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showToast('Đã sao chép đường link phòng học vào Clipboard!', 'success');
     }
 
     function handleEditMeeting(tempId) {
@@ -2405,18 +2566,26 @@
         const payload = {
           action: "saveMeetings",
           data: {
-            records: meetingsList.map(m => ({
-              tempId: m.tempId || `m_${Date.now()}`,
-              category: m.category || "taphuan",
-              time: m.time || "",
-              topic: m.topic || "",
-              staff: m.staff || "",
-              location: m.location || "",
-              organizer: m.organizer || "",
-              status: m.status || "Đã xếp lịch",
-              startDate: m.startDate || "",
-              endDate: m.endDate || ""
-            }))
+            records: meetingsList.map(m => {
+              let mLink = (m.meetingLink || '').trim();
+              if (!mLink && m.location) {
+                const urlMatch = m.location.match(/(https?:\/\/[^\s]+)/i);
+                if (urlMatch) mLink = urlMatch[0];
+              }
+              return {
+                tempId: m.tempId || `m_${Date.now()}`,
+                category: m.category || "taphuan",
+                time: m.time || "",
+                topic: m.topic || "",
+                staff: m.staff || "",
+                location: m.location || "",
+                meetingLink: mLink,
+                organizer: m.organizer || "",
+                status: m.status || "Đã xếp lịch",
+                startDate: m.startDate || "",
+                endDate: m.endDate || ""
+              };
+            })
           }
         };
         const response = await fetch(GOOGLE_SHEET_HOP_URL, {
@@ -2424,9 +2593,18 @@
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload)
         });
-        const res = await response.json();
+        const rawText = await response.text();
+        let res;
+        try {
+          res = JSON.parse(rawText);
+        } catch (jsonErr) {
+          console.error("Phản hồi không phải JSON:", rawText);
+          showToast("Đã gửi yêu cầu lưu lên Google Sheets!", "info");
+          return;
+        }
+
         if (res && res.status === "success") {
-          showToast(res.message || "Đã lưu thành công lịch lên Google Sheets!", "success");
+          showToast(res.message || "Đã lưu thành công lịch lên Google Sheets (bảo toàn cột Link)!", "success");
         } else {
           showToast("Lỗi lưu dữ liệu: " + (res.message || "Không xác định"), "error");
         }
