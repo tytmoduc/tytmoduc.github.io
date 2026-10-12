@@ -57,6 +57,13 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
+    /* Hiệu ứng kéo thả sắp xếp thứ tự kíp trực trong modal xoay tua */
+    .roster-item-dragover {
+      border: 2px dashed #0d9488 !important;
+      background-color: #ccfbf1 !important;
+      transform: scale(1.01);
+    }
+
     /* Định dạng in chuẩn thể thức văn bản hành chính khổ A4 dọc theo mẫu */
     @media print {
       body { background: white !important; margin: 0 !important; padding: 0 !important; }
@@ -116,7 +123,7 @@
           <span>Xoay Tua Chuẩn</span>
         </button>
 
-        <button onclick="saveScheduleToCloud()" class="px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs sm:text-sm transition shadow-xs flex items-center gap-1.5" title="Lưu dữ liệu lịch trực lên Google Sheets">
+        <button onclick="saveScheduleToCloud()" class="px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs sm:text-sm transition shadow-xs flex items-center gap-1.5" title="Lưu toàn bộ lịch trực các tuần trong tháng lên Google Sheets">
           <i class="fa-solid fa-cloud-arrow-up"></i>
           <span>Lưu Cloud</span>
         </button>
@@ -405,7 +412,7 @@
           </div>
           <div>
             <h3 class="font-extrabold text-sm sm:text-base leading-tight">CÔNG CỤ XOAY TUA TRỰC CHUẨN</h3>
-            <p class="text-[11px] text-teal-100">Áp dụng kíp trực tuần hoàn • Tịnh tiến 7 người • Thêm cán bộ chi viện từ trạm khác</p>
+            <p class="text-[11px] text-teal-100">Áp dụng kíp trực tuần hoàn • Tịnh tiến 7 người • Kéo thả sắp xếp thứ tự kíp</p>
           </div>
         </div>
         <button onclick="closeRotationModal()" class="w-8 h-8 rounded-lg hover:bg-white/20 text-white flex items-center justify-center transition">
@@ -462,8 +469,8 @@
               <span class="text-[11px] text-teal-700 font-bold" id="rot-roster-count-badge">7 cán bộ</span>
             </div>
 
-            <!-- Danh sách thứ tự cán bộ kíp trực (Kéo thả hoặc dùng mũi tên ▲ / ▼) -->
-            <div class="space-y-1 max-h-48 overflow-y-auto custom-scrollbar p-1 bg-white rounded-xl border border-slate-200" id="rot-roster-items-box">
+            <!-- Danh sách thứ tự cán bộ kíp trực (Hỗ trợ kéo thả lên/xuống hoặc dùng mũi tên ▲ / ▼) -->
+            <div class="space-y-1 max-h-52 overflow-y-auto custom-scrollbar p-1 bg-white rounded-xl border border-slate-200" id="rot-roster-items-box">
               <!-- Render động qua JS -->
             </div>
 
@@ -754,13 +761,12 @@
 
   <script>
     // 1. CẤU HÌNH API ĐỒNG BỘ CLOUD CHUẨN XÁC
-    const DEFAULT_GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzd_0N29KwslUk1dsw6cZIBP2i_4tCj-PVff0GdAqQmWLgzkiDfyZWudI5LHyMTFNXH/exec";
+    const DEFAULT_GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxargASuNxzYJPtSw52uounHzcixO1Sthc-IXnaSwLLiUtz8XQHveuorG8pHOLbwQCI/exec";
     const GOOGLE_SHEET_STAFF_URL = "https://script.google.com/macros/s/AKfycbz8rE8UkPQOG-gk_annTiMfKic9qoUQRn-X-qII3Dtme_xPMwecwi0YzbxoSHlLbNZmBg/exec";
 
-    let GOOGLE_SHEETS_API_URL = localStorage.getItem('lichTrucApiUrl') || DEFAULT_GOOGLE_SHEETS_API_URL;
-    if (!localStorage.getItem('lichTrucApiUrl')) {
-      localStorage.setItem('lichTrucApiUrl', DEFAULT_GOOGLE_SHEETS_API_URL);
-    }
+    // Tự động đồng bộ URL mới nhất vào bộ nhớ trình duyệt
+    let GOOGLE_SHEETS_API_URL = DEFAULT_GOOGLE_SHEETS_API_URL;
+    localStorage.setItem('lichTrucApiUrl', DEFAULT_GOOGLE_SHEETS_API_URL);
 
     const STATIONS = [
       { id: 0, code: "ĐỨC TÂN", name: "Điểm trạm chính (Đức Tân)", short: "Đức Tân", badge: "ĐT", phone: "0949544799", color: "blue", bg: "bg-blue-50" },
@@ -1073,7 +1079,7 @@
           const hasDoc = (doc !== '-');
 
           rHtml += `
-            <td class="p-2 border-l border-slate-200 cursor-pointer hover:bg-slate-100 transition relative dropzone-ready ${isToday ? 'bg-teal-50/40' : ''}" 
+            <td class="p-1 sm:p-1.5 border-l border-slate-200 cursor-pointer hover:bg-slate-100 transition relative dropzone-ready ${isToday ? 'bg-teal-50/40' : ''}" 
                 ondragover="onCellDragOver(event)" 
                 ondragleave="onCellDragLeave(event)" 
                 ondrop="onCellDrop(event, ${rIdx}, ${c})"
@@ -1081,15 +1087,15 @@
               
               <div draggable="${hasDoc}" 
                    ondragstart="onCellDragStart(event, ${rIdx}, ${c}, '${doc.replace(/'/g, "\\'")}')" 
-                   class="px-2.5 py-3 rounded-xl border ${hasDoc ? 'bg-white border-slate-300 shadow-2xs cursor-grab active:cursor-grabbing hover:border-teal-500' : 'bg-slate-50/70 border-dashed border-slate-300 text-slate-400'} flex items-center justify-between min-h-[46px] transition">
+                   class="px-1.5 sm:px-2 py-2 rounded-xl border ${hasDoc ? 'bg-white border-slate-300 shadow-2xs cursor-grab active:cursor-grabbing hover:border-teal-500' : 'bg-slate-50/70 border-dashed border-slate-300 text-slate-400'} flex items-center justify-between min-h-[42px] transition">
                 
-                <span class="font-black text-xs sm:text-sm ${hasDoc ? 'text-slate-900' : 'text-slate-400'} truncate pointer-events-none">
+                <span class="font-black text-[11px] sm:text-xs ${hasDoc ? 'text-slate-900' : 'text-slate-400'} tracking-tight whitespace-nowrap overflow-hidden text-ellipsis pointer-events-none" title="${doc}">
                   ${doc}
                 </span>
 
                 ${hasDoc ? `
-                  <button type="button" onclick="event.stopPropagation(); clearSingleShift(${rIdx}, ${c})" class="w-6 h-6 rounded-lg hover:bg-rose-100 text-slate-400 hover:text-rose-600 flex items-center justify-center transition shrink-0 ml-1" title="Xóa ca này">
-                    <i class="fa-solid fa-trash text-[11px]"></i>
+                  <button type="button" onclick="event.stopPropagation(); clearSingleShift(${rIdx}, ${c})" class="w-5 h-5 rounded-lg hover:bg-rose-100 text-slate-400 hover:text-rose-600 flex items-center justify-center transition shrink-0 ml-0.5" title="Xóa ca này">
+                    <i class="fa-solid fa-trash text-[10px]"></i>
                   </button>
                 ` : ''}
 
@@ -1181,7 +1187,7 @@
         const dayFormatted = d < 10 ? '0' + d : d;
 
         if (!isOverviewMode) {
-          // CHẾ ĐỘ 1 ĐIỂM TRẠM CỤ THỂ: HIỂN THỊ DUY NHẤT TÊN CÁN BỘ (BỎ 24/24, 07H-07H)
+          // CHẾ ĐỘ 1 ĐIỂM TRẠM CỤ THỂ: HIỂN THỊ DUY NHẤT TÊN CÁN BỘ
           const doc = getShiftForSpecificDate(singleStationIdx, iso);
           const hasDoc = (doc && doc !== '-');
 
@@ -1203,15 +1209,15 @@
               <!-- Ô TÊN CÁN BỘ (CHỈ HIỆN DUY NHẤT TÊN) -->
               <div draggable="${hasDoc}" 
                    ondragstart="onCellDragStart(event, ${singleStationIdx}, -1, '${doc ? doc.replace(/'/g, "\\'") : ''}', '${iso}')" 
-                   class="my-auto py-1 px-1.5 rounded-lg border ${hasDoc ? 'bg-slate-50 border-slate-200 hover:bg-teal-50 hover:border-teal-300' : 'bg-transparent border-dashed border-slate-200 text-slate-300'} flex items-center justify-between gap-1 transition">
+                   class="my-auto py-1 px-1 rounded-lg border ${hasDoc ? 'bg-slate-50 border-slate-200 hover:bg-teal-50 hover:border-teal-300' : 'bg-transparent border-dashed border-slate-200 text-slate-300'} flex items-center justify-between gap-0.5 transition">
                 
-                <span class="font-black text-xs sm:text-sm ${hasDoc ? 'text-slate-900' : 'text-slate-400'} truncate pointer-events-none" title="${doc || ''}">
+                <span class="font-black text-[11px] sm:text-xs ${hasDoc ? 'text-slate-900' : 'text-slate-400'} tracking-tight whitespace-nowrap overflow-hidden text-ellipsis pointer-events-none" title="${doc || ''}">
                   ${hasDoc ? doc : '-'}
                 </span>
 
                 ${hasDoc ? `
-                  <button type="button" onclick="event.stopPropagation(); clearMonthSingleShift(${singleStationIdx}, '${iso}')" class="w-5 h-5 rounded hover:bg-rose-100 text-slate-400 hover:text-rose-600 flex items-center justify-center transition shrink-0 ml-1" title="Xóa ca này">
-                    <i class="fa-solid fa-trash text-[10px]"></i>
+                  <button type="button" onclick="event.stopPropagation(); clearMonthSingleShift(${singleStationIdx}, '${iso}')" class="w-4 h-4 rounded hover:bg-rose-100 text-slate-400 hover:text-rose-600 flex items-center justify-center transition shrink-0 ml-0.5" title="Xóa ca này">
+                    <i class="fa-solid fa-trash text-[9.5px]"></i>
                   </button>
                 ` : ''}
 
@@ -1240,22 +1246,22 @@
               </div>
 
               <!-- 4 DÒNG TÊN CÁN BỘ 4 TRẠM -->
-              <div class="space-y-1 text-[11px] pt-1">
+              <div class="space-y-0.5 text-[10px] sm:text-[10.5px] pt-0.5">
                 <div class="flex items-center justify-between bg-blue-50/80 px-1 py-0.5 rounded border border-blue-100 truncate" title="Đức Tân: ${docs[0]}">
-                  <span class="font-black text-blue-900 text-[10px] w-6 shrink-0">ĐT:</span>
-                  <span class="font-extrabold text-slate-900 truncate">${docs[0] || '-'}</span>
+                  <span class="font-black text-blue-900 text-[9.5px] w-5 shrink-0">ĐT:</span>
+                  <span class="font-black text-slate-900 text-[10.5px] sm:text-[11px] truncate tracking-tight">${docs[0] || '-'}</span>
                 </div>
                 <div class="flex items-center justify-between bg-emerald-50/80 px-1 py-0.5 rounded border border-emerald-100 truncate" title="Mộ Đức: ${docs[1]}">
-                  <span class="font-black text-emerald-900 text-[10px] w-6 shrink-0">Đ1:</span>
-                  <span class="font-extrabold text-slate-900 truncate">${docs[1] || '-'}</span>
+                  <span class="font-black text-emerald-900 text-[9.5px] w-5 shrink-0">Đ1:</span>
+                  <span class="font-black text-slate-900 text-[10.5px] sm:text-[11px] truncate tracking-tight">${docs[1] || '-'}</span>
                 </div>
                 <div class="flex items-center justify-between bg-amber-50/80 px-1 py-0.5 rounded border border-amber-100 truncate" title="Đức Hòa: ${docs[2]}">
-                  <span class="font-black text-amber-900 text-[10px] w-6 shrink-0">Đ2:</span>
-                  <span class="font-extrabold text-slate-900 truncate">${docs[2] || '-'}</span>
+                  <span class="font-black text-amber-900 text-[9.5px] w-5 shrink-0">Đ2:</span>
+                  <span class="font-black text-slate-900 text-[10.5px] sm:text-[11px] truncate tracking-tight">${docs[2] || '-'}</span>
                 </div>
                 <div class="flex items-center justify-between bg-purple-50/80 px-1 py-0.5 rounded border border-purple-100 truncate" title="Đức Phú: ${docs[3]}">
-                  <span class="font-black text-purple-900 text-[10px] w-6 shrink-0">Đ3:</span>
-                  <span class="font-extrabold text-slate-900 truncate">${docs[3] || '-'}</span>
+                  <span class="font-black text-purple-900 text-[9.5px] w-5 shrink-0">Đ3:</span>
+                  <span class="font-black text-slate-900 text-[10.5px] sm:text-[11px] truncate tracking-tight">${docs[3] || '-'}</span>
                 </div>
               </div>
 
@@ -1837,19 +1843,26 @@
 
       if (box) {
         box.innerHTML = roster.map((doc, idx) => `
-          <div class="p-1.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-teal-600 text-white font-black text-[10px] flex items-center justify-center">
+          <div draggable="true"
+               ondragstart="onRosterDragStart(event, ${idx})"
+               ondragend="onRosterDragEnd(event)"
+               ondragover="onRosterDragOver(event, ${idx})"
+               ondragleave="onRosterDragLeave(event)"
+               ondrop="onRosterDrop(event, ${idx})"
+               class="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100/90 border border-slate-200 flex items-center justify-between text-xs cursor-grab active:cursor-grabbing transition duration-150 select-none">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <i class="fa-solid fa-grip-vertical text-slate-400 hover:text-teal-600 text-xs px-0.5" title="Kéo lên / xuống để đổi thứ tự"></i>
+              <span class="w-5 h-5 rounded-full bg-teal-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">
                 ${idx + 1}
               </span>
-              <span class="font-extrabold text-slate-900">${doc}</span>
+              <span class="font-extrabold text-slate-900 truncate">${doc}</span>
             </div>
 
-            <div class="flex items-center gap-1">
-              <button type="button" onclick="moveRosterItem(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="w-6 h-6 rounded bg-white hover:bg-slate-200 text-slate-700 disabled:opacity-30 flex items-center justify-center transition">
+            <div class="flex items-center gap-1 shrink-0">
+              <button type="button" onclick="moveRosterItem(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="w-6 h-6 rounded bg-white hover:bg-slate-200 text-slate-700 disabled:opacity-30 flex items-center justify-center transition" title="Lên trên">
                 ▲
               </button>
-              <button type="button" onclick="moveRosterItem(${idx}, 1)" ${idx === roster.length - 1 ? 'disabled' : ''} class="w-6 h-6 rounded bg-white hover:bg-slate-200 text-slate-700 disabled:opacity-30 flex items-center justify-center transition">
+              <button type="button" onclick="moveRosterItem(${idx}, 1)" ${idx === roster.length - 1 ? 'disabled' : ''} class="w-6 h-6 rounded bg-white hover:bg-slate-200 text-slate-700 disabled:opacity-30 flex items-center justify-center transition" title="Xuống dưới">
                 ▼
               </button>
               <button type="button" onclick="removeRosterItem(${idx})" class="w-6 h-6 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition" title="Xóa khỏi kíp">
@@ -1863,6 +1876,50 @@
       if (starterSelect) {
         starterSelect.innerHTML = roster.map(doc => `<option value="${doc}">${doc}</option>`).join('');
       }
+    }
+
+    // XỬ LÝ KÉO THẢ LÊN / XUỐNG SẮP XẾP THỨ TỰ TUA
+    let draggedRosterIdx = null;
+
+    function onRosterDragStart(e, idx) {
+      draggedRosterIdx = idx;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(idx));
+      e.currentTarget.classList.add('opacity-50');
+    }
+
+    function onRosterDragEnd(e) {
+      draggedRosterIdx = null;
+      e.currentTarget.classList.remove('opacity-50');
+      document.querySelectorAll('.roster-item-dragover').forEach(el => el.classList.remove('roster-item-dragover'));
+    }
+
+    function onRosterDragOver(e, idx) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (draggedRosterIdx === null || draggedRosterIdx === idx) return;
+      e.currentTarget.classList.add('roster-item-dragover');
+    }
+
+    function onRosterDragLeave(e) {
+      e.currentTarget.classList.remove('roster-item-dragover');
+    }
+
+    function onRosterDrop(e, targetIdx) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('roster-item-dragover');
+      if (draggedRosterIdx === null || draggedRosterIdx === targetIdx) return;
+
+      const roster = STATION_ROSTER_SEQUENCES[activeRotationStationIdx];
+      if (!roster) return;
+
+      const moved = roster.splice(draggedRosterIdx, 1)[0];
+      roster.splice(targetIdx, 0, moved);
+      draggedRosterIdx = null;
+
+      saveRotationSequences();
+      renderRotationRosterItems();
+      showToast(`Đã xếp lại thứ tự: ${moved}`, "info");
     }
 
     function moveRosterItem(idx, dir) {
@@ -2337,14 +2394,61 @@
     }
 
     async function saveScheduleToCloud() {
-      showToast("Đang lưu lịch trực lên Google Sheets...", "info");
+      showToast("Đang gom và lưu các tuần trong tháng lên Google Sheets...", "info");
 
       try {
+        saveCurrentWeekToLocalCache();
+
+        let weeksMap = {};
+        try {
+          const raw = localStorage.getItem('TYT_LICH_TRUC_SAVED_WEEKS_V3');
+          if (raw) weeksMap = JSON.parse(raw);
+        } catch(e) {}
+
+        const daysInCurrentMonth = new Date(currentChosenYear, currentChosenMonth, 0).getDate();
+        const monthMondays = new Set();
+        for (let d = 1; d <= daysInCurrentMonth; d++) {
+          const dObj = new Date(currentChosenYear, currentChosenMonth - 1, d);
+          const iso = getLocalISODate(dObj);
+          monthMondays.add(getMondayForIso(iso));
+        }
+
+        const weeksToSave = [];
+        monthMondays.forEach(mStr => {
+          let g = null;
+          if (weeksMap[mStr] && weeksMap[mStr].grid) {
+            g = weeksMap[mStr].grid;
+          } else if (mStr === currentWeekStartStr) {
+            g = scheduleGrid;
+          } else {
+            const pM = mStr.split('-');
+            const monD = new Date(parseInt(pM[0]), parseInt(pM[1]) - 1, parseInt(pM[2]));
+            g = STATIONS.map((st, rIdx) => {
+              const row = [st.name];
+              for (let col = 1; col <= 7; col++) {
+                const dayD = new Date(monD);
+                dayD.setDate(monD.getDate() + (col - 1));
+                row.push(getShiftForSpecificDate(rIdx, getLocalISODate(dayD)));
+              }
+              return row;
+            });
+          }
+
+          const pM = mStr.split('-');
+          const endD = new Date(parseInt(pM[0]), parseInt(pM[1]) - 1, parseInt(pM[2]) + 6);
+
+          weeksToSave.push({
+            weekStart: mStr,
+            weekEnd: getLocalISODate(endD),
+            grid: g
+          });
+        });
+
         const payload = {
-          action: "saveWeek",
-          weekStart: currentWeekStartStr,
-          weekEnd: currentWeekEndStr,
-          grid: scheduleGrid
+          action: "saveWeeks",
+          month: currentChosenMonth,
+          year: currentChosenYear,
+          weeks: weeksToSave
         };
 
         const res = await fetch(GOOGLE_SHEETS_API_URL, {
@@ -2355,8 +2459,7 @@
 
         const data = await res.json();
         if (data && data.status === 'success') {
-          saveCurrentWeekToLocalCache();
-          showToast("Đã lưu lịch trực lên Google Sheets thành công!", "success");
+          showToast(`Đã lưu thành công ${weeksToSave.length} tuần trực của Tháng ${currentChosenMonth} lên Google Sheets!`, "success");
         } else {
           showToast("Máy chủ phản hồi nhưng chưa lưu được.", "warning");
         }
@@ -2395,6 +2498,13 @@
  * GOOGLE APPS SCRIPT: QUẢN LÝ LỊCH TRỰC CẤP CỨU 24/24 - TYT MỘ ĐỨC
  */
 var STANDARD_SCHEDULE_HEADERS = ["Tuần Bắt Đầu (Thứ 2)","Tuần Kết Thúc (CN)","Điểm Trạm Y Tế","Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7","Chủ Nhật","Cập Nhật Lúc"];
+
+var STATION_NAMES = [
+  "Điểm trạm chính (Đức Tân)",
+  "Điểm y tế số 1 (Mộ Đức)",
+  "Điểm y tế số 2 (Đức Hòa)",
+  "Điểm y tế số 3 (Đức Phú)"
+];
 
 function getOrCreateScheduleSheet(ss) {
   if (!ss) ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -2445,30 +2555,57 @@ function doPost(e) {
     var payload = JSON.parse(e.postData.contents);
     var action = payload.action || "saveWeek";
 
-    if (action === "saveWeek") {
+    if (action === "saveWeek" || action === "saveWeeks") {
       var sheet = getOrCreateScheduleSheet(ss);
-      var wStart = String(payload.weekStart).trim();
-      var wEnd = String(payload.weekEnd).trim();
-      var grid = payload.grid || [];
-      var nowStr = Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss");
+      var weeksToProcess = [];
+      if (payload.weeks && Array.isArray(payload.weeks)) {
+        weeksToProcess = payload.weeks;
+      } else if (payload.weekStart && payload.grid) {
+        weeksToProcess.push({ weekStart: payload.weekStart, weekEnd: payload.weekEnd, grid: payload.grid });
+      }
 
-      var lR = sheet.getLastRow();
-      if (lR >= 2) {
-        var existing = sheet.getRange(2, 1, lR - 1, 1).getDisplayValues();
-        for (var i = existing.length - 1; i >= 0; i--) {
-          if (String(existing[i][0]).trim() === wStart) sheet.deleteRow(i + 2);
+      var nowStr = Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss");
+      var updatedWeeksSet = {};
+      var incomingRows = [];
+
+      for (var w = 0; w < weeksToProcess.length; w++) {
+        var item = weeksToProcess[w];
+        var wStart = String(item.weekStart || "").trim();
+        var wEnd = String(item.weekEnd || "").trim();
+        if (!wStart) continue;
+
+        updatedWeeksSet[wStart] = true;
+        var gridData = item.grid || [];
+
+        for (var st = 0; st < 4; st++) {
+          var rowData = gridData[st] || [];
+          incomingRows.push([
+            wStart, wEnd, STATION_NAMES[st],
+            rowData[1] || "-", rowData[2] || "-", rowData[3] || "-",
+            rowData[4] || "-", rowData[5] || "-", rowData[6] || "-", rowData[7] || "-",
+            nowStr
+          ]);
         }
       }
 
-      var ins = [];
-      for (var r = 0; r < 4; r++) {
-        var g = grid[r] || [];
-        ins.push([wStart, wEnd, g[0]||STATIONS[r].name, g[1]||"-", g[2]||"-", g[3]||"-", g[4]||"-", g[5]||"-", g[6]||"-", g[7]||"-", nowStr]);
+      var lastRow = sheet.getLastRow();
+      var existingRows = lastRow >= 2 ? sheet.getRange(2, 1, lastRow - 1, 11).getDisplayValues() : [];
+      var finalRows = existingRows.filter(function(r) { return !updatedWeeksSet[String(r[0]).trim()]; });
+      finalRows = finalRows.concat(incomingRows);
+
+      finalRows.sort(function(a, b) {
+        if (a[0] !== b[0]) return String(a[0]).localeCompare(String(b[0]));
+        return 0;
+      });
+
+      if (lastRow >= 2) sheet.getRange(2, 1, lastRow - 1, 11).clearContent();
+      if (finalRows.length > 0) {
+        sheet.getRange(2, 1, finalRows.length, 11).setValues(finalRows);
+        sheet.getRange(2, 1, finalRows.length, 2).setNumberFormat("@");
       }
-      var nextR = sheet.getLastRow() + 1;
-      sheet.getRange(nextR, 1, ins.length, 11).setValues(ins);
       SpreadsheetApp.flush();
-      return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Đã lưu lịch trực tuần!" })).setMimeType(ContentService.MimeType.JSON);
+
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Đã lưu lịch trực thành công!" })).setMimeType(ContentService.MimeType.JSON);
     }
     return doGet(e);
   } catch(err) {
