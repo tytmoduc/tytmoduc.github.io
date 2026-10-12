@@ -221,6 +221,54 @@
           </div>
         </div>
 
+        <!-- MENU XÓA CÔNG (TỪ NGÀY ĐẾN NGÀY / TUẦN / THÁNG) -->
+        <div class="relative inline-block text-left" id="clear-attendance-dropdown-container">
+          <button onclick="toggleClearAttendanceMenu(event)" class="px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded-xl hover:bg-rose-100 transition text-xs flex items-center gap-1.5 shadow-sm" title="Tùy chọn xóa dữ liệu chấm công">
+            <i class="fa-solid fa-eraser text-rose-600"></i>
+            <span>Xóa công</span>
+            <i class="fa-solid fa-chevron-down text-[10px] ml-0.5 text-rose-600"></i>
+          </button>
+
+          <div id="clear-attendance-dropdown" class="hidden absolute right-0 mt-1.5 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 text-xs">
+            <div class="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1 flex items-center justify-between">
+              <span>Tùy chọn xóa công</span>
+              <i class="fa-solid fa-trash-can text-rose-500"></i>
+            </div>
+            
+            <button onclick="openClearDateRangeModal()" class="w-full text-left px-3 py-2 text-slate-700 hover:bg-rose-50 hover:text-rose-800 flex items-start gap-2.5 transition group">
+              <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 group-hover:bg-rose-600 group-hover:text-white transition">
+                <i class="fa-solid fa-calendar-week"></i>
+              </div>
+              <div class="flex-1">
+                <div class="font-bold text-slate-800 group-hover:text-rose-700">Từ ngày đến ngày...</div>
+                <div class="text-[10.5px] text-slate-400 font-normal">Xóa khoảng ngày tự chọn & buổi</div>
+              </div>
+            </button>
+
+            <button onclick="clearWeekAttendance()" class="w-full text-left px-3 py-2 text-slate-700 hover:bg-amber-50 hover:text-amber-800 flex items-start gap-2.5 transition group">
+              <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 group-hover:bg-amber-600 group-hover:text-white transition">
+                <i class="fa-solid fa-calendar-day"></i>
+              </div>
+              <div class="flex-1">
+                <div class="font-bold text-slate-800 group-hover:text-amber-700">Tuần hiện tại</div>
+                <div class="text-[10.5px] text-slate-400 font-normal">Xóa cả tuần Thứ 2 - Chủ nhật tuần này</div>
+              </div>
+            </button>
+
+            <div class="border-t border-slate-100 my-1"></div>
+
+            <button onclick="clearMonthAttendance()" class="w-full text-left px-3 py-2 text-slate-700 hover:bg-rose-50 hover:text-rose-800 flex items-start gap-2.5 transition group">
+              <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 group-hover:bg-rose-600 group-hover:text-white transition">
+                <i class="fa-solid fa-trash-can"></i>
+              </div>
+              <div class="flex-1">
+                <div class="font-bold text-slate-800 group-hover:text-rose-700">Toàn bộ tháng đang xem</div>
+                <div class="text-[10.5px] text-slate-400 font-normal" id="clear-month-desc">Xóa toàn bộ công cả tháng</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
         <!-- MENU LẤY CA TỪ LỊCH TRỰC -->
         <div class="relative inline-block text-left" id="sync-schedule-dropdown-container">
           <button onclick="toggleSyncScheduleMenu(event)" class="px-3 py-2 bg-teal-50 text-teal-700 border border-teal-200 font-bold rounded-xl hover:bg-teal-100 transition text-xs flex items-center gap-1.5 shadow-sm" title="Lấy dữ liệu ca trực đêm (+T) từ Lịch Trực">
@@ -356,7 +404,7 @@
     
     <div class="mt-1.5 text-[10.5px] text-slate-500 flex flex-wrap justify-between items-center gap-2">
       <div class="flex items-center gap-3">
-        <span><i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i>Bảng chấm công Trạm y tế xã Mộ Đức.</span>
+        <span><i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i> Phân quyền theo 04 điểm trạm. Ban Giám Đốc có toàn quyền điều hành.</span>
         <span><i class="fa-solid fa-arrows-rotate text-indigo-600 mr-1"></i> Tự động đồng bộ với Quản lý nhân viên & Lịch trực.</span>
       </div>
       <span id="last-sync-time" class="font-bold text-slate-600">Đã sẵn sàng</span>
@@ -523,6 +571,71 @@
     </div>
   </div>
 
+  <!-- MODAL XÓA CÔNG THEO KHOẢNG NGÀY (TỪ NGÀY ĐẾN NGÀY) -->
+  <div id="clear-date-range-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 overflow-hidden transform transition-all">
+      <div class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-calendar-xmark"></i>
+          </div>
+          <h3 class="font-extrabold text-slate-800 text-sm">Xóa Công Theo Khoảng Ngày</h3>
+        </div>
+        <button onclick="closeClearDateRangeModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <p class="text-xs text-slate-600" id="clear-date-range-desc">
+          Chọn khoảng ngày cần xóa công trong tháng:
+        </p>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Từ ngày:</label>
+            <select id="clear-from-day-select" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-rose-500">
+              <!-- Render động danh sách ngày -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Đến ngày:</label>
+            <select id="clear-to-day-select" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-rose-500">
+              <!-- Render động danh sách ngày -->
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Áp dụng xóa cho buổi:</label>
+          <div class="grid grid-cols-3 gap-2 text-xs">
+            <label class="flex items-center gap-1.5 p-2 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer">
+              <input type="radio" name="clearRangeSession" value="both" checked class="text-rose-600 focus:ring-rose-500">
+              <span class="font-bold text-slate-700">Cả ngày</span>
+            </label>
+            <label class="flex items-center gap-1.5 p-2 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer">
+              <input type="radio" name="clearRangeSession" value="am" class="text-rose-600 focus:ring-rose-500">
+              <span class="font-semibold text-slate-700">Sáng</span>
+            </label>
+            <label class="flex items-center gap-1.5 p-2 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer">
+              <input type="radio" name="clearRangeSession" value="pm" class="text-rose-600 focus:ring-rose-500">
+              <span class="font-semibold text-slate-700">Chiều</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2 justify-end">
+        <button onclick="closeClearDateRangeModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+          Hủy
+        </button>
+        <button onclick="applyClearDateRange()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-rose-600/30">
+          <i class="fa-solid fa-eraser mr-1"></i> Xóa Công
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- BẢNG IN PDF THEO MẪU 01A-LĐTL CHUẨN XÁC THEO BẢN QUÉT -->
   <div id="print-container" class="w-full text-black" style="font-size: 7.5pt;">
     <!-- TIÊU ĐỀ TRÊN CÙNG: CƠ QUAN CHỦ QUẢN & MẪU 01A-LĐTL -->
@@ -597,7 +710,8 @@
     // 1. CẤU HÌNH LIÊN KẾT GOOGLE APPS SCRIPT & BẢNG MẬT KHẨU
     // =========================================================================
     const GOOGLE_SHEET_CHAM_CONG_URL = "https://script.google.com/macros/s/AKfycbwjYcU1KIGtTBQHmUnrdrNZD6nS1DTVGImvKCP1PbRtweAqLe0KMIUNc8YsZrL-28Ss8A/exec";
-    const GOOGLE_SHEETS_LICH_TRUC_URL = "https://script.google.com/macros/s/AKfycbxcFk7LYV7MIouy9hSeTSQ12yTflnFmrAnbmvqnsj4zrghSsIAOVNfgbyVtle0XaDA8yA/exec";
+    const DEFAULT_GOOGLE_SHEETS_LICH_TRUC_URL = "https://script.google.com/macros/s/AKfycbxargASuNxzYJPtSw52uounHzcixO1Sthc-IXnaSwLLiUtz8XQHveuorG8pHOLbwQCI/exec";
+    let GOOGLE_SHEETS_LICH_TRUC_URL = localStorage.getItem('lichTrucApiUrl') || DEFAULT_GOOGLE_SHEETS_LICH_TRUC_URL;
     const GOOGLE_SHEET_STAFF_URL = "https://script.google.com/macros/s/AKfycbz8rE8UkPQOG-gk_annTiMfKic9qoUQRn-X-qII3Dtme_xPMwecwi0YzbxoSHlLbNZmBg/exec";
 
     const STATION_PASSWORDS = {
@@ -706,6 +820,14 @@
       };
     } catch(e) {}
 
+    // Lắng nghe kênh phát sóng lịch trực thời gian thực khi có ca trực mới
+    try {
+      const scheduleBroadcast = new BroadcastChannel('TYT_SCHEDULE_CHANNEL');
+      scheduleBroadcast.onmessage = (e) => {
+        showToast('Lịch trực vừa được cập nhật mới trên hệ thống! Bạn có thể bấm "Lấy ca từ Lịch trực" để đồng bộ.', 'info');
+      };
+    } catch(e) {}
+
     window.onload = () => {
       document.getElementById('select-month').value = currentMonth;
       document.getElementById('select-year').value = currentYear;
@@ -731,6 +853,11 @@
         const syncContainer = document.getElementById('sync-schedule-dropdown-container');
         if (syncContainer && !syncContainer.contains(e.target)) {
           closeSyncScheduleMenu();
+        }
+
+        const clearContainer = document.getElementById('clear-attendance-dropdown-container');
+        if (clearContainer && !clearContainer.contains(e.target)) {
+          closeClearAttendanceMenu();
         }
       });
     };
@@ -1332,6 +1459,220 @@
 
       renderBody();
       showToast(`Đã chấm (+) ngày ${selectedDay} (${sessionText}) cho ${targetDesc}!`, 'success');
+    }
+
+    // =========================================================================
+    // CÁC HÀM XỬ LÝ XÓA CÔNG: KHOẢNG NGÀY (TỪ NGÀY ĐẾN NGÀY), TUẦN VÀ THÁNG
+    // =========================================================================
+    function toggleClearAttendanceMenu(e) {
+      if (e) e.stopPropagation();
+      const dropdown = document.getElementById('clear-attendance-dropdown');
+      if (dropdown) {
+        dropdown.classList.toggle('hidden');
+        const monthDesc = document.getElementById('clear-month-desc');
+        if (monthDesc) {
+          monthDesc.innerText = `Xóa cả Tháng ${currentMonth}/${currentYear}`;
+        }
+      }
+    }
+
+    function closeClearAttendanceMenu() {
+      const dropdown = document.getElementById('clear-attendance-dropdown');
+      if (dropdown) dropdown.classList.add('hidden');
+    }
+
+    function openClearDateRangeModal() {
+      closeClearAttendanceMenu();
+
+      if (!authorizedStation) {
+        openAuthModal();
+        showToast('Vui lòng mở khóa điểm trạm để thực hiện xóa công!', 'warning');
+        return;
+      }
+
+      const descEl = document.getElementById('clear-date-range-desc');
+      const targetDesc = (authorizedStation === 'Ban Giám Đốc') 
+        ? 'toàn bộ 29 cán bộ của 04 điểm trạm' 
+        : `cán bộ thuộc ${authorizedStation}`;
+      if (descEl) {
+        descEl.innerText = `Xóa ký hiệu chấm công cho ${targetDesc} trong Tháng ${currentMonth}/${currentYear}:`;
+      }
+
+      const selectFrom = document.getElementById('clear-from-day-select');
+      const selectTo = document.getElementById('clear-to-day-select');
+      if (selectFrom && selectTo) {
+        selectFrom.innerHTML = '';
+        selectTo.innerHTML = '';
+
+        const today = new Date();
+        const isCurrentMonth = (today.getMonth() + 1 === currentMonth && today.getFullYear() === currentYear);
+        const defaultDay = isCurrentMonth ? today.getDate() : 1;
+        const dayNames = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dObj = new Date(currentYear, currentMonth - 1, d);
+          const dayName = dayNames[dObj.getDay()];
+
+          const optFrom = document.createElement('option');
+          optFrom.value = d;
+          optFrom.text = `Ngày ${d < 10 ? '0' + d : d} (${dayName})`;
+          if (d === defaultDay) optFrom.selected = true;
+          selectFrom.appendChild(optFrom);
+
+          const optTo = document.createElement('option');
+          optTo.value = d;
+          optTo.text = `Ngày ${d < 10 ? '0' + d : d} (${dayName})`;
+          if (d === defaultDay) optTo.selected = true;
+          selectTo.appendChild(optTo);
+        }
+      }
+
+      document.getElementById('clear-date-range-modal').classList.remove('hidden');
+    }
+
+    function closeClearDateRangeModal() {
+      const modal = document.getElementById('clear-date-range-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function applyClearDateRange() {
+      const fromDay = parseInt(document.getElementById('clear-from-day-select').value);
+      const toDay = parseInt(document.getElementById('clear-to-day-select').value);
+
+      if (fromDay > toDay) {
+        showToast('Ngày bắt đầu không được lớn hơn ngày kết thúc!', 'warning');
+        return;
+      }
+
+      const sessionRadios = document.getElementsByName('clearRangeSession');
+      let chosenSession = 'both';
+      for (const r of sessionRadios) {
+        if (r.checked) { chosenSession = r.value; break; }
+      }
+
+      closeClearDateRangeModal();
+
+      const targetDesc = (authorizedStation === 'Ban Giám Đốc') 
+        ? 'toàn bộ 29 cán bộ của 04 điểm trạm' 
+        : `cán bộ thuộc ${authorizedStation}`;
+
+      let sessionText = 'Cả ngày (Sáng & Chiều)';
+      if (chosenSession === 'am') sessionText = 'buổi Sáng';
+      if (chosenSession === 'pm') sessionText = 'buổi Chiều';
+
+      const rangeText = (fromDay === toDay) 
+        ? `ngày ${fromDay}` 
+        : `từ ngày ${fromDay} đến ngày ${toDay}`;
+
+      showConfirmModal(
+        'Xác nhận xóa công theo khoảng ngày',
+        `Hệ thống sẽ XÓA ký hiệu chấm công ${rangeText} (${sessionText}) cho ${targetDesc}.\n\nBạn có chắc chắn muốn xóa?`,
+        () => {
+          let updatedCount = 0;
+          attendanceData.forEach(emp => {
+            if (canEditStaff(emp)) {
+              for (let d = fromDay; d <= toDay; d++) {
+                if (emp.days[d]) {
+                  if (chosenSession === 'both') {
+                    delete emp.days[d];
+                  } else {
+                    let { am, pm } = parseDayCode(emp.days[d]);
+                    if (chosenSession === 'am') am = '';
+                    if (chosenSession === 'pm') pm = '';
+                    const newCodeStr = buildDayCode(am, pm);
+                    if (!newCodeStr) {
+                      delete emp.days[d];
+                    } else {
+                      emp.days[d] = newCodeStr;
+                    }
+                  }
+                  updatedCount++;
+                }
+              }
+            }
+          });
+
+          renderBody();
+          showToast(`Đã xóa công ${rangeText} (${sessionText}) cho ${targetDesc}!`, 'success');
+        }
+      );
+    }
+
+    function clearWeekAttendance() {
+      closeClearAttendanceMenu();
+
+      if (!authorizedStation) {
+        openAuthModal();
+        showToast('Vui lòng mở khóa điểm trạm để thực hiện xóa công!', 'warning');
+        return;
+      }
+
+      const targetDesc = (authorizedStation === 'Ban Giám Đốc') 
+        ? 'toàn bộ 29 cán bộ của 04 điểm trạm' 
+        : `cán bộ thuộc ${authorizedStation}`;
+
+      const today = new Date();
+      const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1;
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - dayOfWeek);
+
+      let targetDays = [];
+      for (let i = 0; i < 7; i++) {
+        const dObj = new Date(monday);
+        dObj.setDate(monday.getDate() + i);
+        if (dObj.getMonth() + 1 === currentMonth && dObj.getFullYear() === currentYear) {
+          targetDays.push(dObj.getDate());
+        }
+      }
+
+      if (targetDays.length === 0) {
+        showToast(`Tuần hiện tại không có ngày nào thuộc Tháng ${currentMonth}/${currentYear} đang xem!`, 'warning');
+        return;
+      }
+
+      const modalTitle = 'Xác nhận xóa công Tuần này';
+      const modalMsg = `Hệ thống sẽ XÓA TOÀN BỘ ký hiệu chấm công của các ngày trong tuần này (${targetDays.map(d => `ngày ${d}`).join(', ')}) cho ${targetDesc}.\n\nBạn có chắc chắn muốn tiếp tục?`;
+
+      showConfirmModal(modalTitle, modalMsg, () => {
+        attendanceData.forEach(emp => {
+          if (canEditStaff(emp)) {
+            targetDays.forEach(d => {
+              if (emp.days[d]) {
+                delete emp.days[d];
+              }
+            });
+          }
+        });
+        renderBody();
+        showToast(`Đã xóa công tuần này thành công cho ${targetDesc}!`, 'success');
+      });
+    }
+
+    function clearMonthAttendance() {
+      closeClearAttendanceMenu();
+
+      if (!authorizedStation) {
+        openAuthModal();
+        showToast('Vui lòng mở khóa điểm trạm để thực hiện xóa công!', 'warning');
+        return;
+      }
+
+      const targetDesc = (authorizedStation === 'Ban Giám Đốc') 
+        ? 'toàn bộ 29 cán bộ của 04 điểm trạm' 
+        : `cán bộ thuộc ${authorizedStation}`;
+
+      const modalTitle = `Xác nhận xóa công Cả Tháng ${currentMonth}/${currentYear}`;
+      const modalMsg = `Hệ thống sẽ XÓA TOÀN BỘ ký hiệu chấm công từ ngày 01 đến ngày ${daysInMonth} trong Tháng ${currentMonth}/${currentYear} cho ${targetDesc}.\n\nThao tác này sẽ đưa bảng chấm công tháng này về trạng thái trống cho điểm trạm của bạn. Bạn có chắc chắn muốn xóa?`;
+
+      showConfirmModal(modalTitle, modalMsg, () => {
+        attendanceData.forEach(emp => {
+          if (canEditStaff(emp)) {
+            emp.days = {};
+          }
+        });
+        renderBody();
+        showToast(`Đã xóa sạch công Tháng ${currentMonth}/${currentYear} cho ${targetDesc}!`, 'success');
+      });
     }
 
     function quickFill(scope) {
