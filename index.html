@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Tramg thông tin mội bộ Trạm Y tế Mộ Đức</title>
+  <title>Cổng Điều Hành Y Tế Số Xã Mộ Đức • TYT Mộ Đức</title>
 
   <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#047857">
@@ -11,10 +11,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="description" content="Trung tâm điều hành y tế số Trạm Y Tế Xã Mộ Đức - Trực ban 4 điểm trạm, Lịch họp, Tập huấn, Nhiệm vụ & Báo cáo tổng quan lãnh đạo">
 
-  <!-- Tailwind CSS & FontAwesome 6 & Phông Roboto Chuẩn -->
+  <!-- Tailwind CSS & FontAwesome 6 & Phông Roboto & JetBrains Mono -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700;800&family=Times+New+Roman&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -32,9 +32,6 @@
   </script>
 
   <style>
-    /* =========================================================================
-       GIAO DIỆN TƯƠNG PHẢN CAO, CHỮ TO RÕ RÀNG, HOÀN TOÀN KHÔNG NHỨC MẮT
-       ========================================================================= */
     :root {
       --bg-main: #f8fafc;
       --text-main: #0f172a;
@@ -74,7 +71,6 @@
       --header-border: #334155;
     }
 
-    /* Thẻ nội dung vững chắc, viền rõ ràng, không bóng mờ nhòe mắt */
     .contrast-card {
       background-color: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -92,7 +88,6 @@
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
     }
 
-    /* Tương thích chế độ đêm cho các thành phần */
     body.theme-night header {
       background-color: #0f172a !important;
       border-color: #334155 !important;
@@ -120,14 +115,12 @@
       background-color: #1e293b !important;
     }
 
-    /* Hiệu ứng nhạt màu khi tìm kiếm */
     .tile-dimmed {
       opacity: 0.15 !important;
       filter: grayscale(100%) !important;
       pointer-events: none;
     }
 
-    /* Mô phỏng trang A4 Báo cáo Lãnh đạo */
     .a4-preview-sheet {
       width: 100%;
       max-width: 210mm;
@@ -150,13 +143,11 @@
 </head>
 <body class="theme-day min-h-screen flex flex-col antialiased selection:bg-emerald-600 selection:text-white">
 
-  <!-- =========================================================================
-       THANH ĐIỀU HÀNH TÁC CHIẾN CHÍNH (CLEAR CONTRAST OPERATIONS TOP DECK)
-       ========================================================================= -->
+  <!-- THANH ĐIỀU HÀNH CHÍNH -->
   <header class="sticky top-0 z-50 bg-white border-b border-slate-300 px-3 sm:px-6 py-3 shadow-sm transition-colors">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
       
-      <!-- Logo Đơn Vị & Tên Hệ Thống Rõ Ràng, Không Chói -->
+      <!-- Logo Đơn Vị & Tên Hệ Thống -->
       <div class="flex items-center gap-3.5 w-full md:w-auto">
         <div class="w-12 h-12 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-2xl font-black shrink-0 shadow-sm">
           <i class="fa-solid fa-hospital"></i>
@@ -167,7 +158,7 @@
               TRẠM Y TẾ XÃ MỘ ĐỨC
             </h1>
             <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+              <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
               TRỰC TUYẾN
             </span>
           </div>
@@ -177,10 +168,9 @@
         </div>
       </div>
 
-      <!-- Ô Tìm Kiếm, Chuyển Đổi Chế Độ & Đồng Hồ -->
+      <!-- Ô Tìm Kiếm, Chế Độ Ngày/Đêm & Đồng Hồ -->
       <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end flex-wrap sm:flex-nowrap">
         
-        <!-- Ô tìm kiếm to rõ, tương phản sắc nét -->
         <div class="relative flex-1 md:w-64">
           <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
           <input type="text" id="tile-search-input" placeholder="Tìm trạm, trực ban, lịch họp, phép..." class="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20 transition" oninput="filterTiles(this.value)">
@@ -189,13 +179,11 @@
           </button>
         </div>
 
-        <!-- Nút chuyển đổi Giao diện Ban Ngày / Ban Đêm -->
         <button id="theme-toggle-btn" onclick="toggleTheme()" class="px-3.5 py-2 rounded-xl border border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 flex items-center gap-1.5 font-bold text-xs sm:text-sm transition shrink-0 shadow-xs" title="Chuyển đổi giao diện Ban Ngày / Ban Đêm">
           <i id="theme-toggle-icon" class="fa-solid fa-sun text-amber-500 text-sm"></i>
           <span id="theme-toggle-label" class="hidden sm:inline">BAN NGÀY</span>
         </button>
 
-        <!-- Đồng hồ chuẩn to rõ -->
         <div class="clock-box bg-slate-100 border border-slate-300 px-3.5 py-1.5 rounded-xl flex items-center gap-2.5 shrink-0 font-mono">
           <div class="text-right">
             <div id="live-time" class="text-sm sm:text-base font-black text-slate-900 leading-tight">--:--:--</div>
@@ -204,12 +192,10 @@
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 shrink-0" title="Đồng hồ chuẩn"></span>
         </div>
 
-        <!-- Nút Đồng Bộ Đám Mây Google Sheets -->
         <button onclick="fetchAllCloudData(false)" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 flex items-center justify-center transition shrink-0 shadow-xs" title="Đồng bộ dữ liệu tức thời từ Google Sheets">
           <i class="fa-solid fa-arrows-rotate text-sm" id="cloud-sync-icon"></i>
         </button>
 
-        <!-- Đường Dây Khẩn Cấp 24/7 -->
         <button onclick="openHotlineModal()" class="w-10 h-10 rounded-xl bg-orange-600 hover:bg-orange-700 text-white flex items-center justify-center transition shadow-sm shrink-0 font-bold" title="Đường dây nóng cấp cứu 04 điểm trạm">
           <i class="fa-solid fa-phone-volume text-sm"></i>
         </button>
@@ -218,12 +204,9 @@
     </div>
   </header>
 
-  <!-- =========================================================================
-       NỘI DUNG CHÍNH: KHÔNG GIAN ĐIỀU HÀNH RÕ RÀNG, DỄ ĐỌC
-       ========================================================================= -->
   <main class="max-w-7xl mx-auto px-3 sm:px-6 py-5 flex-1 w-full space-y-6">
 
-    <!-- KHỐI CHỈ HUY TRUNG TÂM LÃNH ĐẠO (EXECUTIVE COMMAND CENTER) -->
+    <!-- KHỐI CHỈ HUY TRUNG TÂM LÃNH ĐẠO -->
     <section class="contrast-card p-5 sm:p-7 bg-white shadow-sm border border-slate-300">
       
       <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-5 border-b border-slate-200">
@@ -238,11 +221,10 @@
             TỔNG QUAN TÁC CHIẾN Y TẾ & QUÂN SỐ TOÀN XÃ
           </h2>
           <p class="text-sm sm:text-base text-slate-600 font-medium mt-1 leading-relaxed">
-            Dữ liệu tích hợp tự động qua Google Sheets: Trực ban 4 Trạm, Lớp học CME/Zoom & Nhiệm vụ trọng tâm
+            Dữ liệu tích hợp liên thông thời gian thực: Trực ban 4 Trạm, Lớp học CME/Zoom & Nhiệm vụ trọng tâm
           </p>
         </div>
 
-        <!-- Bộ nút lệnh tác chiến Lãnh Đạo -->
         <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-start lg:justify-end">
           <button onclick="openExecutiveReportModal()" class="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm flex items-center gap-2 transition shadow-sm">
             <i class="fa-solid fa-file-invoice text-sm"></i>
@@ -255,10 +237,9 @@
         </div>
       </div>
 
-      <!-- 4 THẺ CHỈ SỐ TELEMETRY KPI TO RÕ, TƯƠNG PHẢN CAO -->
+      <!-- 4 THẺ CHỈ SỐ TELEMETRY KPI -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5 pt-5">
         
-        <!-- KPI 1: Trực cấp cứu 24/24 -->
         <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
           <div>
             <div class="text-xs sm:text-sm font-extrabold text-emerald-800 uppercase tracking-wide">
@@ -272,7 +253,6 @@
           </div>
         </div>
 
-        <!-- KPI 2: Cán bộ đi họp / học trực tuyến -->
         <div class="p-4 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-between">
           <div>
             <div class="text-xs sm:text-sm font-extrabold text-orange-800 uppercase tracking-wide">
@@ -286,7 +266,6 @@
           </div>
         </div>
 
-        <!-- KPI 3: Việc khẩn hạn chót -->
         <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between">
           <div>
             <div class="text-xs sm:text-sm font-extrabold text-rose-800 uppercase tracking-wide">
@@ -300,7 +279,6 @@
           </div>
         </div>
 
-        <!-- KPI 4: Quân số toàn trạm -->
         <div class="p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between">
           <div>
             <div class="text-xs sm:text-sm font-extrabold text-blue-800 uppercase tracking-wide">
@@ -317,16 +295,10 @@
       </div>
     </section>
 
-    <!-- =========================================================================
-         BỐ CỤC 2 CỘT:
-         - CỘT TRÁI (8 CỘT): TIÊU ĐIỂM TRỰC BAN, LỊCH HỌP & NHIỆM VỤ KHẨN
-         - CỘT PHẢI (4 CỘT): SIDEBAR 6 PHÂN HỆ ĐIỀU HÀNH
-         ========================================================================= -->
+    <!-- BỐ CỤC 2 CỘT: TRÁI (TÁC CHIẾN 8 CỘT) & PHẢI (SIDEBAR 4 CỘT) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
       
-      <!-- =====================================================================
-           CỘT TRÁI (8 CỘT): KHÔNG GIAN TÁC CHIẾN CHÍNH
-           ===================================================================== -->
+      <!-- CỘT TRÁI (8 CỘT) -->
       <div class="lg:col-span-8 space-y-6">
 
         <!-- TIÊU ĐIỂM 1: PHÂN CÔNG TRỰC Y TẾ 24/24 (04 ĐIỂM TRẠM) -->
@@ -338,12 +310,18 @@
                 PHÂN CÔNG TRỰC BAN CẤP CỨU (NODE 01 - 04)
               </h3>
             </div>
-            <a href="lich-truc.html" class="text-sm text-emerald-700 hover:text-emerald-900 font-extrabold flex items-center gap-1.5 transition">
-              <span>ĐIỀU PHỐI LỊCH TRỰC</span> <i class="fa-solid fa-arrow-right-long text-sm"></i>
-            </a>
+            <div class="flex items-center gap-3">
+              <a href="xem-lich-truc.html" class="text-xs sm:text-sm text-teal-700 hover:text-teal-900 font-extrabold flex items-center gap-1 transition" title="Dành cho cán bộ tra cứu cá nhân, đổi ca và tải lịch">
+                <i class="fa-solid fa-user-doctor"></i> <span>Xem Cá Nhân</span>
+              </a>
+              <span class="text-slate-300">•</span>
+              <a href="lich-truc.html" class="text-xs sm:text-sm text-emerald-700 hover:text-emerald-900 font-extrabold flex items-center gap-1 transition" title="Phân hệ xếp lịch và điều động">
+                <span>Quản Lý Lịch</span> <i class="fa-solid fa-arrow-right-long"></i>
+              </a>
+            </div>
           </div>
 
-          <!-- Ô Gạch Hero Trực Ban Màu Xanh Đậm Rõ Ràng -->
+          <!-- Hero Card Trực Ban Màu Xanh Rõ Ràng -->
           <div class="contrast-card p-5 sm:p-6 bg-emerald-800 text-white border-2 border-emerald-900 shadow-sm" data-keywords="lịch trực ca trực hôm nay đức tân mộ đức đức hòa đức phú node">
             <div>
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
@@ -351,7 +329,7 @@
                   <span>PHIÊN TRỰC 24/24 HIỆN TẠI</span>
                 </div>
                 <span class="text-xs sm:text-sm font-semibold text-emerald-100">
-                  Chu kỳ 24h: 07h00 sáng nay $\rightarrow$ 07h00 sáng mai • Liên thông Chấm công 01a-LĐTL
+                  Chu kỳ 24h: 07h00 sáng nay → 07h00 sáng mai • Liên thông Chấm công 01a-LĐTL
                 </span>
               </div>
 
@@ -364,11 +342,16 @@
             <div class="mt-4 pt-3.5 border-t border-emerald-700 flex flex-wrap items-center justify-between text-xs sm:text-sm text-emerald-100 gap-2 font-medium">
               <div class="flex items-center gap-2">
                 <i class="fa-solid fa-circle-check text-emerald-300"></i>
-                <span>Dữ liệu ca trực tự động liên thông từ Lịch trực của Ban Giám Đốc.</span>
+                <span id="duty-source-label">Dữ liệu liên thông thời gian thực từ Quản Lý Lịch Trực.</span>
               </div>
-              <a href="lich-truc.html" class="font-bold text-white hover:underline flex items-center gap-1.5">
-                <span>Hoán đổi ca & Điều động</span> <i class="fa-solid fa-chevron-right text-xs"></i>
-              </a>
+              <div class="flex items-center gap-3">
+                <button onclick="fetchAllCloudData(false)" class="text-xs text-white/90 hover:text-white underline font-bold flex items-center gap-1">
+                  <i class="fa-solid fa-rotate"></i> Cập nhật ngay
+                </button>
+                <a href="lich-truc.html" class="font-bold text-white hover:underline flex items-center gap-1">
+                  <span>Hoán đổi & Điều động</span> <i class="fa-solid fa-chevron-right text-xs"></i>
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -395,7 +378,6 @@
                 Theo dõi cán bộ cử đi đào tạo (CME), giao ban và phòng học Zoom/Google Meet
               </p>
 
-              <!-- Danh sách sự kiện hôm nay -->
               <div class="mt-3.5 space-y-2.5" id="today-meetings-list-box">
                 <!-- Điền động bằng JS -->
               </div>
@@ -430,7 +412,6 @@
                 Đôn đốc tiến độ báo cáo dịch bệnh, tiêm chủng, BHYT và hồ sơ trạm
               </p>
 
-              <!-- Danh sách nhiệm vụ khẩn -->
               <div class="mt-3.5 space-y-2.5" id="today-tasks-list-box">
                 <!-- Điền động bằng JS -->
               </div>
@@ -472,12 +453,9 @@
 
       </div>
 
-      <!-- =====================================================================
-           CỘT PHẢI (4 CỘT): SIDEBAR PHÂN HỆ ĐIỀU HÀNH RÕ RÀNG
-           ===================================================================== -->
+      <!-- CỘT PHẢI (4 CỘT): SIDEBAR PHÂN HỆ ĐIỀU HÀNH RÕ RÀNG -->
       <aside class="lg:col-span-4 space-y-3.5 lg:sticky lg:top-20">
         
-        <!-- TIÊU ĐỀ SIDEBAR -->
         <div class="flex items-center justify-between pb-2 border-b border-slate-300">
           <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-emerald-700"></span>
@@ -623,7 +601,6 @@
             Truy cập 1-chạm vào các cổng phần mềm giám định BHYT, tiêm chủng & báo cáo quốc gia:
           </p>
 
-          <!-- Danh sách liên kết ngoài rõ ràng -->
           <div class="space-y-1.5 text-xs font-bold">
             <a href="https://tiemchung.gov.vn" target="_blank" rel="noopener noreferrer" class="sidebar-link-btn p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 hover:bg-slate-100 flex items-center justify-between transition">
               <span class="flex items-center gap-2">
@@ -667,7 +644,6 @@
           </div>
         </div>
 
-        <!-- THÔNG SỐ HỆ THỐNG GỌN GÀNG -->
         <div class="p-3.5 rounded-xl bg-slate-100 border border-slate-300 text-xs font-semibold text-slate-700 space-y-1">
           <div class="flex items-center justify-between">
             <span>TRẠNG THÁI HỆ THỐNG:</span>
@@ -691,7 +667,7 @@
 
   </main>
 
-  <!-- CHÂN TRANG FOOTER RÕ RÀNG -->
+  <!-- CHÂN TRANG FOOTER -->
   <footer class="border-t border-slate-300 bg-white py-4 px-4 text-center text-xs text-slate-600 font-medium mt-8">
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
       <div>
@@ -709,7 +685,6 @@
   <div id="exec-report-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl border border-slate-300 overflow-hidden my-auto flex flex-col max-h-[92vh]">
       
-      <!-- Header Modal -->
       <div class="p-4 bg-slate-900 text-white flex justify-between items-center flex-none">
         <div class="flex items-center gap-2.5">
           <div class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold">
@@ -729,14 +704,12 @@
         </button>
       </div>
 
-      <!-- Khung xem trước mặt giấy A4 Báo cáo Lãnh đạo -->
       <div class="flex-1 bg-slate-100 p-3 sm:p-6 overflow-y-auto flex justify-center">
         <article id="exec-a4-preview-content" class="a4-preview-sheet text-black text-[12.5pt] leading-normal select-text shadow-lg">
           <!-- Render tự động bằng JavaScript -->
         </article>
       </div>
 
-      <!-- Footer Modal: In A4, Sao chép Zalo và Đóng -->
       <div class="p-3 bg-slate-50 border-t border-slate-200 flex flex-wrap gap-2 justify-between items-center flex-none text-xs">
         <div class="text-[11.5px] text-slate-600 hidden sm:flex items-center gap-1.5 font-medium">
           <i class="fa-solid fa-circle-check text-emerald-700"></i>
@@ -830,7 +803,6 @@
   <div id="library-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl border border-slate-300 overflow-hidden my-auto flex flex-col max-h-[92vh]">
       
-      <!-- Header Modal Thư Viện -->
       <div class="p-4 bg-indigo-900 text-white flex justify-between items-center flex-none">
         <div class="flex items-center gap-2.5">
           <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold">
@@ -850,7 +822,6 @@
         </button>
       </div>
 
-      <!-- Thanh tìm kiếm & Phân loại tài liệu -->
       <div class="p-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 flex-none">
         <div class="flex items-center gap-1.5 overflow-x-auto text-xs font-bold" id="library-cat-filter">
           <button onclick="filterLibraryDocs('all')" id="lib-btn-all" class="px-3 py-1.5 rounded-lg bg-indigo-700 text-white transition">
@@ -873,12 +844,10 @@
         </div>
       </div>
 
-      <!-- Danh sách tài liệu thư viện -->
       <div class="flex-1 p-4 overflow-y-auto space-y-2.5 bg-slate-100" id="library-docs-list-container">
         <!-- Render tự động bằng JavaScript -->
       </div>
 
-      <!-- Footer Modal -->
       <div class="p-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center flex-none text-xs">
         <span class="text-slate-600 font-medium">Hệ thống thư viện điện tử liên thông 04 điểm trạm y tế.</span>
         <button onclick="closeLibraryModal()" class="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold transition">
@@ -925,16 +894,15 @@
   <!-- KHUNG IN BÁO CÁO A4 DÀNH CHO TRÌNH DUYỆT -->
   <div id="print-report-container" class="w-full text-black"></div>
 
-  <!-- TOAST THÔNG BÁO GỌN GÀNG -->
+  <!-- TOAST THÔNG BÁO -->
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-  <!-- =========================================================================
-       JAVASCRIPT: BỘ MÁY ĐIỀU HÀNH THỜI GIAN THỰC & ĐỒNG BỘ GOOGLE SHEETS
-       ========================================================================= -->
+  <!-- JAVASCRIPT: BỘ MÁY ĐIỀU HÀNH THỜI GIAN THỰC & ĐỒNG BỘ LỊCH TRỰC CHUẨN XÁC -->
   <script>
-    // 1. CẤU HÌNH CLOUD API CHÍNH XÁC
+    // 1. CẤU HÌNH CLOUD API CHÍNH XÁC (ĐỒNG BỘ HOÀN HẢO VỚI LICH-TRUC.HTML)
+    const DEFAULT_SCHEDULE_API_URL = "https://script.google.com/macros/s/AKfycbxargASuNxzYJPtSw52uounHzcixO1Sthc-IXnaSwLLiUtz8XQHveuorG8pHOLbwQCI/exec";
     const API_ENDPOINTS = {
-      shifts: "https://script.google.com/macros/s/AKfycbxcFk7LYV7MIouy9hSeTSQ12yTflnFmrAnbmvqnsj4zrghSsIAOVNfgbyVtle0XaDA8yA/exec",
+      shifts: localStorage.getItem('lichTrucApiUrl') || DEFAULT_SCHEDULE_API_URL,
       meetings: "https://script.google.com/macros/s/AKfycbw9IDJhGC2UQ6mKnn1NjlTIiZACzj8uvwZJj28dgpbSVWREHqljf3aYC6ihmbslqg_jUg/exec",
       tasks: "https://script.google.com/macros/s/AKfycbzm7GcXOJnmCzFvp1WHy1TCex45KocdorP2wYkizmXnOffD4mwBPq3HAse3ak-4ibsS/exec",
       staff: "https://script.google.com/macros/s/AKfycbz8rE8UkPQOG-gk_annTiMfKic9qoUQRn-X-qII3Dtme_xPMwecwi0YzbxoSHlLbNZmBg/exec"
@@ -947,7 +915,7 @@
       { id: "station_3", code: "ĐỨC PHÚ", short: "Điểm y tế số 3", phone: "0379949880", defaultDoctor: "CN Thu", address: "Thôn Phước Hòa, Đức Phú" }
     ];
 
-    const ANCHOR_MONDAY = new Date(2026, 7, 17); // 17/08/2026
+    const ANCHOR_MONDAY = new Date(2026, 7, 17, 0, 0, 0); // 17/08/2026 (Anchor Monday)
 
     const OFFICIAL_SCHEDULE_MAP = {
       "2026-08-16": ["Bs Thuyên", "ĐD Lài", "Ys Phương", "NHS Lan"],
@@ -1010,7 +978,24 @@
       activeStaffList: []
     };
 
-    // 2. KHỞI ĐỘNG VÀ ĐỒNG BỘ
+    // Hàm xác định ngày Thứ 2 chuẩn hóa (00:00:00)
+    function getMondayDate(d) {
+      const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const day = date.getDay();
+      const diff = (day === 0 ? -6 : 1) - day;
+      date.setDate(date.getDate() + diff);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    }
+
+    function getLocalISODate(d) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    // 2. KHỞI ĐỘNG VÀ ĐỒNG BỘ LIÊN THÔNG
     window.onload = function() {
       initTheme();
       startLiveClock();
@@ -1019,7 +1004,17 @@
       renderAllTiles();
       fetchAllCloudData(true);
 
-      // Tự động làm mới khi người dùng quay lại tab
+      // Lắng nghe kênh phát sóng thời gian thực khi trang lich-truc.html điều chỉnh ca trực
+      try {
+        const scheduleChannel = new BroadcastChannel('TYT_SCHEDULE_CHANNEL');
+        scheduleChannel.onmessage = (e) => {
+          loadCachedData();
+          computeTodayDutySchedule();
+          renderAllTiles();
+        };
+      } catch(e) {}
+
+      // Lắng nghe khi người dùng chuyển qua lại tab trình duyệt
       window.addEventListener('focus', () => {
         loadCachedData();
         computeTodayDutySchedule();
@@ -1059,27 +1054,25 @@
       setInterval(updateClock, 1000);
     }
 
-    // 4. TÍNH TOÁN CA TRỰC HÔM NAY CHUẨN XÁC VỚI LỊCH TRỰC
+    // 4. TÍNH TOÁN CA TRỰC HÔM NAY CHUẨN XÁC 100% VỚI LICH-TRUC.HTML
     function computeTodayDutySchedule() {
       const now = new Date();
-      const isoToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const isoToday = getLocalISODate(now);
 
-      // Tính ngày Thứ 2 của tuần hiện tại
       const dayOfWeek = now.getDay();
-      const dayInWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-      const colIndex = dayInWeek + 1;
+      const dayInWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 0 for Mon, 6 for Sun
+      const colIndex = dayInWeek + 1; // Cột 1 = Thứ 2 ... Cột 7 = Chủ Nhật
 
-      const monday = new Date(now);
-      monday.setDate(now.getDate() - dayInWeek);
-      const mondayStr = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+      const monday = getMondayDate(now);
+      const mondayStr = getLocalISODate(monday);
 
-      // Bước 1: Kiểm tra bộ nhớ cache đã lưu của trang lich-truc.html
+      // Bước 1: Đọc từ bộ nhớ lưu của trang lich-truc.html
       let cachedShifts = null;
       try {
         const rawLocal = localStorage.getItem('TYT_LICH_TRUC_SAVED_WEEKS_V3');
         if (rawLocal) {
           const weeksMap = JSON.parse(rawLocal);
-          if (weeksMap[mondayStr] && weeksMap[mondayStr].grid) {
+          if (weeksMap && weeksMap[mondayStr] && weeksMap[mondayStr].grid) {
             const grid = weeksMap[mondayStr].grid;
             cachedShifts = [
               grid[0] ? grid[0][colIndex] : null,
@@ -1091,7 +1084,7 @@
         }
       } catch (e) {}
 
-      // Bước 2: Kiểm tra bảng lịch trực ban hành chính thức
+      // Bước 2: Kiểm tra bảng lịch ban hành chính thức
       const officialShifts = OFFICIAL_SCHEDULE_MAP[isoToday];
 
       // Bước 3: Thuật toán xoay tua công bằng
@@ -1122,7 +1115,7 @@
     // 5. NẠP DỮ LIỆU TỪ BỘ NHỚ CỤC BỘ
     function loadCachedData() {
       const now = new Date();
-      const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const todayIso = getLocalISODate(now);
 
       // Nạp lịch họp hôm nay
       try {
@@ -1162,14 +1155,18 @@
       } catch (e) {}
     }
 
-    // 6. ĐỒNG BỘ ĐÁM MÂY TỪ GOOGLE SHEETS
+    // 6. ĐỒNG BỘ ĐÁM MÂY TỪ GOOGLE SHEETS (TRUYỀN CHÍNH XÁC TUẦN HIỆN TẠI)
     async function fetchAllCloudData(isBackground = false) {
       const syncIcon = document.getElementById('cloud-sync-icon');
       if (syncIcon) syncIcon.classList.add('fa-spin');
 
+      const now = new Date();
+      const monday = getMondayDate(now);
+      const mondayStr = getLocalISODate(monday);
+
       try {
         const promises = [
-          fetch(`${API_ENDPOINTS.shifts}?action=load&t=${Date.now()}`).then(r => r.json()).catch(() => null),
+          fetch(`${API_ENDPOINTS.shifts}?action=load&weekStart=${mondayStr}&t=${Date.now()}`).then(r => r.json()).catch(() => null),
           fetch(`${API_ENDPOINTS.meetings}?action=load&t=${Date.now()}`).then(r => r.json()).catch(() => null),
           fetch(`${API_ENDPOINTS.tasks}?action=loadTasks&t=${Date.now()}`).then(r => r.json()).catch(() => null),
           fetch(`${API_ENDPOINTS.staff}?action=loadStaffList&t=${Date.now()}`).then(r => r.json()).catch(() => null)
@@ -1177,18 +1174,31 @@
 
         const [shiftsRes, meetingsRes, tasksRes, staffRes] = await Promise.all(promises);
 
-        // Xử lý Lịch Trực từ Cloud
+        // Xử lý Lịch Trực từ Cloud: CHỈ NHẬN KHI ĐÚNG TUẦN HIỆN TẠI
         if (shiftsRes && shiftsRes.status === 'success' && shiftsRes.grid) {
-          const now = new Date();
-          const dayOfWeek = now.getDay();
-          const dayInWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-          const colIndex = dayInWeek + 1;
+          if (!shiftsRes.weekStart || shiftsRes.weekStart === mondayStr) {
+            const dayOfWeek = now.getDay();
+            const dayInWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            const colIndex = dayInWeek + 1;
 
-          STATIONS_INFO.forEach((st, idx) => {
-            if (shiftsRes.grid[idx] && shiftsRes.grid[idx][colIndex] && shiftsRes.grid[idx][colIndex] !== '-') {
-              liveState.todayDuty[st.id] = shiftsRes.grid[idx][colIndex];
-            }
-          });
+            STATIONS_INFO.forEach((st, idx) => {
+              if (shiftsRes.grid[idx] && shiftsRes.grid[idx][colIndex] && shiftsRes.grid[idx][colIndex] !== '-') {
+                liveState.todayDuty[st.id] = shiftsRes.grid[idx][colIndex];
+              }
+            });
+
+            // Lưu đệm để các trang con liên thông
+            try {
+              let weeksMap = {};
+              const raw = localStorage.getItem('TYT_LICH_TRUC_SAVED_WEEKS_V3');
+              if (raw) weeksMap = JSON.parse(raw);
+              weeksMap[mondayStr] = {
+                grid: shiftsRes.grid,
+                updatedAt: new Date().toISOString()
+              };
+              localStorage.setItem('TYT_LICH_TRUC_SAVED_WEEKS_V3', JSON.stringify(weeksMap));
+            } catch(e) {}
+          }
         }
 
         // Xử lý Lịch Họp từ Cloud
@@ -1892,7 +1902,7 @@
       showToast("Đã sao chép tóm tắt tài liệu vào Clipboard!", "success");
     }
 
-    // 11. CHUYỂN ĐỔI CHẾ ĐỘ BAN NGÀY / BAN ĐÊM (KHÔNG NHỨC MẮT)
+    // 11. CHUYỂN ĐỔI CHẾ ĐỘ BAN NGÀY / BAN ĐÊM
     let currentTheme = localStorage.getItem('TYT_PORTAL_THEME') || 'day';
 
     function initTheme() {
