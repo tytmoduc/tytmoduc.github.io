@@ -9,7 +9,15 @@
   <meta name="theme-color" content="#047857">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="TYT Mộ Đức">
+  <meta name="application-name" content="TYT Mộ Đức">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="description" content="Trung tâm điều hành y tế số Trạm Y Tế Xã Mộ Đức - Trực ban 4 điểm trạm, Lịch họp, Tập huấn, Nhiệm vụ & Báo cáo tổng quan lãnh đạo">
+
+  <!-- Dynamic PWA Manifest & App Icons -->
+  <link rel="apple-touch-icon" id="dynamic-apple-icon">
+  <link rel="icon" id="dynamic-favicon" type="image/png">
+  <link rel="manifest" id="dynamic-manifest">
 
   <!-- Tailwind CSS & FontAwesome 6 & Phông Roboto & JetBrains Mono -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -244,7 +252,6 @@
           <h2 class="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 mt-2 leading-tight">
             TỔNG QUAN TÌNH HÌNH TOÀN TRẠM
           </h2>
-          
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-start lg:justify-end">
@@ -293,7 +300,7 @@
         </a>
 
         <!-- THẺ 3: LIÊN KẾT ĐẾN LỊCH CÔNG VIỆC & NHIỆM VỤ -->
-        <a href="cong-viec.html" class="p-4 rounded-xl bg-rose-50 hover:bg-rose-100/80 border border-rose-200 hover:border-rose-400 flex items-center justify-between transition shadow-xs group cursor-pointer" title="Xem Công Việc & Nhiệm Vụ Được Giao">
+        <a href="cong-viec-nhiem-vu.html" class="p-4 rounded-xl bg-rose-50 hover:bg-rose-100/80 border border-rose-200 hover:border-rose-400 flex items-center justify-between transition shadow-xs group cursor-pointer" title="Xem Công Việc & Nhiệm Vụ Được Giao">
           <div>
             <div class="text-xs sm:text-sm font-extrabold text-rose-800 uppercase tracking-wide group-hover:text-rose-950 transition flex items-center gap-1">
               <span>NHIỆM VỤ TRỌNG TÂM</span>
@@ -348,7 +355,7 @@
           </div>
 
           <!-- Hero Card Trực Ban Màu Xanh Rõ Ràng -->
-          <div class="contrast-card p-5 sm:p-6 bg-emerald-800 text-white border-2 border-emerald-900 shadow-sm" data-keywords="lịch trực ca trực hôm nay đức tân mộ đức đức hòa đức phú node">
+          <div class="contrast-card p-5 sm:p-6 bg-emerald-800 text-white border-2 border-emerald-900 shadow-sm" data-keywords="lịch trực ca trực hôm nay đức tân mộ đức đức hòa đức phú">
             <div>
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                 <div class="inline-flex items-center gap-2 bg-orange-600 text-white text-xs sm:text-sm px-3.5 py-1 rounded-full font-black uppercase tracking-wide w-fit">
@@ -441,7 +448,7 @@
             </div>
 
             <div class="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-xs font-bold">
-              <a href="cong-viec.html" class="text-slate-800 hover:text-emerald-700 flex items-center gap-1">
+              <a href="cong-viec-nhiem-vu.html" class="text-slate-800 hover:text-emerald-700 flex items-center gap-1">
                 <i class="fa-solid fa-user-check"></i> Nhiệm vụ của tôi
               </a>
             </div>
@@ -483,7 +490,6 @@
               DANH MỤC
             </h3>
           </div>
-          
         </div>
 
         <!-- 1. BẢNG CHẤM CÔNG 01A-LĐTL -->
@@ -528,7 +534,7 @@
             <i class="fa-solid fa-arrow-right text-slate-400 group-hover:text-orange-700 transition"></i>
           </div>
           <p class="text-xs text-slate-600 font-medium pl-11">
-            Liên hệ Tổ hành chính lấy mật khẩu để chấm nghỉ phép vâ nghỉ bù trực tuyến
+            Liên hệ Tổ hành chính lấy mật khẩu để chấm nghỉ phép và nghỉ bù trực tuyến
           </p>
         </a>
 
@@ -684,15 +690,14 @@
 
   </main>
 
-  <!-- CHÂN TRANG FOOTER -->
+  <!-- FOOTER -->
   <footer class="border-t border-slate-300 bg-white py-4 px-4 text-center text-xs text-slate-600 font-medium mt-8">
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
       <div>
         © 2026 <b>Trạm Y Tế Xã Mộ Đức</b> • Tỉnh Quảng Ngãi
       </div>
       <div class="flex items-center gap-3 font-semibold text-slate-700">
-        <span>HỆ THỐNG ĐIỀU HÀNH Y 
-          TẾ SỐ</span>
+        <span>HỆ THỐNG ĐIỀU HÀNH Y TẾ SỐ</span>
         <span>•</span>
         <span>ĐỒNG BỘ THỜI GIAN THỰC</span>
       </div>
@@ -700,51 +705,133 @@
   </footer>
 
   <!-- MODAL: HƯỚNG DẪN CÀI ĐẶT ỨNG DỤNG PWA TRÊN ĐIỆN THOẠI & MÁY TÍNH -->
-  <div id="pwa-install-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white border border-slate-300 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+  <div id="pwa-install-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white border border-slate-300 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden my-auto transform transition-all">
       <div class="p-4 bg-gradient-to-r from-emerald-700 to-teal-800 text-white flex justify-between items-center">
-        <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center font-bold text-amber-300">
-            <i class="fa-solid fa-mobile-screen-button"></i>
+        <div class="flex items-center gap-3">
+          <div id="pwa-modal-app-icon" class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center font-bold text-amber-300 shadow-sm shrink-0 overflow-hidden">
+            <i class="fa-solid fa-hospital text-xl"></i>
           </div>
           <div>
-            <h3 class="font-extrabold text-sm sm:text-base leading-tight">CÀI ĐẶT</h3>
-            <p class="text-[11px] text-emerald-100">Dùng như ứng dụng điện thoại</p>
+            <h3 class="font-extrabold text-sm sm:text-base leading-tight">CÀI ĐẶT CỔNG Y TẾ MỘ ĐỨC</h3>
+            <p class="text-[11px] text-emerald-100 mt-0.5">Mở nhanh 1 chạm từ màn hình chính • Chạy mượt mà như app gốc</p>
           </div>
         </div>
-        <button onclick="closePWAInstallModal()" class="w-7 h-7 rounded-lg hover:bg-white/20 text-white flex items-center justify-center transition">
+        <button onclick="closePWAInstallModal()" class="w-8 h-8 rounded-lg hover:bg-white/20 text-white flex items-center justify-center transition">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <div class="p-5 space-y-3.5 text-xs text-slate-700 leading-relaxed">
-        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-          <div class="font-black text-slate-900 text-sm flex items-center gap-2 text-emerald-800">
-            <i class="fa-brands fa-apple text-base"></i> Trên iPhone / iPad (Safari):
-          </div>
-          <p>1. Nhấn nút <b>Chia sẻ</b> (biểu tượng hình vuông có mũi tên trỏ lên <i class="fa-solid fa-arrow-up-from-bracket"></i> ở đáy màn hình).</p>
-          <p>2. Cuộn xuống và chọn <b>"Thêm vào Màn hình chính"</b> (Add to Home Screen).</p>
-          <p>3. Nhấn <b>"Thêm"</b> (Add) ở góc trên bên phải để hoàn tất.</p>
+      <!-- Trạng thái thiết bị & Nút Cài đặt tức thì nếu trình duyệt hỗ trợ -->
+      <div class="p-3.5 bg-emerald-50 border-b border-emerald-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
+          <span class="font-semibold text-emerald-950" id="pwa-detected-platform-text">Đang nhận diện thiết bị...</span>
         </div>
-
-        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-          <div class="font-black text-slate-900 text-sm flex items-center gap-2 text-teal-800">
-            <i class="fa-brands fa-android text-base text-emerald-600"></i> Trên Android (Chrome / Cốc Cốc):
-          </div>
-          <p>1. Nhấn biểu tượng <b>3 dấu chấm</b> (<i class="fa-solid fa-ellipsis-vertical"></i>) ở góc trên bên phải trình duyệt.</p>
-          <p>2. Chọn <b>"Cài đặt ứng dụng"</b> hoặc <b>"Thêm vào màn hình chính"</b>.</p>
-          <p>3. Bấm <b>Cài đặt</b> để biểu tượng xuất hiện ngay trên màn hình.</p>
-        </div>
-
-        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-          <div class="font-black text-slate-900 text-sm flex items-center gap-2 text-blue-800">
-            <i class="fa-solid fa-laptop text-base"></i> Trên Máy Tính (Chrome / Edge):
-          </div>
-          <p>Nhấp vào biểu tượng <b>Cài đặt</b> (<i class="fa-solid fa-download"></i>) trên thanh nhập địa chỉ URL ở góc trên bên phải.</p>
-        </div>
+        <button id="pwa-native-prompt-btn" onclick="triggerNativeInstallPrompt()" class="hidden px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold transition flex items-center gap-1.5 shadow-xs">
+          <i class="fa-solid fa-download text-amber-300"></i> Cài Đặt Ngay
+        </button>
       </div>
 
-      <div class="p-3.5 bg-slate-50 border-t border-slate-200 flex justify-end">
+      <!-- Thanh chọn nền tảng: iOS | Android | Máy tính -->
+      <div class="p-3 bg-slate-50 border-b border-slate-200 flex gap-1.5 text-xs font-bold">
+        <button id="pwa-tab-ios" onclick="switchPWATab('ios')" class="flex-1 py-2 px-2 rounded-xl transition text-center border">
+          <i class="fa-brands fa-apple mr-1"></i> iPhone / iPad
+        </button>
+        <button id="pwa-tab-android" onclick="switchPWATab('android')" class="flex-1 py-2 px-2 rounded-xl transition text-center border">
+          <i class="fa-brands fa-android mr-1"></i> Android
+        </button>
+        <button id="pwa-tab-desktop" onclick="switchPWATab('desktop')" class="flex-1 py-2 px-2 rounded-xl transition text-center border">
+          <i class="fa-solid fa-laptop mr-1"></i> Máy Tính (PC)
+        </button>
+      </div>
+
+      <!-- Nội dung hướng dẫn từng nền tảng -->
+      <div class="p-5 space-y-3.5 text-xs text-slate-700 leading-relaxed max-h-[60vh] overflow-y-auto">
+        
+        <!-- HƯỚNG DẪN DÀNH CHO IPHONE / IPAD -->
+        <div id="pwa-panel-ios" class="space-y-3">
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <div class="font-black text-slate-900 text-sm flex items-center gap-2 text-emerald-800">
+              <i class="fa-brands fa-apple text-lg"></i> Trên iPhone / iPad (Trình duyệt Safari):
+            </div>
+            <div class="space-y-2 pl-1">
+              <p class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-emerald-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                <span>Bấm nút <b>Chia sẻ</b> (biểu tượng hình vuông có mũi tên trỏ lên <i class="fa-solid fa-arrow-up-from-bracket text-blue-600 mx-1"></i> ở thanh công cụ dưới đáy màn hình Safari).</span>
+              </p>
+              <p class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-emerald-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                <span>Cuộn xuống dưới và chọn mục <b>"Thêm vào Màn hình chính"</b> (hoặc <i>Add to Home Screen</i> <i class="fa-regular fa-square-plus text-slate-600 mx-1"></i>).</span>
+              </p>
+              <p class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-emerald-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+                <span>Nhấn <b>"Thêm"</b> (Add) ở góc trên bên phải màn hình để hoàn tất cài đặt icon app.</span>
+              </p>
+            </div>
+          </div>
+          <div class="text-[11px] text-slate-500 italic">
+            * Lưu ý: Hãy mở trang web bằng trình duyệt <b>Safari</b> để có tùy chọn "Thêm vào Màn hình chính".
+          </div>
+        </div>
+
+        <!-- HƯỚNG DẪN DÀNH CHO ANDROID -->
+        <div id="pwa-panel-android" class="hidden space-y-3">
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <div class="font-black text-slate-900 text-sm flex items-center gap-2 text-teal-800">
+              <i class="fa-brands fa-android text-lg text-emerald-600"></i> Trên Điện Thoại Android (Chrome / Cốc Cốc):
+            </div>
+            <div class="space-y-2 pl-1">
+              <p class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-teal-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                <span>Bấm vào biểu tượng <b>3 dấu chấm</b> (<i class="fa-solid fa-ellipsis-vertical mx-0.5"></i>) ở góc trên bên phải màn hình trình duyệt.</span>
+              </p>
+              <p class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-teal-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                <span>Chọn <b>"Cài đặt ứng dụng"</b> (hoặc <b>"Thêm vào màn hình chính"</b> / <i>Install App</i>).</span>
+              </p>
+              <p class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-teal-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+                <span>Bấm <b>Cài đặt</b> để biểu tượng xuất hiện ngay ngoài màn hình điện thoại.</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- HƯỚNG DẪN DÀNH CHO MÁY TÍNH -->
+        <div id="pwa-panel-desktop" class="hidden space-y-3">
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <div class="font-black text-slate-900 text-sm flex items-center gap-2 text-blue-800">
+              <i class="fa-solid fa-laptop text-lg text-blue-600"></i> Trên Máy Tính (Chrome / Microsoft Edge):
+            </div>
+            <div class="space-y-2 pl-1">
+              <p class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-blue-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                <span>Bấm vào biểu tượng <b>Cài đặt ứng dụng</b> (<i class="fa-solid fa-download text-teal-600 mx-0.5"></i>) nằm ở thanh nhập địa chỉ URL (góc trên bên phải).</span>
+              </p>
+              <p class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-full bg-blue-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                <span>Nhấn <b>"Cài đặt"</b> (Install) để mở ứng dụng trong cửa sổ riêng biệt.</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- NÚT TẢI FILE LỐI TẮT TRỰC TIẾP RA DESKTOP CHO PC -->
+          <div class="p-3 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between gap-3">
+            <div>
+              <div class="font-bold text-blue-900 text-xs">Cách nhanh cho máy tính:</div>
+              <div class="text-[11px] text-blue-700">Tải file Lối Tắt (.url) để mở nhanh từ màn hình Desktop</div>
+            </div>
+            <button onclick="downloadDesktopShortcut()" class="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 shrink-0">
+              <i class="fa-solid fa-file-arrow-down"></i> Tải Lối Tắt
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="p-3.5 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
+        <span class="text-[11px] text-slate-500 italic">PWA Web App • TYT Xã Mộ Đức</span>
         <button onclick="closePWAInstallModal()" class="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs transition shadow-xs">
           Đã Hiểu
         </button>
@@ -1072,95 +1159,6 @@
       };
     }
 
-    // DỮ LIỆU MẶC ĐỊNH LINH HOẠT THEO NGÀY HIỆN TẠI
-    function getDefaultInitialMeetings(refDate = new Date()) {
-      const todayIso = getLocalISODate(refDate);
-      const dPlus1 = new Date(refDate); dPlus1.setDate(refDate.getDate() + 1);
-      const plus1Iso = getLocalISODate(dPlus1);
-      const dPlus3 = new Date(refDate); dPlus3.setDate(refDate.getDate() + 3);
-      const plus3Iso = getLocalISODate(dPlus3);
-
-      return [
-        {
-          tempId: "m_today_1",
-          time: "Hôm nay (Giao ban đầu ngày) - 08:00",
-          topic: "Giao ban trực tuyến công tác y tế cơ sở và phòng chống dịch bệnh đầu tuần",
-          staff: "BS. Phạm Minh Đức, BS. Nguyễn Thị Như Nguyện",
-          location: "Trực tuyến qua Google Meet",
-          meetingLink: "https://meet.google.com/abc-defg-hij",
-          organizer: "Sở Y tế Quảng Ngãi",
-          status: "Đang diễn ra",
-          startDate: `${todayIso}T08:00:00`,
-          endDate: `${todayIso}T11:30:00`
-        },
-        {
-          tempId: "m_duoc_bv_2026",
-          time: `Ngày mai (${dPlus1.getDate()}/${dPlus1.getMonth() + 1}) - 08:30`,
-          topic: "Tập huấn công tác Dược lâm sàng, kiểm soát kê đơn và thanh quyết toán BHYT trạm y tế",
-          staff: "DS. Huỳnh Thị Thuỳ Yên, DS. Bùi Đạt Hiếu, DS. Đoàn Thị Diễm",
-          location: "Hội trường Sở Y tế Quảng Ngãi",
-          meetingLink: "",
-          organizer: "Sở Y tế Quảng Ngãi",
-          status: "Đã xếp lịch",
-          startDate: `${plus1Iso}T08:30:00`,
-          endDate: `${plus1Iso}T16:30:00`
-        },
-        {
-          tempId: "m_cme_sxh_2026",
-          time: `Thứ 6 (${dPlus3.getDate()}/${dPlus3.getMonth() + 1}) - 14:00`,
-          topic: "Đào tạo liên tục (CME) phác đồ điều trị sốt xuất huyết Dengue cảnh báo sớm",
-          staff: "BS. Võ Thị Thanh Thuyên, YS. Trịnh Thị Minh Tuệ, ĐD. Võ Quang Vinh",
-          location: "Trực tuyến qua Zoom",
-          meetingLink: "https://zoom.us/j/987654321",
-          organizer: "Bệnh viện Đa khoa tỉnh Quảng Ngãi",
-          status: "Sắp diễn ra",
-          startDate: `${plus3Iso}T14:00:00`,
-          endDate: `${plus3Iso}T17:00:00`
-        }
-      ];
-    }
-
-    function getDefaultInitialTasks(refDate = new Date()) {
-      const todayIso = getLocalISODate(refDate);
-      const dPlus2 = new Date(refDate); dPlus2.setDate(refDate.getDate() + 2);
-      const plus2Iso = getLocalISODate(dPlus2);
-      const dPlus4 = new Date(refDate); dPlus4.setDate(refDate.getDate() + 4);
-      const plus4Iso = getLocalISODate(dPlus4);
-
-      return [
-        {
-          tempId: "t_today_1",
-          title: "Báo cáo nhanh ca bệnh truyền nhiễm & thống kê dịch tễ trong ngày gửi CDC",
-          desc: "Tổng hợp số liệu từ 04 phân trạm Đức Tân, Mộ Đức, Đức Hòa, Đức Phú trước 16h00.",
-          staff: "YS. Lê Thị Thủy, NHS. Huỳnh Thị Anh Tin",
-          assigner: "BS. Phạm Minh Đức (Giám đốc)",
-          priority: "urgent",
-          status: "Đang tiến hành",
-          deadlineIso: `${todayIso}T16:00:00`
-        },
-        {
-          tempId: "t_sotxuathuyet_2026",
-          title: "Phun hóa chất diệt muỗi, xử lý ổ bọ gậy phòng chống sốt xuất huyết tại thôn 2 & thôn 3",
-          desc: "Phối hợp với Tổ y tế thôn bản tổ chức thả cá bảy màu diệt lăng quăng bọ gậy.",
-          staff: "YS. Lê Thị Thủy, YS. Nguyễn Anh Vũ, NHS. Nguyễn Thị Ánh Thu",
-          assigner: "BS. Nguyễn Thị Như Nguyện (Phó GĐ)",
-          priority: "normal",
-          status: "Đang tiến hành",
-          deadlineIso: `${plus2Iso}T11:30:00`
-        },
-        {
-          tempId: "t_capcuu_2026",
-          title: "Kiểm tra, rà soát tủ thuốc cấp cứu và hạn sử dụng vật tư y tế tại 04 điểm trạm",
-          desc: "Lập biên bản kiểm kê danh mục thuốc hồi sức cấp cứu theo Quyết định của Bộ Y tế.",
-          staff: "DS. Huỳnh Thị Thuỳ Yên, DS. Bùi Đạt Hiếu, DS. Đoàn Thị Diễm",
-          assigner: "BS. Phạm Minh Đức (Giám đốc)",
-          priority: "urgent",
-          status: "Đang tiến hành",
-          deadlineIso: `${plus4Iso}T17:00:00`
-        }
-      ];
-    }
-
     const STATIONS_INFO = [
       { id: "station_chinh", code: "ĐỨC TÂN", short: "Điểm trạm chính", phone: "0949544799", defaultDoctor: "Bs Thuyên", address: "Thôn 2, Đức Tân, Mộ Đức" },
       { id: "station_1", code: "MỘ ĐỨC", short: "Điểm y tế số 1", phone: "0914158350", defaultDoctor: "BS Đức", address: "Khu Phố 1, Mộ Đức" },
@@ -1360,7 +1358,6 @@
       });
     }
 
-    // KIỂM TRA SỰ KIỆN / CÔNG VIỆC CÓ DIỄN RA HÔM NAY
     function isItemToday(item, todayIso, now = new Date()) {
       if (!item) return false;
       const sIso = toIsoStringOnly(item.startDate);
@@ -1452,7 +1449,6 @@
       return false;
     }
 
-    // NẠP DỮ LIỆU ĐỆM & SẮP XẾP HÔM NAY LÊN ĐẦU
     function loadCachedData() {
       const now = new Date();
       const todayIso = getLocalISODate(now);
@@ -1468,16 +1464,9 @@
         }
       } catch (e) {}
 
-      if (allMeetings.length === 0) {
-        allMeetings = getDefaultInitialMeetings(now);
-      }
-
       let weekList = allMeetings.filter(m => isMeetingInWeek(m, bounds, todayIso, now));
       if (weekList.length === 0) {
         weekList = allMeetings.filter(m => !isMeetingPast(m, todayIso, now));
-      }
-      if (weekList.length === 0) {
-        weekList = getDefaultInitialMeetings(now);
       }
 
       weekList.sort((a, b) => {
@@ -1506,16 +1495,9 @@
         }
       } catch (e) {}
 
-      if (allTasks.length === 0) {
-        allTasks = getDefaultInitialTasks(now);
-      }
-
       let weekTasksList = allTasks.filter(t => isTaskInWeek(t, bounds, todayIso, now));
       if (weekTasksList.length === 0) {
         weekTasksList = allTasks.filter(t => !isTaskPast(t, todayIso, now));
-      }
-      if (weekTasksList.length === 0) {
-        weekTasksList = getDefaultInitialTasks(now);
       }
 
       weekTasksList.sort((a, b) => {
@@ -1624,7 +1606,6 @@
       }
     }
 
-    // KẾT XUẤT GIAO DIỆN CHÍNH
     function renderAllTiles() {
       renderDutyCards();
       renderTodayMeetingsBox();
@@ -1829,7 +1810,6 @@
       }
     }
 
-    // BÁO CÁO TÌNH HÌNH HÀNG NGÀY & SAO CHÉP ZALO KÈM SĐT NGƯỜI TRỰC
     function openExecutiveReportModal() {
       const preview = document.getElementById('exec-a4-preview-content');
       if (!preview) return;
@@ -2040,39 +2020,244 @@
       showToast("Đã sao chép Báo cáo tình hình hôm nay! Hãy mở Zalo để dán vào nhóm.", "success");
     }
 
-    // CÀI ĐẶT ỨNG DỤNG PWA
+    // =========================================================================
+    // CƠ CHẾ PWA NÂNG CAO: TỰ ĐỘNG SINH BIỂU TƯỢNG, MANIFEST & SERVICE WORKER
+    // =========================================================================
     let deferredPWAEvent = null;
+    let pwaIcon192 = null;
+    let pwaIcon512 = null;
 
+    // 1. Tự động vẽ Icon biểu tượng Y Tế chuẩn PNG 192x192 & 512x512 trực tiếp bằng Canvas
+    function generatePWAIcon(size = 192) {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      // Nền bo góc màu xanh ngọc y tế
+      const radius = size * 0.22;
+      ctx.beginPath();
+      ctx.moveTo(radius, 0);
+      ctx.lineTo(size - radius, 0);
+      ctx.quadraticCurveTo(size, 0, size, radius);
+      ctx.lineTo(size, size - radius);
+      ctx.quadraticCurveTo(size, size, size - radius, size);
+      ctx.lineTo(radius, size);
+      ctx.quadraticCurveTo(0, size, 0, size - radius);
+      ctx.lineTo(0, radius);
+      ctx.quadraticCurveTo(0, 0, radius, 0);
+      ctx.closePath();
+
+      const grad = ctx.createLinearGradient(0, 0, size, size);
+      grad.addColorStop(0, '#047857');
+      grad.addColorStop(1, '#0f766e');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Vẽ chữ thập cứu thương màu trắng ở giữa
+      ctx.fillStyle = '#ffffff';
+      const crossW = size * 0.22;
+      const crossL = size * 0.58;
+      const center = size / 2;
+
+      // Nhánh dọc
+      ctx.fillRect(center - crossW / 2, center - crossL / 2, crossW, crossL);
+      // Nhánh ngang
+      ctx.fillRect(center - crossL / 2, center - crossW / 2, crossL, crossW);
+
+      // Điểm nhấn vòng tròn cứu thương
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = size * 0.025;
+      ctx.beginPath();
+      ctx.arc(center, center, crossL * 0.62, 0, Math.PI * 2);
+      ctx.stroke();
+
+      return canvas.toDataURL('image/png');
+    }
+
+    // 2. Khởi tạo tài nguyên PWA: Gắn Manifest, Apple-Touch-Icon & Favicon vào <head>
+    function setupPWAAssets() {
+      try {
+        pwaIcon192 = generatePWAIcon(192);
+        pwaIcon512 = generatePWAIcon(512);
+
+        // Gắn Apple-Touch-Icon cho iOS
+        const appleIcon = document.getElementById('dynamic-apple-icon');
+        if (appleIcon) appleIcon.href = pwaIcon192;
+
+        // Gắn Favicon
+        const favicon = document.getElementById('dynamic-favicon');
+        if (favicon) favicon.href = pwaIcon192;
+
+        // Cập nhật icon trong modal
+        const modalIconBox = document.getElementById('pwa-modal-app-icon');
+        if (modalIconBox) {
+          modalIconBox.innerHTML = `<img src="${pwaIcon192}" class="w-full h-full object-cover rounded-xl" alt="TYT Mộ Đức">`;
+        }
+
+        // Tạo cấu trúc Manifest JSON chuẩn
+        const currentUrl = window.location.href.split('#')[0];
+        const manifestObj = {
+          name: "Trạm Y Tế Xã Mộ Đức",
+          short_name: "TYT Mộ Đức",
+          description: "Trung tâm điều hành y tế số Trạm Y Tế Xã Mộ Đức - Trực ban 4 điểm trạm, Lịch họp, Tập huấn, Nhiệm vụ",
+          start_url: currentUrl,
+          scope: currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1) || "./",
+          display: "standalone",
+          background_color: "#047857",
+          theme_color: "#047857",
+          orientation: "portrait-primary",
+          icons: [
+            { src: pwaIcon192, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+            { src: pwaIcon512, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+          ]
+        };
+
+        const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        const manifestLink = document.getElementById('dynamic-manifest');
+        if (manifestLink) manifestLink.href = manifestURL;
+
+        // Đăng ký Service Worker ngầm hỗ trợ cài đặt PWA
+        registerOfflineServiceWorker();
+      } catch (err) {
+        console.warn("Lỗi thiết lập PWA:", err);
+      }
+    }
+
+    // 3. Đăng ký Service Worker an toàn
+    function registerOfflineServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        try {
+          const swScript = `
+            const CACHE_NAME = 'tyt-moduc-pwa-v1';
+            self.addEventListener('install', (e) => self.skipWaiting());
+            self.addEventListener('activate', (e) => clients.claim());
+            self.addEventListener('fetch', (e) => {
+              e.respondWith(
+                fetch(e.request).catch(() => caches.match(e.request))
+              );
+            });
+          `;
+          const blob = new Blob([swScript], { type: 'application/javascript' });
+          const swUrl = URL.createObjectURL(blob);
+          navigator.serviceWorker.register(swUrl).catch(() => {
+            // Trình duyệt không cho phép blob SW thì bỏ qua an toàn
+          });
+        } catch (e) {}
+      }
+    }
+
+    // 4. Lắng nghe sự kiện trình duyệt sẵn sàng cài đặt (beforeinstallprompt)
     function initPWAInstallPrompt() {
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPWAEvent = e;
+
+        // Làm nổi bật nút cài đặt trên thanh điều hành
         const headerBtn = document.getElementById('pwa-install-header-btn');
         if (headerBtn) {
           headerBtn.classList.add('ring-2', 'ring-amber-300', 'animate-pulse');
         }
+
+        // Hiện nút cài đặt ngay trong Modal
+        const modalPromptBtn = document.getElementById('pwa-native-prompt-btn');
+        if (modalPromptBtn) modalPromptBtn.classList.remove('hidden');
+
+        const platformText = document.getElementById('pwa-detected-platform-text');
+        if (platformText) platformText.innerText = "Trình duyệt đã sẵn sàng cài đặt ứng dụng 1-chạm!";
+      });
+
+      window.addEventListener('appinstalled', () => {
+        deferredPWAEvent = null;
+        showToast("Ứng dụng Cổng Y Tế Mộ Đức đã được cài đặt thành công!", "success");
       });
     }
 
+    // 5. Kích hoạt cài đặt ứng dụng
     function triggerPWAInstall() {
       if (deferredPWAEvent) {
         deferredPWAEvent.prompt();
         deferredPWAEvent.userChoice.then((choiceResult) => {
           if (choiceResult.outcome === 'accepted') {
-            showToast("Chúc mừng bạn đã cài đặt Cổng Điều Hành Y Tế Số Mộ Đức!", "success");
+            showToast("Chúc mừng bạn đã cài đặt ứng dụng TYT Mộ Đức!", "success");
           }
           deferredPWAEvent = null;
         });
       } else {
-        document.getElementById('pwa-install-modal').classList.remove('hidden');
+        openPWAInstallModal();
       }
+    }
+
+    function triggerNativeInstallPrompt() {
+      if (deferredPWAEvent) {
+        triggerPWAInstall();
+        closePWAInstallModal();
+      }
+    }
+
+    // 6. Nhận diện thiết bị người dùng và mở Modal hướng dẫn tương ứng
+    function openPWAInstallModal() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+      let platform = 'desktop';
+
+      if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+        platform = 'ios';
+      } else if (/android/i.test(ua)) {
+        platform = 'android';
+      }
+
+      switchPWATab(platform);
+
+      const platformText = document.getElementById('pwa-detected-platform-text');
+      if (platformText && !deferredPWAEvent) {
+        if (platform === 'ios') {
+          platformText.innerText = "Đang nhận diện: iPhone / iPad (Safari)";
+        } else if (platform === 'android') {
+          platformText.innerText = "Đang nhận diện: Thiết bị Android";
+        } else {
+          platformText.innerText = "Đang nhận diện: Máy tính (Windows / Mac)";
+        }
+      }
+
+      document.getElementById('pwa-install-modal').classList.remove('hidden');
     }
 
     function closePWAInstallModal() {
       document.getElementById('pwa-install-modal').classList.add('hidden');
     }
 
-    // TÌM KIẾM Ô GẠCH
+    function switchPWATab(tab) {
+      const tabs = ['ios', 'android', 'desktop'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`pwa-tab-${t}`);
+        const panel = document.getElementById(`pwa-panel-${t}`);
+        if (!btn || !panel) return;
+
+        if (t === tab) {
+          btn.className = "flex-1 py-2 px-2 rounded-xl text-center border font-extrabold bg-emerald-700 text-white border-emerald-800 shadow-xs";
+          panel.classList.remove('hidden');
+        } else {
+          btn.className = "flex-1 py-2 px-2 rounded-xl text-center border font-bold bg-white text-slate-700 border-slate-200 hover:bg-slate-100";
+          panel.classList.add('hidden');
+        }
+      });
+    }
+
+    // 7. Tải file Lối Tắt Desktop (.url) cho máy tính
+    function downloadDesktopShortcut() {
+      const currentUrl = window.location.href;
+      const shortcutContent = `[InternetShortcut]\r\nURL=${currentUrl}\r\nIconIndex=0\r\n`;
+      const blob = new Blob([shortcutContent], { type: 'application/octet-stream' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'Cong_Y_Te_Mo_Duc.url';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast("Đã tải Lối Tắt! Bạn hãy kéo file này ra màn hình Desktop máy tính để mở nhanh.", "success");
+    }
+
     function filterTiles(query) {
       const q = (query || '').toLowerCase().trim();
       const clearBtn = document.getElementById('tile-search-clear');
@@ -2425,6 +2610,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       initTheme();
       startLiveClock();
+      setupPWAAssets();
       initPWAInstallPrompt();
       computeTodayDutySchedule();
       loadCachedData();
