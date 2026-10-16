@@ -293,44 +293,44 @@
   <div id="print-workspace-container" class="w-full text-black font-times"></div>
 
   <script>
-    // 1. DANH SÁCH 29 CÁN BỘ GỐC CHUẨN XÁC 100% CỦA 04 ĐIỂM TRẠM
+    // 1. DANH SÁCH 29 CÁN BỘ GỐC CHUẨN XÁC 100% CỦA 04 ĐIỂM TRẠM (GIỮ NGUYÊN BẢN SỬA CỦA BẠN)
     const STAFF_ROSTER = [
       // 1. Đức Tân - 10 cán bộ
-      { name: "Võ Thị Thanh Thuyên", shortName: "Bs Thuyên", position: "Bác sĩ điều trị", point: "Điểm trạm chính", phone: "0382237018", email: "vttthuyen6392@quangngai.gov.vn" },
-      { name: "Trịnh Thị Minh Tuệ", shortName: "Ys Tuệ", position: "Y sĩ đa khoa", point: "Điểm trạm chính", phone: "0949544799", email: "tuetrinh73@gmail.com" },
-      { name: "Võ Thị Thanh Thùy", shortName: "NHS Thuỳ", position: "Hộ sinh viên", point: "Điểm trạm chính", phone: "0914126139", email: "votthuy1987@gmail.com" },
-      { name: "Lê Thị Thu Thủy", shortName: "Ys Thủy", position: "Y sĩ YHCT", point: "Điểm trạm chính", phone: "0934083084", email: "han230717@gmail.com" },
-      { name: "Võ Quang Vinh", shortName: "ĐD Vinh", position: "Điều dưỡng viên", point: "Điểm trạm chính", phone: "0985530289", email: "quangvinh.tyt@gmail.com" },
+      { name: "Võ Thị Thanh Thuyên", shortName: "Bs Thuyên", position: "Nhân viên", point: "Điểm trạm chính", phone: "0382237018", email: "vttthuyen6392@quangngai.gov.vn" },
+      { name: "Trịnh Thị Minh Tuệ", shortName: "Ys Tuệ", position: "Nhân viên", point: "Điểm trạm chính", phone: "0949544799", email: "tuetrinh73@gmail.com" },
+      { name: "Võ Thị Thanh Thùy", shortName: "NHS Thuỳ", position: "Nhân viên", point: "Điểm trạm chính", phone: "0914126139", email: "votthuy1987@gmail.com" },
+      { name: "Lê Thị Thu Thủy", shortName: "Ys Thủy", position: "Nhân viên", point: "Điểm trạm chính", phone: "0934083084", email: "han230717@gmail.com" },
+      { name: "Võ Quang Vinh", shortName: "ĐD Vinh", position: "Nhân viên", point: "Điểm trạm chính", phone: "0985530289", email: "quangvinh.tyt@gmail.com" },
       { name: "Nguyễn Thị Như Nguyện", shortName: "BS Nguyện", position: "Phó Giám đốc", point: "Điểm trạm chính", phone: "0962849485", email: "nhunguyenhealth@gmail.com" },
-      { name: "Trần Thị Lệ Thy", shortName: "NHS Thy", position: "Hộ sinh viên", point: "Điểm trạm chính", phone: "0365208605", email: "ttlthy2975@quangngai.gov.vn" },
-      { name: "Lê Thị Nương", shortName: "NHS Nương", position: "Hộ sinh viên", point: "Điểm trạm chính", phone: "0907201285", email: "ltnuong8033@quangngai.gov.vn" },
-      { name: "Bùi Đạt Hiếu", shortName: "DS Hiếu", position: "Dược sĩ đại học", point: "Điểm trạm chính", phone: "0984279097", email: "dathieu102@gmail.com" },
-      { name: "Huỳnh Thị Thùy Yên", shortName: "DS Yên", position: "Dược sĩ phụ trách kho", point: "Điểm trạm chính", phone: "0931511727", email: "dsthuyyen@gmail.com" },
+      { name: "Trần Thị Lệ Thy", shortName: "NHS Thy", position: "Nhân viên", point: "Điểm trạm chính", phone: "0365208605", email: "ttlthy2975@quangngai.gov.vn" },
+      { name: "Lê Thị Nương", shortName: "NHS Nương", position: "Nhân viên", point: "Điểm trạm chính", phone: "0907201285", email: "ltnuong8033@quangngai.gov.vn" },
+      { name: "Bùi Đạt Hiếu", shortName: "DS Hiếu", position: "Nhân viên", point: "Điểm trạm chính", phone: "0984279097", email: "dathieu102@gmail.com" },
+      { name: "Huỳnh Thị Thùy Yên", shortName: "DS Yên", position: "Nhân viên", point: "Điểm trạm chính", phone: "0931511727", email: "dsthuyyen@gmail.com" },
 
       // 2. Mộ Đức - 6 cán bộ
       { name: "Phạm Minh Đức", shortName: "BS Đức", position: "Giám đốc Trạm Y tế", point: "Điểm y tế số 1", phone: "0914158350", email: "ducphammoduc@gmail.com" },
-      { name: "Đoàn Thị Diễm", shortName: "DS Diễm", position: "Dược sĩ viên", point: "Điểm y tế số 1", phone: "0977013706", email: "diemdoan1189@gmail.com" },
+      { name: "Đoàn Thị Diễm", shortName: "DS Diễm", position: "Nhân viên", point: "Điểm y tế số 1", phone: "0977013706", email: "diemdoan1189@gmail.com" },
       { name: "Võ Thị Thanh Việt", shortName: "ĐD Việt", position: "Phó Giám đốc", point: "Điểm y tế số 1", phone: "0974930431", email: "vothanhviet81@gmail.com" },
-      { name: "Huỳnh Thị Anh Tin", shortName: "NHS Tin", position: "Hộ sinh viên", point: "Điểm y tế số 1", phone: "0377448814", email: "huynhtin2129@gmail.com" },
-      { name: "Nguyễn Thị Thu Nguyệt", shortName: "ĐD Nguyệt", position: "Điều dưỡng viên", point: "Điểm y tế số 1", phone: "0394319708", email: "thunguyetbvmd@gmail.com" },
-      { name: "Trần Thị Lài", shortName: "ĐD Lài", position: "Điều dưỡng viên", point: "Điểm y tế số 1", phone: "0767331264", email: "laitran0677@gmail.com" },
+      { name: "Huỳnh Thị Anh Tin", shortName: "NHS Tin", position: "Nhân viên", point: "Điểm y tế số 1", phone: "0377448814", email: "huynhtin2129@gmail.com" },
+      { name: "Nguyễn Thị Thu Nguyệt", shortName: "ĐD Nguyệt", position: "Nhân viên", point: "Điểm y tế số 1", phone: "0394319708", email: "thunguyetbvmd@gmail.com" },
+      { name: "Trần Thị Lài", shortName: "ĐD Lài", position: "Nhân viên", point: "Điểm y tế số 1", phone: "0767331264", email: "laitran0677@gmail.com" },
 
       // 3. Đức Hòa - 6 cán bộ
       { name: "Nguyễn Phu", shortName: "BS Phu", position: "Phó Giám đốc", point: "Điểm y tế số 2", phone: "0777401717", email: "nphu2817@quangngai.gov.vn" },
-      { name: "Huỳnh Văn Phương", shortName: "Ys Phương", position: "Y sĩ YHCT", point: "Điểm y tế số 2", phone: "0976737118", email: "hvphuong@quangngai.gov.vn" },
-      { name: "Trần Thị Kim Thanh", shortName: "ĐD Thanh", position: "Điều dưỡng viên", point: "Điểm y tế số 2", phone: "0903700722", email: "ttkthanh2845@quangngai.gov.vn" },
-      { name: "Nguyễn Thị Kiều Thắm", shortName: "NHS Thắm", position: "Hộ sinh viên", point: "Điểm y tế số 2", phone: "0779487016", email: "ntktham2623@quangngai.gov.vn" },
-      { name: "Cao Thị Ánh Trúc", shortName: "ĐD Trúc", position: "Điều dưỡng viên", point: "Điểm y tế số 2", phone: "0944942416", email: "tytduchoa@gmail.com" },
-      { name: "Nguyễn Thị Phương Thảo", shortName: "DS Thảo", position: "Dược sĩ viên", point: "Điểm y tế số 2", phone: "0394376446", email: "ntpthao1516@quangngai.gov.vn" },
+      { name: "Huỳnh Văn Phương", shortName: "Ys Phương", position: "Nhân viên", point: "Điểm y tế số 2", phone: "0976737118", email: "hvphuong@quangngai.gov.vn" },
+      { name: "Trần Thị Kim Thanh", shortName: "ĐD Thanh", position: "Nhân viên", point: "Điểm y tế số 2", phone: "0903700722", email: "ttkthanh2845@quangngai.gov.vn" },
+      { name: "Nguyễn Thị Kiều Thắm", shortName: "NHS Thắm", position: "Nhân viên", point: "Điểm y tế số 2", phone: "0779487016", email: "ntktham2623@quangngai.gov.vn" },
+      { name: "Cao Thị Ánh Trúc", shortName: "ĐD Trúc", position: "Nhân viên", point: "Điểm y tế số 2", phone: "0944942416", email: "tytduchoa@gmail.com" },
+      { name: "Nguyễn Thị Phương Thảo", shortName: "DS Thảo", position: "Nhân viên", point: "Điểm y tế số 2", phone: "0394376446", email: "ntpthao1516@quangngai.gov.vn" },
 
       // 4. Đức Phú - 7 cán bộ
-      { name: "Lê Thị Tố Lan", shortName: "NHS Lan", position: "Hộ sinh viên", point: "Điểm y tế số 3", phone: "0985508847", email: "lethitolan23@gmail.com" },
-      { name: "Nguyễn Anh Vũ", shortName: "Ys Vũ", position: "Y sĩ đa khoa", point: "Điểm y tế số 3", phone: "0349796028", email: "anhvucuto362@gmail.com" },
-      { name: "Nguyễn Thị Ánh Thu", shortName: "CN Thu", position: "Cử nhân hộ sinh", point: "Điểm y tế số 3", phone: "0379949880", email: "anhthuphusan@gmail.com" },
-      { name: "Nguyễn Thị Ly Va", shortName: "ĐD Ly Va", position: "Điều dưỡng viên", point: "Điểm y tế số 3", phone: "0915618065", email: "nguyenthilyva@gmail.com" },
-      { name: "Nguyễn Thị Bé", shortName: "NHS Bé", position: "Hộ sinh viên", point: "Điểm y tế số 3", phone: "0918093101", email: "ntbe4043@quangngai.gov.vn" },
-      { name: "Phạm Thị Mỹ Trâm", shortName: "NHS Trâm", position: "Hộ sinh viên", point: "Điểm y tế số 3", phone: "0916702207", email: "phamthimytramqng@gmail.com" },
-      { name: "Phạm Trần Thị Hòa", shortName: "DS Hoà", position: "Dược sĩ viên", point: "Điểm y tế số 3", phone: "0942548742", email: "quahoamy@gmail.com" }
+      { name: "Lê Thị Tố Lan", shortName: "NHS Lan", position: "Nhân viên", point: "Điểm y tế số 3", phone: "0985508847", email: "lethitolan23@gmail.com" },
+      { name: "Nguyễn Anh Vũ", shortName: "Ys Vũ", position: "Nhân viên", point: "Điểm y tế số 3", phone: "0349796028", email: "anhvucuto362@gmail.com" },
+      { name: "Nguyễn Thị Ánh Thu", shortName: "CN Thu", position: "Nhân viên", point: "Điểm y tế số 3", phone: "0379949880", email: "anhthuphusan@gmail.com" },
+      { name: "Nguyễn Thị Ly Va", shortName: "ĐD Ly Va", position: "Nhân viên", point: "Điểm y tế số 3", phone: "0915618065", email: "nguyenthilyva@gmail.com" },
+      { name: "Nguyễn Thị Bé", shortName: "NHS Bé", position: "Nhân viên", point: "Điểm y tế số 3", phone: "0918093101", email: "ntbe4043@quangngai.gov.vn" },
+      { name: "Phạm Thị Mỹ Trâm", shortName: "NHS Trâm", position: "Nhân viên", point: "Điểm y tế số 3", phone: "0916702207", email: "phamthimytramqng@gmail.com" },
+      { name: "Phạm Trần Thị Hòa", shortName: "DS Hoà", position: "Nhân viên", point: "Điểm y tế số 3", phone: "0942548742", email: "quahoamy@gmail.com" }
     ];
 
     // Lấy danh bạ cán bộ cập nhật nhất từ bộ nhớ LocalStorage nếu có
@@ -354,38 +354,29 @@
       return STAFF_ROSTER;
     }
 
-    // Hàm chuyển đổi ngày an toàn chống tràn số ngày cuối tháng
-    function formatSafeDateVN(d) {
-      if (!d || !(d instanceof Date) || isNaN(d.getTime())) d = new Date();
-      const dd = String(d.getDate()).padStart(2, '0');
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const yyyy = d.getFullYear();
-      return `${dd}/${mm}/${yyyy}`;
-    }
-
     // 2. KHAI BÁO DANH SÁCH 11 VĂN BẢN MẪU CHUẨN XÁC THEO TỆP THỰC TẾ
     const TEMPLATES_CATALOG = [
       {
         id: "don_nghi_phep",
         code: "MẪU 01-ĐNP",
-        title: "Đơn Xin Nghỉ Phép / Nghỉ Bù / Việc Riêng",
+        title: "Đơn Xin Nghỉ Phép",
         category: "admin",
         catName: "Hành chính & Nhân sự",
         badge: "Dành Cho Cán Bộ",
         badgeColor: "bg-blue-100 text-blue-800 border-blue-200",
-        desc: "Đơn xin nghỉ phép gửi Ban Giám đốc và Tổ HC-TC-NS, có nơi nghỉ phép cụ thể.",
+        desc: "Đơn xin nghỉ phép gửi Ban Giám đốc và Tổ HC-TC-NS",
         signer: "Cán bộ, Tổ HC-TC-NS & Giám đốc phê duyệt",
         orientation: "portrait"
       },
       {
         id: "giay_gioi_thieu",
         code: "MẪU 02-GGT",
-        title: "Giấy Giới Thiệu Cán Bộ Đi Công Tác (Khổ Ngang A4 - 02 Liên)",
+        title: "Giấy Giới Thiệu Cán Bộ Đi Công Tác",
         category: "admin",
         catName: "Hành chính & Nhân sự",
         badge: "Khổ Ngang A4 (02 Liên)",
         badgeColor: "bg-indigo-100 text-indigo-800 border-indigo-200",
-        desc: "Giấy giới thiệu công tác thiết kế chuẩn khổ ngang A4 (Landscape) chia 02 liên: Liên 1 lưu tại Trạm, Liên 2 giao cán bộ đem đi liên hệ công tác.",
+        desc: "Giấy giới thiệu công tác.",
         signer: "BS. Phạm Minh Đức (Giám đốc)",
         orientation: "landscape"
       },
@@ -397,7 +388,7 @@
         catName: "Dược & Vắc xin",
         badge: "Chương Trình TCMR",
         badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
-        desc: "Dự trù vắc xin tiêm chủng mở rộng chuẩn 16 mục: VAT, DPT(3in1), VNNB B, Sởi, Nước pha, BCG, Sởi-Rubella, IPV, SII(5in1), bOpv, BKT, HAT.",
+        desc: "Dự trù vắc xin tiêm chủng mở rộng",
         signer: "Khoa Dược, Trạm Y Tế & Giám đốc phê duyệt",
         orientation: "portrait"
       },
@@ -409,7 +400,7 @@
         catName: "Dược & Vắc xin",
         badge: "Hoàn Trả TCMR",
         badgeColor: "bg-teal-100 text-teal-800 border-teal-200",
-        desc: "Biên bản hoàn trả vắc xin hỏng, vỡ, hết hạn hoặc không sử dụng hết về Kho Dược TTYT.",
+        desc: "Biên bản hoàn trả vắc xin hỏng, vỡ, hết hạn hoặc không sử dụng hết",
         signer: "Người trả, Người nhận, Khoa Dược & Trưởng trạm",
         orientation: "portrait"
       },
@@ -499,9 +490,9 @@
       }
     ];
 
-    // 3. BỘ HÀM SINH NỘI DUNG VĂN BẢN MẪU (11 BUILDERS CHUẨN XÁC)
+    // 3. BỘ HÀM SINH NỘI DUNG VĂN BẢN MẪU (GIỮ NGUYÊN VĂN TỪNG CÂU CHỮ BẠN ĐÃ SỬA)
     const TEMPLATE_BUILDERS = {
-      // 1. ĐƠN XIN NGHỈ PHÉP / NGHỈ BÙ / VIỆC RIÊNG
+      // 1. ĐƠN XIN NGHỈ PHÉP (GIỮ NGUYÊN VĂN BẢN SỬA CỦA BẠN)
       don_nghi_phep: function(staff) {
         const now = new Date();
         const dd = now.getDate();
@@ -509,18 +500,9 @@
         const yyyy = now.getFullYear();
 
         const sName = staff ? staff.name : "Võ Thị Thanh Thùy";
-        const sRole = staff ? staff.position : "Hộ sinh viên";
+        const sRole = staff ? staff.position : "Nhân viên";
         const sPoint = staff ? staff.point : "Điểm trạm chính (Đức Tân)";
         const sPhone = staff ? staff.phone : "0914126139";
-
-        // Tính ngày an toàn chống tràn cuối tháng
-        const startD = new Date(now);
-        startD.setDate(now.getDate() + 1);
-        const endD = new Date(now);
-        endD.setDate(now.getDate() + 2);
-
-        const startDateStr = formatSafeDateVN(startD);
-        const endDateStr = formatSafeDateVN(endD);
 
         return `
           <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 8px;">
@@ -541,28 +523,22 @@
 
           <div style="text-align: center; margin-top: 14px; margin-bottom: 16px;">
             <div style="font-size: 15pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">ĐƠN XIN NGHỈ PHÉP</div>
-            <div style="font-size: 11pt; font-style: italic; margin-top: 2px;">(Kèm theo chế độ nghỉ phép năm / nghỉ bù trực ban / việc riêng)</div>
           </div>
 
-          <div style="margin-left: 20px; margin-bottom: 12px; font-size: 13pt; line-height: 1.45;">
-            <div style="margin-bottom: 3px;">Kính gửi:</div>
-            <div style="margin-left: 20px;">- <b>Ban Giám đốc Trạm Y tế xã Mộ Đức</b>;</div>
-            <div style="margin-left: 20px;">- <b>Tổ Hành chính - Tài chính - Nhân sự</b>.</div>
+          <div style="margin-left: 50px; margin-bottom: 12px; font-size: 13pt; line-height: 1.45;">
+            <div style="margin-bottom: 3px;">Kính gửi: - <b>Ban Giám đốc Trạm Y tế xã Mộ Đức</b>;</div>
+            <div style="margin-left: 70px;">- <b>Tổ Hành chính - Tài chính - Nhân sự</b>.</div>
           </div>
 
           <div style="line-height: 1.5; font-size: 13pt; text-align: justify; margin-bottom: 12px;">
             <p style="margin-bottom: 6px;">Tôi tên là: <b>${sName}</b></p>
             <p style="margin-bottom: 6px;">Chức vụ: <b>${sRole}</b></p>
             <p style="margin-bottom: 6px;">Bộ phận / Nơi làm việc: <b>${sPoint}</b></p>
-            <p style="margin-bottom: 6px;">Số điện thoại liên hệ khi cần: <b>${sPhone}</b></p>
             <p style="margin-bottom: 6px;">
-              Nay tôi làm đơn này kính đề nghị Ban Giám đốc Trạm Y tế và Tổ Hành chính - Tài chính - Nhân sự cho tôi được nghỉ phép năm ${yyyy}: <b>02 ngày</b> (từ ngày <b>${startDateStr}</b> đến hết ngày <b>${endDateStr}</b>).
+              Nay tôi làm đơn này kính đề nghị Ban Giám đốc Trạm Y tế và Tổ Hành chính - Tài chính - Nhân sự cho tôi được nghỉ phép năm 2026: <b>02 ngày</b> (từ ngày <b>${dd + 1 > 31 ? 1 : dd + 1}/${mm}/${yyyy}</b> đến hết ngày <b>${dd + 2 > 31 ? 2 : dd + 2}/${mm}/${yyyy}</b>).
             </p>
             <p style="margin-bottom: 6px;">Lý do xin nghỉ: <b>Giải quyết công việc gia đình / Nghỉ bù ca trực theo quy định</b>.</p>
-            <p style="margin-bottom: 6px;">Nơi nghỉ phép: <b>Tại gia đình (Xã Mộ Đức, Huyện Mộ Đức, Tỉnh Quảng Ngãi)</b>.</p>
-            <p style="margin-bottom: 6px;">
-              Trong thời gian nghỉ, tôi đã bàn giao toàn bộ hồ sơ, bệnh án, tủ thuốc và công việc phụ trách lại cho đồng chí: <b>Trịnh Thị Minh Tuệ</b> (Y sĩ trực thay).
-            </p>
+            <p style="margin-bottom: 6px;">Nơi nghỉ phép: <b>Tại gia đình (Xã Mộ Đức, Tỉnh Quảng Ngãi)</b>.</p>
             <p style="text-indent: 25px; margin-top: 8px;">
               Kính mong Ban Giám đốc và Tổ Hành chính - Tài chính - Nhân sự xem xét và tạo điều kiện giải quyết cho tôi được nghỉ theo quy định. Tôi xin chân thành cảm ơn!
             </p>
@@ -572,17 +548,17 @@
             <tr>
               <td style="width: 33%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
                 <div style="font-weight: bold; font-size: 11pt; text-transform: uppercase;">TỔ HC - TC - NS</div>
-                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 52px;">(Kiểm tra phép, ký tên)</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 52px;"></div>
                 <div style="font-weight: bold; font-size: 11.5pt;">Trần Thị Kim Thanh</div>
               </td>
               <td style="width: 34%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
-                <div style="font-weight: bold; font-size: 11pt; text-transform: uppercase;">BAN GIÁM ĐỐC DUYỆT</div>
-                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 52px;">(Phê duyệt, ký tên)</div>
-                <div style="font-weight: bold; font-size: 11.5pt;">BS. Phạm Minh Đức</div>
+                <div style="font-weight: bold; font-size: 11pt; text-transform: uppercase;">BAN GIÁM ĐỐC</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 52px;"></div>
+                <div style="font-weight: bold; font-size: 11.5pt;">Phạm Minh Đức</div>
               </td>
               <td style="width: 33%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
                 <div style="font-weight: bold; font-size: 11pt; text-transform: uppercase;">NGƯỜI LÀM ĐƠN</div>
-                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 52px;">(Ký, ghi rõ họ tên)</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 52px;"></div>
                 <div style="font-weight: bold; font-size: 11.5pt;">${sName}</div>
               </td>
             </tr>
@@ -590,7 +566,7 @@
         `;
       },
 
-      // 2. GIẤY GIỚI THIỆU CÔNG TÁC (KHỔ NGANG A4 - LANDSCAPE: 02 LIÊN ĐẶT SONG SONG TRÁI - PHẢI)
+      // 2. GIẤY GIỚI THIỆU CÔNG TÁC (GIỮ NGUYÊN VĂN BẢN SỬA CỦA BẠN - KHỔ A4 NGANG)
       giay_gioi_thieu: function(staff) {
         const now = new Date();
         const dd = now.getDate();
@@ -598,12 +574,8 @@
         const yyyy = now.getFullYear();
 
         const sName = staff ? staff.name : "Bùi Đạt Hiếu";
-        const sRole = staff ? staff.position : "Dược sĩ đại học";
+        const sRole = staff ? staff.position : "Nhân viên";
         const sPoint = staff ? staff.point : "Điểm trạm chính (Đức Tân)";
-
-        const validUntilD = new Date(now);
-        validUntilD.setDate(now.getDate() + 7);
-        const validUntilStr = formatSafeDateVN(validUntilD);
 
         // Hàm dựng nội dung cho từng cột liên trên mặt giấy A4 ngang
         function buildLienColumn(lienNumber, lienRoleTitle, isSecondLien) {
@@ -646,17 +618,11 @@
                 <p style="margin-bottom: 4px;">Đơn vị công tác: <b>Trạm Y tế xã Mộ Đức (${sPoint})</b></p>
                 <p style="margin-bottom: 4px;">Được cử đến liên hệ công tác tại: <b>BVĐK khu vực Mộ Đức / Bệnh viện tâm thần tỉnh Quảng Ngãi</b></p>
                 <p style="margin-bottom: 4px;">Về việc: <b>Nhận thuốc hướng thần Quý ${Math.ceil(mm / 3)} năm ${yyyy}</b>.</p>
-                ${isSecondLien ? `
-                  <p style="margin-bottom: 4px;">
-                    Đề nghị Quý cơ quan tạo điều kiện thuận lợi để ông (bà) <b>${sName}</b> hoàn thành tốt nhiệm vụ được giao.
-                  </p>
-                ` : `
-                  <p style="margin-bottom: 4px; font-style: italic; color: #334155;">
-                    (Bản lưu cuống tại Trạm Y tế để theo dõi và đối chiếu chứng từ đi công tác).
-                  </p>
-                `}
+                <p style="margin-bottom: 4px;">
+                  Đề nghị Quý cơ quan tạo điều kiện thuận lợi để ông (bà) <b>${sName}</b> hoàn thành tốt nhiệm vụ được giao.
+                </p>
                 <p style="margin-bottom: 4px; font-style: italic;">
-                  Giấy giới thiệu này có giá trị đến hết ngày: <b>${validUntilStr}</b>.
+                  Giấy giới thiệu này có giá trị đến hết ngày: <b>${dd + 5 > 30 ? 30 : dd + 5}/${mm}/${yyyy}</b>.
                 </p>
               </div>
 
@@ -670,7 +636,7 @@
                   </td>
                   <td style="width: 52%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.25;">
                     <div style="font-size: 10.5pt; font-weight: bold; text-transform: uppercase;">GIÁM ĐỐC</div>
-                    <div style="font-size: 8pt; font-style: italic; margin-top: 1px; margin-bottom: 38px;">(Ký, đóng dấu)</div>
+                    <div style="font-size: 8pt; font-style: italic; margin-top: 1px; margin-bottom: 38px;"></div>
                     <div style="font-size: 10.5pt; font-weight: bold;">Phạm Minh Đức</div>
                   </td>
                 </tr>
@@ -684,19 +650,21 @@
           <table style="width: 100%; border: none; border-collapse: collapse; table-layout: fixed;">
             <tr>
               <!-- CỘT TRÁI: LIÊN 1 (CUỐNG LƯU TẠI TRẠM Y TẾ) -->
-              <td style="width: 48%; vertical-align: top; border: none; padding: 0 10px 0 0;">
+              <td style="width: 47.5%; vertical-align: top; border: none; padding: 0 8px 0 0;">
                 ${buildLienColumn("Liên 1", "Lưu tại Trạm Y tế", false)}
               </td>
 
               <!-- RÃNH KẺ CẮT DỌC CHIA ĐÔI MẶT GIẤY A4 NGANG KÈM BIỂU TƯỢNG KÉO -->
-              <td style="width: 4%; vertical-align: middle; text-align: center; border-left: 1.5pt dashed #64748b; border-right: none; border-top: none; border-bottom: none; padding: 0;">
-                <span style="font-size: 12pt; color: #475569; display: inline-block;">
-                  ✂
-                </span>
+              <td style="width: 5%; vertical-align: top; text-align: center; border: none; padding: 0; position: relative;">
+                <div style="border-left: 1.5px dashed #64748b; height: 168mm; margin: 0 auto; position: relative;">
+                  <span style="position: absolute; top: 48%; left: -11px; background: #ffffff; padding: 4px 1px; font-size: 11pt; color: #475569; display: inline-block;">
+                    ✂
+                  </span>
+                </div>
               </td>
 
               <!-- CỘT PHẢI: LIÊN 2 (GIAO CHO CÁN BỘ ĐI CÔNG TÁC) -->
-              <td style="width: 48%; vertical-align: top; border: none; padding: 0 0 0 10px;">
+              <td style="width: 47.5%; vertical-align: top; border: none; padding: 0 0 0 8px;">
                 ${buildLienColumn("Liên 2", "Giao cho người được giới thiệu", true)}
               </td>
             </tr>
@@ -704,13 +672,13 @@
         `;
       },
 
-      // 3. DỰ TRÙ VẮC XIN - VẬT TƯ TIÊM CHỦNG MỞ RỘNG (MẪU 06D/BV-01 CHUẨN 16 MỤC)
+      // 3. DỰ TRÙ VẮC XIN - VẬT TƯ TIÊM CHỦNG MỞ RỘNG (GIỮ NGUYÊN BẢN SỬA CỦA BẠN: TRẦN THỊ LÀI LÀM MẶC ĐỊNH)
       du_tru_vaccin: function(staff) {
         const now = new Date();
         const dd = now.getDate();
         const mm = now.getMonth() + 1;
         const yyyy = now.getFullYear();
-        const sName = staff ? staff.name : "Huỳnh Thị Thùy Yên";
+        const sName = staff ? staff.name : "Trần Thị Lài";
 
         return `
           <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
@@ -884,7 +852,7 @@
               <td style="width: 25%; vertical-align: top; border: none; padding: 0;">
                 <div style="font-weight: bold; font-size: 10.5pt; text-transform: uppercase;">GIÁM ĐỐC</div>
                 <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, đóng dấu)</div>
-                <div style="font-weight: bold; font-size: 10.5pt;">BS. Phạm Minh Đức</div>
+                <div style="font-weight: bold; font-size: 10.5pt;"></div>
               </td>
               <td style="width: 25%; vertical-align: top; border: none; padding: 0;">
                 <div style="font-weight: bold; font-size: 10.5pt; text-transform: uppercase;">KHOA DƯỢC</div>
@@ -905,10 +873,9 @@
         `;
       },
 
-      // 4. PHIẾU TRẢ VẮC XIN TIÊM CHỦNG MỞ RỘNG (MẪU 05D/BV-01)
+      // 4. PHIẾU TRẢ VẮC XIN TIÊM CHỦNG MỞ RỘNG (GIỮ NGUYÊN VĂN BẢN SỬA CỦA BẠN: TIÊU ĐỀ UBND XÃ MỘ ĐỨC)
       phieu_tra_vaccin: function(staff) {
         const now = new Date();
-        const dd = now.getDate();
         const mm = now.getMonth() + 1;
         const yyyy = now.getFullYear();
         const sName = staff ? staff.name : "Huỳnh Thị Anh Tin";
@@ -917,8 +884,8 @@
           <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
             <tr>
               <td style="width: 40%; vertical-align: top; text-align: left; border: none; padding: 0; line-height: 1.3;">
-                <div style="font-size: 10pt; font-weight: bold;">TRUNG TÂM Y TẾ HUYỆN MỘ ĐỨC</div>
-                <div style="font-size: 10.5pt; font-weight: bold;">TRẠM Y TẾ XÃ MỘ ĐỨC</div>
+                <div style="font-size: 10pt; font-weight: bold;">UBND XÃ MỘ ĐỨC</div>
+                <div style="font-size: 10.5pt; font-weight: bold;">TRẠM Y TẾ</div>
               </td>
               <td style="width: 40%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.3;">
                 <div style="font-size: 13pt; font-weight: bold;">PHIẾU TRẢ VACCIN</div>
@@ -927,7 +894,7 @@
               </td>
               <td style="width: 20%; vertical-align: top; text-align: right; border: none; padding: 0; line-height: 1.3;">
                 <div style="font-size: 9.5pt; font-weight: bold;">MS: 05D/BV-01</div>
-                <div style="font-size: 9.5pt;">Số: <b>${dd < 10 ? '0' + dd : dd}/TV-TCMR</b></div>
+                <div style="font-size: 9.5pt;">Số:&nbsp;&nbsp;&nbsp;&nbsp;/TV-TCMR</div>
               </td>
             </tr>
           </table>
@@ -949,69 +916,68 @@
               <tr>
                 <td style="border: 1px solid black; padding: 4px;">1</td>
                 <td style="border: 1px solid black; padding: 4px; text-align: left; font-weight: bold;">Viêm gan B sơ sinh</td>
-                <td style="border: 1px solid black; padding: 4px;">Liều</td>
-                <td style="border: 1px solid black; padding: 4px; font-weight: bold;">02</td>
-                <td style="border: 1px solid black; padding: 4px;">SL: GB-030720E<br>HD: 12/2026</td>
-                <td style="border: 1px solid black; padding: 4px;">&nbsp;</td>
-                <td style="border: 1px solid black; padding: 4px;">&nbsp;</td>
-                <td style="border: 1px solid black; padding: 4px; text-align: left;">Lọ vắc xin bị nứt nút cao su khi vận chuyển</td>
+                <td style="border: 1px solid black;">Liều</td>
+                <td style="border: 1px solid black; font-weight: bold;">02</td>
+                <td style="border: 1px solid black;">SL: GB-030720E<br>HD: 12/2026</td>
+                <td style="border: 1px solid black;">&nbsp;</td>
+                <td style="border: 1px solid black;">&nbsp;</td>
+                <td style="border: 1px solid black; text-align: left;">Lọ vắc xin bị nứt nút cao su khi vận chuyển</td>
               </tr>
               <tr>
                 <td style="border: 1px solid black; padding: 4px;">2</td>
                 <td style="border: 1px solid black; padding: 4px; text-align: left; font-weight: bold;">BCG (Lao)</td>
-                <td style="border: 1px solid black; padding: 4px;">Liều</td>
-                <td style="border: 1px solid black; padding: 4px; font-weight: bold;">05</td>
-                <td style="border: 1px solid black; padding: 4px;">SL: BCG-110825<br>HD: 11/2026</td>
-                <td style="border: 1px solid black; padding: 4px;">&nbsp;</td>
-                <td style="border: 1px solid black; padding: 4px;">&nbsp;</td>
-                <td style="border: 1px solid black; padding: 4px; text-align: left;">Không sử dụng hết trong buổi tiêm chủng</td>
+                <td style="border: 1px solid black;">Liều</td>
+                <td style="border: 1px solid black; font-weight: bold;">05</td>
+                <td style="border: 1px solid black;">SL: BCG-110825<br>HD: 11/2026</td>
+                <td style="border: 1px solid black;">&nbsp;</td>
+                <td style="border: 1px solid black;">&nbsp;</td>
+                <td style="border: 1px solid black; text-align: left;">Không sử dụng hết trong buổi tiêm chủng</td>
               </tr>
               <tr>
                 <td style="border: 1px solid black; padding: 4px;">3</td>
                 <td style="border: 1px solid black; padding: 4px; text-align: left;">Nước pha BCG</td>
-                <td style="border: 1px solid black; padding: 4px;">Liều</td>
-                <td style="border: 1px solid black; padding: 4px; font-weight: bold;">05</td>
-                <td style="border: 1px solid black; padding: 4px;">SL: NP-110825<br>HD: 11/2026</td>
-                <td style="border: 1px solid black; padding: 4px;">&nbsp;</td>
-                <td style="border: 1px solid black; padding: 4px;">&nbsp;</td>
-                <td style="border: 1px solid black; padding: 4px; text-align: left;">Nước pha đi kèm vắc xin BCG</td>
+                <td style="border: 1px solid black;">Liều</td>
+                <td style="border: 1px solid black; font-weight: bold;">05</td>
+                <td style="border: 1px solid black;">SL: NP-110825<br>HD: 11/2026</td>
+                <td style="border: 1px solid black;">&nbsp;</td>
+                <td style="border: 1px solid black;">&nbsp;</td>
+                <td style="border: 1px solid black; text-align: left;">Nước pha đi kèm vắc xin BCG</td>
               </tr>
             </tbody>
           </table>
 
           <div style="text-align: right; font-style: italic; font-size: 10.5pt; margin-bottom: 14px;">
-            Mộ Đức, ngày ${dd} tháng ${mm} năm ${yyyy}
+            Mộ Đức, ngày ${now.getDate()} tháng ${mm} năm ${yyyy}
           </div>
 
           <table style="width: 100%; border: none; border-collapse: collapse; text-align: center; font-size: 10.5pt; page-break-inside: avoid;">
             <tr>
               <td style="width: 25%; vertical-align: top; border: none;">
                 <div style="font-weight: bold;">TRƯỞNG KHOA DƯỢC</div>
-                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 50px;">(Ký, ghi rõ họ tên)</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 50px;"></div>
               </td>
               <td style="width: 25%; vertical-align: top; border: none;">
                 <div style="font-weight: bold;">NGƯỜI NHẬN</div>
-                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 50px;">(Ký, ghi rõ họ tên)</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 50px;"></div>
               </td>
               <td style="width: 25%; vertical-align: top; border: none;">
                 <div style="font-weight: bold;">NGƯỜI TRẢ</div>
-                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 50px;">(Ký, ghi rõ họ tên)</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 50px;"></div>
                 <div style="font-weight: bold;">${sName}</div>
               </td>
               <td style="width: 25%; vertical-align: top; border: none;">
-                <div style="font-weight: bold;">TRƯỞNG TRẠM Y TẾ</div>
-                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 50px;">(Ký, đóng dấu)</div>
-                <div style="font-weight: bold;">BS. Phạm Minh Đức</div>
+                <div style="font-weight: bold;">TRẠM Y TẾ</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 50px;"></div>
+                <div style="font-weight: bold;">Phạm Minh Đức</div>
               </td>
             </tr>
           </table>
         `;
       },
 
-      // 5. DỰ TRÙ THUỐC & VẬT TƯ Y TẾ (QUÝ / THÁNG)
+      // 5. DỰ TRÙ THUỐC & VẬT TƯ Y TẾ (GIỮ NGUYÊN VĂN BẢN SỬA CỦA BẠN: TIÊU ĐỀ UBND XÃ MỘ ĐỨC)
       du_tru_thuoc: function(staff) {
         const now = new Date();
-        const dd = now.getDate();
         const mm = now.getMonth() + 1;
         const yyyy = now.getFullYear();
         const curQ = Math.ceil(mm / 3);
@@ -1021,8 +987,8 @@
           <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
             <tr>
               <td style="width: 40%; vertical-align: top; text-align: left; border: none; padding: 0; line-height: 1.3;">
-                <div style="font-size: 10pt; font-weight: bold;">TRUNG TÂM Y TẾ HUYỆN MỘ ĐỨC</div>
-                <div style="font-size: 10.5pt; font-weight: bold;">TRẠM Y TẾ XÃ MỘ ĐỨC</div>
+                <div style="font-size: 10pt; font-weight: bold;">UBND XÃ MỘ ĐỨC</div>
+                <div style="font-size: 10.5pt; font-weight: bold;">TRẠM Y TẾ</div>
               </td>
               <td style="width: 40%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.3;">
                 <div style="font-size: 13pt; font-weight: bold;">DỰ TRÙ THUỐC - VẬT TƯ</div>
@@ -1142,27 +1108,27 @@
           </table>
 
           <div style="text-align: right; font-style: italic; font-size: 10pt; margin-bottom: 12px;">
-            Mộ Đức, ngày ${dd} tháng ${mm} năm ${yyyy}
+            Mộ Đức, ngày ${now.getDate()} tháng ${mm} năm ${yyyy}
           </div>
 
           <table style="width: 100%; border: none; border-collapse: collapse; text-align: center; font-size: 10pt; page-break-inside: avoid;">
             <tr>
               <td style="width: 25%; vertical-align: top; border: none;">
-                <div style="font-weight: bold;">GIÁM ĐỐC TTYT</div>
-                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 45px;">(Ký, đóng dấu)</div>
+                <div style="font-weight: bold;">GIÁM ĐỐC</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 45px;"></div>
               </td>
               <td style="width: 25%; vertical-align: top; border: none;">
                 <div style="font-weight: bold;">TRƯỞNG KHOA DƯỢC</div>
-                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 45px;">(Ký, ghi rõ họ tên)</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 45px;"></div>
               </td>
               <td style="width: 25%; vertical-align: top; border: none;">
-                <div style="font-weight: bold;">TRƯỞNG TRẠM Y TẾ</div>
-                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 45px;">(Ký, đóng dấu)</div>
-                <div style="font-weight: bold;">BS. Phạm Minh Đức</div>
+                <div style="font-weight: bold;">TRẠM Y TẾ</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 45px;"></div>
+                <div style="font-weight: bold;">Phạm Minh Đức</div>
               </td>
               <td style="width: 25%; vertical-align: top; border: none;">
                 <div style="font-weight: bold;">NGƯỜI DỰ TRÙ</div>
-                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 45px;">(Ký, ghi rõ họ tên)</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 45px;"></div>
                 <div style="font-weight: bold;">${sName}</div>
               </td>
             </tr>
@@ -1170,10 +1136,9 @@
         `;
       },
 
-      // 6. PHIẾU HOÀN TRẢ THUỐC & VẬT TƯ Y TẾ
+      // 6. PHIẾU HOÀN TRẢ THUỐC & VẬT TƯ Y TẾ (GIỮ NGUYÊN VĂN BẢN SỬA CỦA BẠN: KHO DƯỢC - BVĐK KHU VỰC MỘ ĐỨC)
       phieu_tra_thuoc: function(staff) {
         const now = new Date();
-        const dd = now.getDate();
         const mm = now.getMonth() + 1;
         const yyyy = now.getFullYear();
         const sName = staff ? staff.name : "Bùi Đạt Hiếu";
@@ -1182,12 +1147,12 @@
           <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
             <tr>
               <td style="width: 45%; vertical-align: top; text-align: left; border: none; padding: 0; line-height: 1.3;">
-                <div style="font-size: 10pt; font-weight: bold;">TRUNG TÂM Y TẾ HUYỆN MỘ ĐỨC</div>
-                <div style="font-size: 10.5pt; font-weight: bold;">TRẠM Y TẾ XÃ MỘ ĐỨC</div>
+                <div style="font-size: 10pt; font-weight: bold;">UBND XÃ MỘ ĐỨC</div>
+                <div style="font-size: 10.5pt; font-weight: bold;">TRẠM Y TẾ</div>
               </td>
               <td style="width: 55%; vertical-align: top; text-align: right; border: none; padding: 0; line-height: 1.3;">
                 <div style="font-size: 9.5pt; font-weight: bold;">Mẫu số: 05D/BV-01</div>
-                <div style="font-size: 9.5pt;">Số hoàn trả: 02/HT-THUOC</div>
+                <div style="font-size: 9.5pt;">Số: 02/HT-THUOC</div>
               </td>
             </tr>
           </table>
@@ -1199,7 +1164,7 @@
 
           <div style="font-size: 11pt; line-height: 1.5; margin-bottom: 8px;">
             <div>Bộ phận hoàn trả: <b>Trạm Y tế xã Mộ Đức (04 Điểm trạm)</b></div>
-            <div>Nhập về kho: <b>Kho Dược - Trang thiết bị y tế Trung tâm Y tế huyện Mộ Đức</b></div>
+            <div>Nhập về kho: <b>Kho Dược - BVĐK Khu vực Mộ Đức</b></div>
             <div>Lý do hoàn trả: <b>Thuốc cận hạn dùng dưới 03 tháng / Thuốc không còn nhu cầu sử dụng</b>.</div>
           </div>
 
@@ -1222,35 +1187,35 @@
           </table>
 
           <div style="text-align: right; font-style: italic; font-size: 10pt; margin-bottom: 14px;">
-            Mộ Đức, ngày ${dd} tháng ${mm} năm ${yyyy}
+            Mộ Đức, ngày ${now.getDate()} tháng ${mm} năm ${yyyy}
           </div>
 
           <table style="width: 100%; border: none; border-collapse: collapse; text-align: center; font-size: 10pt; page-break-inside: avoid;">
             <tr>
               <td style="width: 25%; vertical-align: top; border: none;">
                 <div style="font-weight: bold;">TRƯỞNG KHOA DƯỢC</div>
-                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, ghi rõ họ tên)</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;"></div>
               </td>
               <td style="width: 25%; vertical-align: top; border: none;">
                 <div style="font-weight: bold;">NGƯỜI NHẬN HÀNG</div>
-                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, ghi rõ họ tên)</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;"></div>
               </td>
               <td style="width: 25%; vertical-align: top; border: none;">
                 <div style="font-weight: bold;">NGƯỜI TRẢ HÀNG</div>
-                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, ghi rõ họ tên)</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;"></div>
                 <div style="font-weight: bold;">${sName}</div>
               </td>
               <td style="width: 25%; vertical-align: top; border: none;">
-                <div style="font-weight: bold;">TRƯỞNG TRẠM Y TẾ</div>
-                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, đóng dấu)</div>
-                <div style="font-weight: bold;">BS. Phạm Minh Đức</div>
+                <div style="font-weight: bold;">TRẠM Y TẾ</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;"></div>
+                <div style="font-weight: bold;">Phạm Minh Đức</div>
               </td>
             </tr>
           </table>
         `;
       },
 
-      // 7. THÔNG BÁO LỊCH TIÊM CHỦNG MỞ RỘNG ĐỊNH KỲ 04 ĐIỂM TRẠM
+      // 7. THÔNG BÁO LỊCH TIÊM CHỦNG MỞ RỘNG ĐỊNH KỲ 04 ĐIỂM TRẠM (GIỮ NGUYÊN VĂN BẢN SỬA CỦA BẠN)
       thong_bao_tiem_chung: function(staff) {
         const now = new Date();
         const dd = now.getDate();
@@ -1331,7 +1296,7 @@
         `;
       },
 
-      // 8. CÔNG VĂN BÁO CÁO & ĐĂNG KÝ DANH SÁCH TẬP HUẤN NVYTT 12 THÔN
+      // 8. CÔNG VĂN BÁO CÁO & ĐĂNG KÝ DANH SÁCH TẬP HUẤN NVYTT 12 THÔN (GIỮ NGUYÊN VĂN BẢN SỬA CỦA BẠN)
       cong_van_bao_cao_nvytt: function(staff) {
         const now = new Date();
         const dd = now.getDate();
@@ -1403,12 +1368,12 @@
               <tr><td style="border: 1px solid black; padding: 3px;">3</td><td style="border: 1px solid black; padding: 3px; text-align: left; font-weight: bold;">Nguyễn Thị Kim Quy</td><td style="border: 1px solid black; padding: 3px;">1989</td><td style="border: 1px solid black; padding: 3px; text-align: left;">Đại học Luật</td><td style="border: 1px solid black; padding: 3px;">Thiết Trường</td></tr>
               <tr><td style="border: 1px solid black; padding: 3px;">4</td><td style="border: 1px solid black; padding: 3px; text-align: left; font-weight: bold;">Nguyễn Thị Sen</td><td style="border: 1px solid black; padding: 3px;">1987</td><td style="border: 1px solid black; padding: 3px; text-align: left;">Trung cấp Giáo dục mầm non</td><td style="border: 1px solid black; padding: 3px;">Phước Khánh</td></tr>
               <tr><td style="border: 1px solid black; padding: 3px;">5</td><td style="border: 1px solid black; padding: 3px; text-align: left; font-weight: bold;">Cao Thị Lệ Trâm</td><td style="border: 1px solid black; padding: 3px;">1994</td><td style="border: 1px solid black; padding: 3px; text-align: left;">Trung cấp kế toán</td><td style="border: 1px solid black; padding: 3px;">Đức Tân</td></tr>
-              <tr><td style="border: 1px solid black; padding: 3px;">6</td><td style="border: 1px solid black; padding: 3px; text-align: left; font-weight: bold;">Trần Thị Thuyền</td><td style="border: 1px solid black; padding: 3px;">1973</td><td style="border: 1px solid black; padding: 3px; text-align: left;">Chứng chỉ đào tạo YTT</td><td style="border: 1px solid black; padding: 3px;">Vạn Phước</td></tr>
-              <tr><td style="border: 1px solid black; padding: 3px;">7</td><td style="border: 1px solid black; padding: 3px; text-align: left; font-weight: bold;">Trần Thị Diệu Hòa</td><td style="border: 1px solid black; padding: 3px;">1971</td><td style="border: 1px solid black; padding: 3px; text-align: left;">Chứng chỉ đào tạo YTT</td><td style="border: 1px solid black; padding: 3px;">Nam Hòa</td></tr>
-              <tr><td style="border: 1px solid black; padding: 3px;">8</td><td style="border: 1px solid black; padding: 3px; text-align: left; font-weight: bold;">Huỳnh Thị Thư</td><td style="border: 1px solid black; padding: 3px;">1974</td><td style="border: 1px solid black; padding: 3px; text-align: left;">Chứng chỉ đào tạo YTT</td><td style="border: 1px solid black; padding: 3px;">Đức Hòa</td></tr>
+              <tr><td style="border: 1px solid black; padding: 3px;">6</td><td style="border: 1px solid black; padding: 3px; text-align: left; font-weight: bold;">Trần Thị Thuyền</td><td style="border: 1px solid black; padding: 3px;">1973</td><td style="border: 1px solid black; padding: 3px; text-align: left;">Đã có chứng chỉ đào tạo YTT</td><td style="border: 1px solid black; padding: 3px;">Vạn Phước</td></tr>
+              <tr><td style="border: 1px solid black; padding: 3px;">7</td><td style="border: 1px solid black; padding: 3px; text-align: left; font-weight: bold;">Trần Thị Diệu Hòa</td><td style="border: 1px solid black; padding: 3px;">1971</td><td style="border: 1px solid black; padding: 3px; text-align: left;">Chưa thể hiện trong hồ sơ đính kèm</td><td style="border: 1px solid black; padding: 3px;">Nam Hòa</td></tr>
+              <tr><td style="border: 1px solid black; padding: 3px;">8</td><td style="border: 1px solid black; padding: 3px; text-align: left; font-weight: bold;">Huỳnh Thị Thư</td><td style="border: 1px solid black; padding: 3px;">1974</td><td style="border: 1px solid black; padding: 3px; text-align: left;">Đã có chứng chỉ đào tạo YTT</td><td style="border: 1px solid black; padding: 3px;">Đức Hòa</td></tr>
               <tr><td style="border: 1px solid black; padding: 3px;">9</td><td style="border: 1px solid black; padding: 3px; text-align: left; font-weight: bold;">Nguyễn Thị Thúy Uyển</td><td style="border: 1px solid black; padding: 3px;">1993</td><td style="border: 1px solid black; padding: 3px; text-align: left;">Đại học kế toán</td><td style="border: 1px solid black; padding: 3px;">Bắc Hòa</td></tr>
               <tr><td style="border: 1px solid black; padding: 3px;">10</td><td style="border: 1px solid black; padding: 3px; text-align: left; font-weight: bold;">Hoàng Thị Minh Nguyệt</td><td style="border: 1px solid black; padding: 3px;">1984</td><td style="border: 1px solid black; padding: 3px; text-align: left;">Trung cấp Y</td><td style="border: 1px solid black; padding: 3px;">Đức Phú</td></tr>
-              <tr><td style="border: 1px solid black; padding: 3px;">11</td><td style="border: 1px solid black; padding: 3px; text-align: left; font-weight: bold;">Nguyễn Thị Thanh Thiện</td><td style="border: 1px solid black; padding: 3px;">1993</td><td style="border: 1px solid black; padding: 3px; text-align: left;">Cao đẳng Sư phạm Kỹ thuật</td><td style="border: 1px solid black; padding: 3px;">Đức Vĩnh</td></tr>
+              <tr><td style="border: 1px solid black; padding: 3px;">11</td><td style="border: 1px solid black; padding: 3px; text-align: left; font-weight: bold;">Nguyễn Thị Thanh Thiện</td><td style="border: 1px solid black; padding: 3px;">1993</td><td style="border: 1px solid black; padding: 3px; text-align: left;">Cao đẳng Sư phạm Kỹ thuật công nghiệp</td><td style="border: 1px solid black; padding: 3px;">Đức Vĩnh</td></tr>
               <tr><td style="border: 1px solid black; padding: 3px;">12</td><td style="border: 1px solid black; padding: 3px; text-align: left; font-weight: bold;">Nguyễn Thị Duyên</td><td style="border: 1px solid black; padding: 3px;">1996</td><td style="border: 1px solid black; padding: 3px; text-align: left;">Cao đẳng kế toán</td><td style="border: 1px solid black; padding: 3px;">Phước Hòa</td></tr>
             </tbody>
           </table>
@@ -1431,16 +1396,12 @@
         `;
       },
 
-      // 9. GIẤY MỜI GIAO BAN Y TẾ DỰ PHÒNG
+      // 9. GIẤY MỜI GIAO BAN Y TẾ DỰ PHÒNG (GIỮ NGUYÊN VĂN BẢN SỬA CỦA BẠN)
       giay_moi_giao_ban: function(staff) {
         const now = new Date();
         const dd = now.getDate();
         const mm = now.getMonth() + 1;
         const yyyy = now.getFullYear();
-
-        const meetDate = new Date(now);
-        meetDate.setDate(now.getDate() + 3);
-        const meetDateStr = formatSafeDateVN(meetDate);
 
         return `
           <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
@@ -1479,7 +1440,7 @@
               Trạm Y tế xã Mộ Đức trân trọng kính mời đại diện chuyên viên phụ trách lĩnh vực y tế thuộc Phòng Văn hóa - Xã hội xã Mộ Đức tham dự hội nghị giao ban với các nội dung sau:
             </p>
             
-            <p style="margin-left: 15px; margin-bottom: 4px;">1. <b>Thời gian:</b> Vào lúc <b>08 giờ 00 phút, ngày ${meetDateStr}</b>.</p>
+            <p style="margin-left: 15px; margin-bottom: 4px;">1. <b>Thời gian:</b> Vào lúc <b>08 giờ 00 phút, ngày ${dd + 2 > 30 ? 30 : dd + 2} tháng ${mm} năm ${yyyy}</b>.</p>
             <p style="margin-left: 15px; margin-bottom: 4px;">2. <b>Hình thức:</b> Hội nghị trực tuyến qua nền tảng Google Meet / Zoom.</p>
             <p style="margin-left: 15px; margin-bottom: 4px;">3. <b>Địa điểm tham dự:</b> Phòng họp giao ban Trạm Y tế xã Mộ Đức (điểm cầu trực tuyến của xã).</p>
             <p style="margin-left: 15px; margin-bottom: 4px;">4. <b>Thông tin kết nối trực tuyến:</b> ID cuộc họp: <b>611 215 5153</b> | Mật khẩu: <b>cdc@${yyyy}</b>.</p>
@@ -1510,16 +1471,12 @@
         `;
       },
 
-      // 10. KẾ HOẠCH XỬ LÝ Ổ DỊCH SỐT XUẤT HUYẾT TẠI THÔN
+      // 10. KẾ HOẠCH XỬ LÝ Ổ DỊCH SỐT XUẤT HUYẾT TẠI THÔN (GIỮ NGUYÊN VĂN BẢN SỬA CỦA BẠN)
       ke_hoach_sxh: function(staff) {
         const now = new Date();
         const dd = now.getDate();
         const mm = now.getMonth() + 1;
         const yyyy = now.getFullYear();
-
-        const sprayD = new Date(now);
-        sprayD.setDate(now.getDate() + 1);
-        const sprayDStr = formatSafeDateVN(sprayD);
 
         return `
           <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
@@ -1561,7 +1518,7 @@
 
             <p style="font-weight: bold; margin-top: 8px; margin-bottom: 4px;">II. NỘI DUNG VÀ BIỆN PHÁP TRIỂN KHAI</p>
             <p style="margin-left: 15px; margin-bottom: 3px;">• <b>1. Chiến dịch vệ sinh môi trường, diệt lăng quăng bọ gậy:</b> Huy động Tổ y tế thôn, Đoàn Thanh niên, Hội Phụ nữ đến từng nhà lật úp vật dụng phế thải đọng nước, thả cá bảy màu vào bể chứa, phát tờ rơi truyền thông.</p>
-            <p style="margin-left: 15px; margin-bottom: 3px;">• <b>2. Phun hóa chất diệt muỗi ULV:</b> Sử dụng máy phun hóa chất đeo vai, phun không gian diệt muỗi trưởng thành đợt 1 vào ngày <b>${sprayDStr}</b> và phun nhắc lại đợt 2 sau 7 ngày.</p>
+            <p style="margin-left: 15px; margin-bottom: 3px;">• <b>2. Phun hóa chất diệt muỗi ULV:</b> Sử dụng máy phun hóa chất đeo vai, phun không gian diệt muỗi trưởng thành đợt 1 vào ngày <b>${dd + 1 > 31 ? 1 : dd + 1}/${mm}/${yyyy}</b> và phun nhắc lại đợt 2 sau 7 ngày.</p>
             <p style="margin-left: 15px; margin-bottom: 6px;">• <b>3. Giám sát ca bệnh và truyền thông:</b> Trạm y tế phân công cán bộ trực theo dõi sát các bệnh nhân sốt trên địa bàn, hướng dẫn người dân đến trạm khám sớm khi có dấu hiệu sốt cao đột ngột.</p>
 
             <p style="font-weight: bold; margin-top: 8px; margin-bottom: 4px;">III. KINH PHÍ VÀ CƠ SỞ VẬT CHẤT</p>
@@ -1898,6 +1855,7 @@
       }
     }
 
+    // TỰ ĐỘNG BẢO TOÀN TẤT CẢ CÁC BẢN SỬA TRÊN TRÌNH DUYỆT CỦA BẠN (KIỂM TRA CẢ V5 VÀ V7)
     function loadActiveTemplate(forceNewStaff = false) {
       const paper = document.getElementById('a4-document-paper');
       if (!paper) return;
@@ -1913,12 +1871,13 @@
       }
       updatePageOrientationUI(isLandscape);
 
-      const cacheKey = `TYT_TEMPLATE_SAVED_V7_${currentTemplateId}`;
+      const cacheKey = `TYT_TEMPLATE_SAVED_V5_${currentTemplateId}`;
       let cachedHtml = null;
 
       if (!forceNewStaff) {
         try {
-          cachedHtml = localStorage.getItem(cacheKey);
+          // Ưu tiên nạp bản nháp bạn đã tự tay chỉnh sửa trên màn hình
+          cachedHtml = localStorage.getItem(cacheKey) || localStorage.getItem(`TYT_TEMPLATE_SAVED_V7_${currentTemplateId}`);
         } catch(e) {}
       }
 
@@ -1941,9 +1900,10 @@
     }
 
     function resetCurrentTemplateToDefault() {
-      const cacheKey = `TYT_TEMPLATE_SAVED_V7_${currentTemplateId}`;
+      const cacheKey = `TYT_TEMPLATE_SAVED_V5_${currentTemplateId}`;
       try {
         localStorage.removeItem(cacheKey);
+        localStorage.removeItem(`TYT_TEMPLATE_SAVED_V7_${currentTemplateId}`);
       } catch(e) {}
       loadActiveTemplate(true);
       showToast("Đã khôi phục nội dung văn bản về mẫu ban đầu!", "info");
@@ -2132,7 +2092,7 @@
 
       setTimeout(() => {
         toast.classList.add('translate-y-2', 'opacity-0');
-        setTimeout(() => toast.remove(), 250);
+        setTimeout(() => toast.remove(), 3200);
       }, 3200);
     }
   </script>
