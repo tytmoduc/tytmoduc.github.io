@@ -1,0 +1,1953 @@
+bổ sung kế hoạch trên vào code đã ok này: <!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kho Văn Bản Mẫu & Biểu Mẫu Hành Chính Y Tế - TYT Xã Mộ Đức</title>
+
+  <!-- Tailwind CSS, FontAwesome 6 & Phông chữ hành chính chuẩn -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Times+New+Roman&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .font-times {
+      font-family: 'Times New Roman', Times, serif;
+    }
+
+    /* Mô phỏng chuẩn xác mặt giấy A4 theo thể thức Nghị định 30/2020/NĐ-CP */
+    .a4-simulation-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 20mm 15mm 20mm 25mm; /* Chuẩn NĐ 30: Trái 25-30mm, Phải 15-20mm, Trên 20-25mm, Dưới 20-25mm */
+      margin: 0 auto;
+      background: #ffffff;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      box-sizing: border-box;
+      position: relative;
+      transition: width 0.2s ease, min-height 0.2s ease, padding 0.2s ease;
+    }
+
+    /* Khổ giấy A4 ngang dành riêng cho Giấy Giới Thiệu 02 Liên (Landscape - 297mm x 210mm) */
+    .a4-simulation-sheet.is-landscape {
+      width: 297mm !important;
+      min-height: 210mm !important;
+      padding: 15mm 14mm 15mm 16mm !important;
+    }
+
+    /* Đảm bảo đường kẻ bảng hiển thị rõ ràng 100% cho mọi cột và dòng trong bảng biểu */
+    .a4-simulation-sheet table.table-bordered,
+    .a4-simulation-sheet table.table-bordered th,
+    .a4-simulation-sheet table.table-bordered td {
+      border: 1px solid #000000 !important;
+    }
+
+    /* Hiệu ứng khi bật chế độ gõ sửa trực tiếp trên mặt giấy */
+    .editable-mode-active [contenteditable="true"] {
+      outline: 1.5px dashed #0284c7 !important;
+      background-color: #f0f9ff !important;
+      border-radius: 3px;
+      padding: 1px 3px;
+      transition: background-color 0.15s ease;
+    }
+    .editable-mode-active [contenteditable="true"]:focus {
+      outline: 2px solid #0369a1 !important;
+      background-color: #e0f2fe !important;
+    }
+
+    /* Tùy chỉnh thanh cuộn mềm mại */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Định dạng in chuẩn khổ giấy A4 theo thể thức văn bản hành chính */
+    @media print {
+      body {
+        background: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body > *:not(#print-workspace-container) { display: none !important; }
+
+      #print-workspace-container {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+      }
+
+      .a4-simulation-sheet {
+        box-shadow: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+        padding: 18mm 12mm 18mm 22mm !important;
+      }
+
+      .a4-simulation-sheet.is-landscape {
+        padding: 12mm 12mm 12mm 14mm !important;
+      }
+
+      @page {
+        size: A4 portrait;
+        margin: 15mm 12mm 15mm 20mm;
+      }
+    }
+    #print-workspace-container { display: none; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-teal-100 selection:text-teal-900">
+
+  <!-- TOAST THÔNG BÁO -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- THANH ĐIỀU HÀNH CHÍNH TRÊN CÙNG -->
+  <header class="sticky top-0 z-40 bg-white border-b border-slate-300 px-3 sm:px-6 py-3 shadow-xs">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+      
+      <!-- Thông tin đơn vị & tiêu đề -->
+      <div class="flex items-center gap-3 w-full md:w-auto">
+        <a href="index.html" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 flex items-center justify-center transition shadow-2xs shrink-0" title="Về Cổng điều hành chính">
+          <i class="fa-solid fa-arrow-left text-base"></i>
+        </a>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="font-black text-base sm:text-lg md:text-xl text-slate-900 leading-tight flex items-center gap-1.5">
+              <i class="fa-solid fa-folder-open text-teal-600"></i>
+              <span>KHO VĂN BẢN MẪU & BIỂU MẪU Y TẾ</span>
+            </h1>
+            <span class="px-2 py-0.5 rounded-md bg-teal-100 text-teal-800 border border-teal-300 text-[10.5px] font-black uppercase tracking-wider">
+              NĐ 30/2020/NĐ-CP
+            </span>
+          </div>
+          <p class="text-xs text-slate-600 font-semibold mt-0.5">
+            Trạm Y Tế Xã Mộ Đức • Dùng chung cho 29 cán bộ 04 điểm trạm • Tự động điền • Sửa trực tiếp • Xuất Word & In PDF A4
+          </p>
+        </div>
+      </div>
+
+      <!-- Cụm công cụ: Tìm mẫu nhanh & Chuyển sang Cổng chính -->
+      <div class="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap sm:flex-nowrap">
+        <div class="relative flex-1 sm:w-64">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="template-search-input" placeholder="Tìm đơn phép, dự trù, công văn..." oninput="filterTemplateCards()" class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500">
+        </div>
+
+        <button onclick="resetCurrentTemplateToDefault()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs transition flex items-center gap-1.5 shadow-2xs" title="Khôi phục nội dung văn bản về mẫu ban đầu">
+          <i class="fa-solid fa-rotate-left text-slate-500"></i>
+          <span class="hidden sm:inline">Khôi Phục Mẫu</span>
+        </button>
+
+        <a href="index.html" class="px-3.5 py-1.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-black text-xs transition flex items-center gap-1.5 shadow-xs" title="Về trang chủ điều hành">
+          <i class="fa-solid fa-house"></i>
+          <span class="hidden sm:inline">Trang Chủ</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- BỐ CỤC CHÍNH (2 CỘT): DANH MỤC BIỂU MẪU (TRÁI) & BÀN LÀM VIỆC MẶT GIẤY A4 (PHẢI) -->
+  <main class="max-w-7xl mx-auto px-2 sm:px-6 py-4 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+    
+    <!-- CỘT TRÁI (4 CỘT): DANH MỤC 10 VĂN BẢN MẪU CHUẨN CỦA TRẠM -->
+    <aside class="lg:col-span-4 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-300 shadow-sm space-y-3.5 lg:sticky lg:top-20 max-h-[calc(100vh-100px)] flex flex-col">
+      
+      <div class="flex items-center justify-between pb-2 border-b border-slate-200 flex-none">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-teal-600"></span>
+          <h2 class="font-black text-sm text-slate-900 uppercase tracking-tight">
+            DANH MỤC VĂN BẢN MẪU (10)
+          </h2>
+        </div>
+        <span class="text-[11px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200" id="filtered-count-badge">
+          10 mẫu sẵn dùng
+        </span>
+      </div>
+
+      <!-- Bộ lọc 3 nhóm lĩnh vực -->
+      <div class="flex flex-wrap gap-1 text-[11px] font-bold flex-none" id="category-filter-bar">
+        <button onclick="setCategoryFilter('all')" id="cat-btn-all" class="px-2.5 py-1 rounded-lg bg-teal-700 text-white transition shadow-2xs">
+          Tất cả (10)
+        </button>
+        <button onclick="setCategoryFilter('admin')" id="cat-btn-admin" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+          Hành chính (4)
+        </button>
+        <button onclick="setCategoryFilter('pharmacy')" id="cat-btn-pharmacy" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+          Dược & Vắc xin (4)
+        </button>
+        <button onclick="setCategoryFilter('medical')" id="cat-btn-medical" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+          Chuyên môn & Dịch (2)
+        </button>
+      </div>
+
+      <!-- Danh sách thẻ các văn bản mẫu -->
+      <div class="space-y-2 overflow-y-auto custom-scrollbar pr-1 flex-1" id="template-cards-list">
+        <!-- Render động bằng JavaScript -->
+      </div>
+
+      <!-- Lưu ý chân sidebar -->
+      <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-500 font-medium leading-relaxed flex-none">
+        <i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i>
+        Bấm vào bất kỳ mẫu nào để nạp ra tờ giấy A4 bên phải. Mọi chỉnh sửa được tự động lưu nháp an toàn.
+      </div>
+    </aside>
+
+    <!-- CỘT PHẢI (8 CỘT): BÀN SOẠN THẢO VĂN BẢN & MẶT GIẤY A4 TRỰC DIỆN -->
+    <section class="lg:col-span-8 flex flex-col space-y-3">
+      
+      <!-- THANH CÔNG CỤ TÁC CHIẾN NỔI (ACTION TOOLBAR) -->
+      <div class="bg-white p-3 rounded-2xl border border-slate-300 shadow-sm flex flex-wrap items-center justify-between gap-2.5">
+        
+        <!-- Bộ chọn tự động điền theo 29 cán bộ -->
+        <div class="flex items-center gap-2 flex-1 sm:flex-none min-w-[240px]">
+          <div class="w-7 h-7 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs shrink-0">
+            <i class="fa-solid fa-user-pen"></i>
+          </div>
+          <div class="flex-1">
+            <select id="staff-autofill-select" onchange="onStaffAutofillChange(this.value)" class="w-full p-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer">
+              <option value="">-- Chọn cán bộ để tự động điền --</option>
+              <!-- Điền động danh sách 29 cán bộ -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Các nút chức năng: Chỉnh sửa trực tiếp, Xuất Word, In PDF, Copy -->
+        <div class="flex flex-wrap items-center gap-1.5 ml-auto">
+          
+          <!-- Huy hiệu định dạng trang (Khổ dọc / Khổ ngang) -->
+          <span id="page-orientation-badge" class="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold flex items-center gap-1">
+            <i class="fa-solid fa-file-lines text-teal-600" id="page-orientation-icon"></i>
+            <span id="page-orientation-text">Khổ A4 Dọc</span>
+          </span>
+
+          <!-- Bật / Tắt chế độ gõ trực tiếp trên mặt giấy -->
+          <button id="btn-toggle-edit" onclick="toggleDirectEditMode()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs transition flex items-center gap-1.5 shadow-2xs">
+            <i class="fa-solid fa-pen-to-square text-teal-600" id="edit-mode-icon"></i>
+            <span id="edit-mode-label">Chỉnh sửa trực tiếp</span>
+          </button>
+
+          <!-- Nút Xuất file Microsoft Word (.doc) chuẩn mẫu -->
+          <button onclick="exportCurrentDocToWord()" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs" title="Tải file Microsoft Word (.doc) giữ nguyên thể thức">
+            <i class="fa-solid fa-file-word"></i>
+            <span>Tải Word (.doc)</span>
+          </button>
+
+          <!-- Nút In PDF A4 chuẩn thể thức -->
+          <button onclick="printCurrentA4Doc()" class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs transition flex items-center gap-1.5 shadow-xs" title="In trực tiếp hoặc Lưu file PDF A4 chuẩn thể thức">
+            <i class="fa-solid fa-print"></i>
+            <span>In PDF A4</span>
+          </button>
+
+          <!-- Nút Sao chép nội dung văn bản -->
+          <button onclick="copyDocumentPlainText()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs transition shadow-2xs" title="Sao chép toàn bộ nội dung văn bản">
+            <i class="fa-solid fa-copy"></i>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- KHUNG BẢN IN XEM TRƯỚC / SOẠN THẢO TỜ GIẤY A4 (DỌC HOẶC NGANG) -->
+      <div class="p-2 sm:p-5 bg-slate-200/90 rounded-2xl border border-slate-300 overflow-x-auto custom-scrollbar flex justify-center" id="paper-outer-wrapper">
+        <article id="a4-document-paper" class="a4-simulation-sheet font-times text-black text-[13pt] leading-[1.38] select-text shadow-xl">
+          <!-- Render động văn bản mẫu bằng JavaScript -->
+        </article>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- CHÂN TRANG FOOTER -->
+  <footer class="border-t border-slate-300 bg-white py-3 px-4 text-center text-xs text-slate-600 font-medium mt-auto">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div>
+        © 2026 <b>Trạm Y Tế Xã Mộ Đức</b> • Tỉnh Quảng Ngãi
+      </div>
+      <div class="flex items-center gap-2 font-semibold text-slate-700">
+        <span>HỆ THỐNG BIỂU MẪU HÀNH CHÍNH & CHUYÊN MÔN Y TẾ</span>
+        <span>•</span>
+        <a href="index.html" class="text-teal-700 hover:underline">Về Cổng Điều Hành Số</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- KHUNG IN A4 CHO TRÌNH DUYỆT (CHỈ HIỂN THỊ KHI BẤM IN) -->
+  <div id="print-workspace-container" class="w-full text-black font-times"></div>
+
+  <!-- JAVASCRIPT: LOGIC QUẢN LÝ 10 MẪU VĂN BẢN, TỰ ĐỘNG ĐIỀN CÁN BỘ & XUẤT WORD -->
+  <script>
+
+    // 1. DANH SÁCH 29 CÁN BỘ GỐC CHUẨN XÁC 100% CỦA 04 ĐIỂM TRẠM
+    const STAFF_ROSTER = [
+      // 1. Đức Tân - 10 cán bộ
+      { name: "Võ Thị Thanh Thuyên", shortName: "Bs Thuyên", position: "Nhân viên", point: "Điểm trạm chính", phone: "0382237018", email: "vttthuyen6392@quangngai.gov.vn" },
+      { name: "Trịnh Thị Minh Tuệ", shortName: "Ys Tuệ", position: "Nhân viên", point: "Điểm trạm chính", phone: "0949544799", email: "tuetrinh73@gmail.com" },
+      { name: "Võ Thị Thanh Thùy", shortName: "NHS Thuỳ", position: "Nhân viên", point: "Điểm trạm chính", phone: "0914126139", email: "votthuy1987@gmail.com" },
+      { name: "Lê Thị Thu Thủy", shortName: "Ys Thủy", position: "Nhân viên", point: "Điểm trạm chính", phone: "0934083084", email: "han230717@gmail.com" },
+      { name: "Võ Quang Vinh", shortName: "ĐD Vinh", position: "Nhân viên", point: "Điểm trạm chính", phone: "0985530289", email: "quangvinh.tyt@gmail.com" },
+      { name: "Nguyễn Thị Như Nguyện", shortName: "BS Nguyện", position: "Phó Giám đốc", point: "Điểm trạm chính", phone: "0962849485", email: "nhunguyenhealth@gmail.com" },
+      { name: "Trần Thị Lệ Thy", shortName: "NHS Thy", position: "Nhân viên", point: "Điểm trạm chính", phone: "0365208605", email: "ttlthy2975@quangngai.gov.vn" },
+      { name: "Lê Thị Nương", shortName: "NHS Nương", position: "Nhân viên", point: "Điểm trạm chính", phone: "0907201285", email: "ltnuong8033@quangngai.gov.vn" },
+      { name: "Bùi Đạt Hiếu", shortName: "DS Hiếu", position: "Nhân viên", point: "Điểm trạm chính", phone: "0984279097", email: "dathieu102@gmail.com" },
+      { name: "Huỳnh Thị Thùy Yên", shortName: "DS Yên", position: "Nhân viên", point: "Điểm trạm chính", phone: "0931511727", email: "dsthuyyen@gmail.com" },
+
+      // 2. Mộ Đức - 6 cán bộ
+      { name: "Phạm Minh Đức", shortName: "BS Đức", position: "Giám đốc Trạm Y tế", point: "Điểm y tế số 1", phone: "0914158350", email: "ducphammoduc@gmail.com" },
+      { name: "Đoàn Thị Diễm", shortName: "DS Diễm", position: "Nhân viên", point: "Điểm y tế số 1", phone: "0977013706", email: "diemdoan1189@gmail.com" },
+      { name: "Võ Thị Thanh Việt", shortName: "ĐD Việt", position: "Phó Giám đốc", point: "Điểm y tế số 1", phone: "0974930431", email: "vothanhviet81@gmail.com" },
+      { name: "Huỳnh Thị Anh Tin", shortName: "NHS Tin", position: "Nhân viên", point: "Điểm y tế số 1", phone: "0377448814", email: "huynhtin2129@gmail.com" },
+      { name: "Nguyễn Thị Thu Nguyệt", shortName: "ĐD Nguyệt", position: "Nhân viên", point: "Điểm y tế số 1", phone: "0394319708", email: "thunguyetbvmd@gmail.com" },
+      { name: "Trần Thị Lài", shortName: "ĐD Lài", position: "Nhân viên", point: "Điểm y tế số 1", phone: "0767331264", email: "laitran0677@gmail.com" },
+
+      // 3. Đức Hòa - 6 cán bộ
+      { name: "Nguyễn Phu", shortName: "BS Phu", position: "Phó Giám đốc", point: "Điểm y tế số 2", phone: "0777401717", email: "nphu2817@quangngai.gov.vn" },
+      { name: "Huỳnh Văn Phương", shortName: "Ys Phương", position: "Nhân viên", point: "Điểm y tế số 2", phone: "0976737118", email: "hvphuong@quangngai.gov.vn" },
+      { name: "Trần Thị Kim Thanh", shortName: "ĐD Thanh", position: "Nhân viên", point: "Điểm y tế số 2", phone: "0903700722", email: "ttkthanh2845@quangngai.gov.vn" },
+      { name: "Nguyễn Thị Kiều Thắm", shortName: "NHS Thắm", position: "Nhân viên", point: "Điểm y tế số 2", phone: "0779487016", email: "ntktham2623@quangngai.gov.vn" },
+      { name: "Cao Thị Ánh Trúc", shortName: "ĐD Trúc", position: "Nhân viên", point: "Điểm y tế số 2", phone: "0944942416", email: "tytduchoa@gmail.com" },
+      { name: "Nguyễn Thị Phương Thảo", shortName: "DS Thảo", position: "Nhân viên", point: "Điểm y tế số 2", phone: "0394376446", email: "ntpthao1516@quangngai.gov.vn" },
+
+      // 4. Đức Phú - 7 cán bộ
+      { name: "Lê Thị Tố Lan", shortName: "NHS Lan", position: "Nhân viên", point: "Điểm y tế số 3", phone: "0985508847", email: "lethitolan23@gmail.com" },
+      { name: "Nguyễn Anh Vũ", shortName: "Ys Vũ", position: "Nhân viên", point: "Điểm y tế số 3", phone: "0349796028", email: "anhvucuto362@gmail.com" },
+      { name: "Nguyễn Thị Ánh Thu", shortName: "CN Thu", position: "Nhân viên", point: "Điểm y tế số 3", phone: "0379949880", email: "anhthuphusan@gmail.com" },
+      { name: "Nguyễn Thị Ly Va", shortName: "ĐD Ly Va", position: "Nhân viên", point: "Điểm y tế số 3", phone: "0915618065", email: "nguyenthilyva@gmail.com" },
+      { name: "Nguyễn Thị Bé", shortName: "NHS Bé", position: "Nhân viên", point: "Điểm y tế số 3", phone: "0918093101", email: "ntbe4043@quangngai.gov.vn" },
+      { name: "Phạm Thị Mỹ Trâm", shortName: "NHS Trâm", position: "Nhân viên", point: "Điểm y tế số 3", phone: "0916702207", email: "phamthimytramqng@gmail.com" },
+      { name: "Phạm Trần Thị Hòa", shortName: "DS Hoà", position: "Nhân viên", point: "Điểm y tế số 3", phone: "0942548742", email: "quahoamy@gmail.com" }
+    ];
+
+    // Lấy danh bạ cán bộ cập nhật nhất từ bộ nhớ LocalStorage nếu có
+    function getStaffList() {
+      try {
+        const stored = localStorage.getItem('TYT_STAFF_LIST');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length >= 20) {
+            return parsed.filter(s => s && s.name && s.status !== 'inactive').map(s => ({
+              name: s.name,
+              shortName: s.shortName || s.name,
+              position: s.position || 'Nhân viên',
+              point: s.point || 'Điểm trạm chính',
+              phone: s.phone || '',
+              email: s.email || ''
+            }));
+          }
+        }
+      } catch (e) {}
+      return STAFF_ROSTER;
+    }
+
+    // 2. KHAI BÁO DANH SÁCH 10 VĂN BẢN MẪU CHUẨN XÁC THEO TỆP NGƯỜI DÙNG CUNG CẤP
+    const TEMPLATES_CATALOG = [
+      {
+        id: "don_nghi_phep",
+        code: "MẪU 01-ĐNP",
+        title: "Đơn Xin Nghỉ Phép",
+        category: "admin",
+        catName: "Hành chính & Nhân sự",
+        badge: "Dành Cho Cán Bộ",
+        badgeColor: "bg-blue-100 text-blue-800 border-blue-200",
+        desc: "Đơn xin nghỉ phép gửi Ban Giám đốc và Tổ HC-TC-NS",
+        signer: "Cán bộ, Tổ HC-TC-NS & Giám đốc phê duyệt",
+        orientation: "portrait"
+      },
+      {
+        id: "giay_gioi_thieu",
+        code: "MẪU 02-GGT",
+        title: "Giấy Giới Thiệu Cán Bộ Đi Công Tác",
+        category: "admin",
+        catName: "Hành chính & Nhân sự",
+        badge: "Khổ Ngang A4 (02 Liên)",
+        badgeColor: "bg-indigo-100 text-indigo-800 border-indigo-200",
+        desc: "Giấy giới thiệu công tác.",
+        signer: "BS. Phạm Minh Đức (Giám đốc)",
+        orientation: "landscape"
+      },
+      {
+        id: "du_tru_vaccin",
+        code: "MS: 06D/BV-01",
+        title: "Phiếu Dự Trù Vắc Xin - Vật Tư TCMR (16 Mục)",
+        category: "pharmacy",
+        catName: "Dược & Vắc xin",
+        badge: "Chương Trình TCMR",
+        badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
+        desc: "Dự trù vắc xin tiêm chủng mở rộng",
+        signer: "Khoa Dược, Trạm Y Tế & Giám đốc phê duyệt",
+        orientation: "portrait"
+      },
+      {
+        id: "phieu_tra_vaccin",
+        code: "MS: 05D/BV-01",
+        title: "Phiếu Hoàn Trả Vắc Xin Tiêm Chủng Mở Rộng",
+        category: "pharmacy",
+        catName: "Dược & Vắc xin",
+        badge: "Hoàn Trả TCMR",
+        badgeColor: "bg-teal-100 text-teal-800 border-teal-200",
+        desc: "Biên bản hoàn trả vắc xin hỏng, vỡ, hết hạn hoặc không sử dụng hết",
+        signer: "Người trả, Người nhận, Khoa Dược & Trưởng trạm"
+      },
+      {
+        id: "du_tru_thuoc",
+        code: "MS: 06D/BV-01",
+        title: "Phiếu Dự Trù Thuốc & Vật Tư Y Tế (Quý / Tháng)",
+        category: "pharmacy",
+        catName: "Dược & Vắc xin",
+        badge: "KCB & BHYT",
+        badgeColor: "bg-amber-100 text-amber-800 border-amber-200",
+        desc: "Dự trù thuốc điều trị, vật tư tiêu hao, hóa chất sát khuẩn phục vụ cấp cứu ban đầu và khám chữa bệnh BHYT.",
+        signer: "Dược sĩ lập bảng & Giám đốc phê duyệt"
+      },
+      {
+        id: "phieu_tra_thuoc",
+        code: "MS: 05D/BV-01",
+        title: "Phiếu Hoàn Trả Thuốc & Vật Tư Y Tế",
+        category: "pharmacy",
+        catName: "Dược & Vắc xin",
+        badge: "Hoàn Trả Thuốc",
+        badgeColor: "bg-rose-100 text-rose-800 border-rose-200",
+        desc: "Biên bản bàn giao hoàn trả thuốc thừa, thuốc cận hạn dùng, bao bì hỏng về Kho Dược Trung tâm Y tế.",
+        signer: "Khoa Dược, Phòng TCHC & Người hoàn trả"
+      },
+      {
+        id: "thong_bao_tiem_chung",
+        code: "TB-TYT ĐỊNH KỲ",
+        title: "Thông Báo Lịch Tiêm Chủng Mở Rộng 04 Điểm Trạm",
+        category: "medical",
+        catName: "Chuyên môn & Y tế dự phòng",
+        badge: "Thông Báo Nhân Dân",
+        badgeColor: "bg-purple-100 text-purple-800 border-purple-200",
+        desc: "Thông báo chi tiết ngày tiêm, đối tượng trẻ em, phụ nữ mang thai tại 04 điểm trạm (Trụ sở chính, Điểm 1, Điểm 2, Điểm 3).",
+        signer: "BS. Nguyễn Thị Như Nguyện (Phó Giám đốc)"
+      },
+      {
+        id: "cong_van_bao_cao_nvytt",
+        code: "CÔNG VĂN / BÁO CÁO",
+        title: "Công Văn & Danh Sách Đăng Ký Tập Huấn NVYTT 12 Thôn",
+        category: "admin",
+        catName: "Hành chính & Nhân sự",
+        badge: "Kèm Bảng Phụ Lục",
+        badgeColor: "bg-sky-100 text-sky-800 border-sky-200",
+        desc: "Công văn gửi Sở Y tế báo cáo rà soát mạng lưới và danh sách đăng ký tập huấn nhân viên y tế thôn bản tại 12 thôn xã Mộ Đức.",
+        signer: "BS. Phạm Minh Đức (Giám đốc)"
+      },
+      {
+        id: "giay_moi_giao_ban",
+        code: "GIẤY MỜI HỘI NGHỊ",
+        title: "Giấy Mời Giao Ban Y Tế Dự Phòng (Trực Tuyến / Trực Tiếp)",
+        category: "admin",
+        catName: "Hành chính & Nhân sự",
+        badge: "Giao Ban Định Kỳ",
+        badgeColor: "bg-indigo-100 text-indigo-800 border-indigo-200",
+        desc: "Giấy mời Phòng VH-XH và các ban ngành dự giao ban y tế dự phòng (có ID/Pass Zoom, Google Meet hoặc trực tiếp).",
+        signer: "BS. Phạm Minh Đức (Giám đốc)"
+      },
+      {
+        id: "ke_hoach_sxh",
+        code: "KẾ HOẠCH XỬ LÝ DỊCH",
+        title: "Kế Hoạch Xử Lý Ổ Dịch Sốt Xuất Huyết Tại Thôn",
+        category: "medical",
+        catName: "Chuyên môn & Y tế dự phòng",
+        badge: "Chống Dịch Khẩn",
+        badgeColor: "bg-rose-100 text-rose-800 border-rose-200",
+        desc: "Kế hoạch huy động lực lượng diệt bọ gậy lăng quăng, phun hóa chất ULV và truyền thông dập ổ dịch tại địa bàn thôn.",
+        signer: "Giám đốc Trạm & UBND Xã phê duyệt"
+      }
+    ];
+
+
+    // 3. BỘ HÀM SINH NỘI DUNG VĂN BẢN MẪU (10 BUILDERS CHUẨN XÁC)
+    const TEMPLATE_BUILDERS = {
+      // 1. ĐƠN XIN NGHỈ PHÉP / NGHỈ BÙ / VIỆC RIÊNG
+      don_nghi_phep: function(staff) {
+        const now = new Date();
+        const dd = now.getDate();
+        const mm = now.getMonth() + 1;
+        const yyyy = now.getFullYear();
+
+        const sName = staff ? staff.name : "Võ Thị Thanh Thùy";
+        const sRole = staff ? staff.position : "Nhân viên";
+        const sPoint = staff ? staff.point : "Điểm trạm chính (Đức Tân)";
+        const sPhone = staff ? staff.phone : "0914126139";
+
+        return `
+          <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 8px;">
+            <tr>
+              <td style="width: 45%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 11pt; text-transform: uppercase;">UBND XÃ MỘ ĐỨC</div>
+                <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">TRẠM Y TẾ</div>
+                <div style="width: 70px; height: 1px; background-color: black; margin: 3px auto 4px auto;"></div>
+              </td>
+              <td style="width: 55%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                <div style="font-size: 12pt; font-weight: bold;">Độc lập - Tự do - Hạnh phúc</div>
+                <div style="width: 140px; height: 1px; background-color: black; margin: 3px auto 5px auto;"></div>
+                <div style="font-size: 11.5pt; font-style: italic; margin-top: 3px;">Mộ Đức, ngày ${dd} tháng ${mm} năm ${yyyy}</div>
+              </td>
+            </tr>
+          </table>
+
+          <div style="text-align: center; margin-top: 14px; margin-bottom: 16px;">
+            <div style="font-size: 15pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">ĐƠN XIN NGHỈ PHÉP</div>
+          </div>
+
+          <div style="margin-left: 50px; margin-bottom: 12px; font-size: 13pt; line-height: 1.45;">
+            <div style="margin-bottom: 3px;">Kính gửi: - <b>Ban Giám đốc Trạm Y tế xã Mộ Đức</b>;</div>
+            <div style="margin-left: 70px;">- <b>Tổ Hành chính - Tài chính - Nhân sự</b>.</div>
+          </div>
+
+          <div style="line-height: 1.5; font-size: 13pt; text-align: justify; margin-bottom: 12px;">
+            <p style="margin-bottom: 6px;">Tôi tên là: <b>${sName}</b></p>
+            <p style="margin-bottom: 6px;">Chức vụ: <b>${sRole}</b></p>
+            <p style="margin-bottom: 6px;">Bộ phận / Nơi làm việc: <b>${sPoint}</b></p>
+            <p style="margin-bottom: 6px;">
+              Nay tôi làm đơn này kính đề nghị Ban Giám đốc Trạm Y tế và Tổ Hành chính - Tài chính - Nhân sự cho tôi được nghỉ phép năm 2026: <b>02 ngày</b> (từ ngày <b>${dd + 1}/${mm}/${yyyy}</b> đến hết ngày <b>${dd + 2}/${mm}/${yyyy}</b>).
+            </p>
+            <p style="margin-bottom: 6px;">Lý do xin nghỉ: <b>Giải quyết công việc gia đình / Nghỉ bù ca trực theo quy định</b>.</p>
+            <p style="margin-bottom: 6px;">Nơi nghỉ phép: <b>Tại gia đình (Xã Mộ Đức, Tỉnh Quảng Ngãi)</b>.</p>
+            <p style="text-indent: 25px; margin-top: 8px;">
+              Kính mong Ban Giám đốc và Tổ Hành chính - Tài chính - Nhân sự xem xét và tạo điều kiện giải quyết cho tôi được nghỉ theo quy định. Tôi xin chân thành cảm ơn!
+            </p>
+          </div>
+
+          <table style="width: 100%; border: none; border-collapse: collapse; margin-top: 22px; page-break-inside: avoid;">
+            <tr>
+              <td style="width: 33%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-weight: bold; font-size: 11pt; text-transform: uppercase;">TỔ HC - TC - NS</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 52px;"></div>
+                <div style="font-weight: bold; font-size: 11.5pt;">Trần Thị Kim Thanh</div>
+              </td>
+              <td style="width: 34%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-weight: bold; font-size: 11pt; text-transform: uppercase;">BAN GIÁM ĐỐC</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 52px;"></div>
+                <div style="font-weight: bold; font-size: 11.5pt;">Phạm Minh Đức</div>
+              </td>
+              <td style="width: 33%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-weight: bold; font-size: 11pt; text-transform: uppercase;">NGƯỜI LÀM ĐƠN</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 52px;"></div>
+                <div style="font-weight: bold; font-size: 11.5pt;">${sName}</div>
+              </td>
+            </tr>
+          </table>
+        `;
+      },
+
+      // 2. GIẤY GIỚI THIỆU CÔNG TÁC
+      giay_gioi_thieu: function(staff) {
+        const now = new Date();
+        const dd = now.getDate();
+        const mm = now.getMonth() + 1;
+        const yyyy = now.getFullYear();
+
+        const sName = staff ? staff.name : "Bùi Đạt Hiếu";
+        const sRole = staff ? staff.position : "Nhân viên";
+        const sPoint = staff ? staff.point : "Điểm trạm chính (Đức Tân)";
+
+        // Hàm dựng nội dung cho từng cột liên trên mặt giấy A4 ngang
+        function buildLienColumn(lienNumber, lienRoleTitle, isSecondLien) {
+          return `
+            <div style="line-height: 1.35; font-size: 11pt; color: #000000;">
+              <!-- Bảng tiêu đề cơ quan & quốc hiệu -->
+              <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
+                <tr>
+                  <td style="width: 44%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.25;">
+                    <div style="font-size: 9.5pt; text-transform: uppercase;">UBND XÃ MỘ ĐỨC</div>
+                    <div style="font-size: 10.5pt; font-weight: bold; text-transform: uppercase;">TRẠM Y TẾ</div>
+                    <div style="width: 55px; height: 1px; background-color: black; margin: 2px auto 3px auto;"></div>
+                    <div style="font-size: 9.5pt; margin-top: 1px;">Số: <b>  /GGT-TYT</b></div>
+                  </td>
+                  <td style="width: 56%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.25;">
+                    <div style="font-size: 9.5pt; font-weight: bold; text-transform: uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                    <div style="font-size: 10.5pt; font-weight: bold;">Độc lập - Tự do - Hạnh phúc</div>
+                    <div style="width: 110px; height: 1px; background-color: black; margin: 2px auto 4px auto;"></div>
+                    <div style="font-size: 9.5pt; font-style: italic; margin-top: 1px;">Mộ Đức, ngày ${dd} tháng ${mm} năm ${yyyy}</div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Tiêu đề giấy giới thiệu -->
+              <div style="text-align: center; margin-top: 6px; margin-bottom: 8px;">
+                <div style="font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">GIẤY GIỚI THIỆU</div>
+                <div style="font-size: 9.5pt; font-weight: bold; text-transform: uppercase; color: #0f172a; margin-top: 1px;">
+                  (${lienNumber}: ${lienRoleTitle})
+                </div>
+              </div>
+
+              <!-- Nội dung trân trọng giới thiệu -->
+              <div style="margin-bottom: 6px; font-size: 10.5pt;">
+                <div><b>TRẠM Y TẾ XÃ MỘ ĐỨC TRÂN TRỌNG GIỚI THIỆU:</b></div>
+              </div>
+
+              <div style="line-height: 1.45; font-size: 10.5pt; text-align: justify; margin-bottom: 6px;">
+                <p style="margin-bottom: 4px;">Ông (Bà): <b>${sName}</b></p>
+                <p style="margin-bottom: 4px;">Chức vụ: <b>${sRole}</b></p>
+                <p style="margin-bottom: 4px;">Đơn vị công tác: <b>Trạm Y tế xã Mộ Đức (${sPoint})</b></p>
+                <p style="margin-bottom: 4px;">Được cử đến liên hệ công tác tại: <b>BVĐK khu vực Mộ Đức / Bệnh viện tâm thần tỉnh Quảng Ngãi</b></p>
+                <p style="margin-bottom: 4px;">Về việc: <b>Nhận thuốc hướng thần Quý ${Math.ceil(mm / 3)} năm ${yyyy}</b>.</p>
+                  <p style="margin-bottom: 4px;">
+                    Đề nghị Quý cơ quan tạo điều kiện thuận lợi để ông (bà) <b>${sName}</b> hoàn thành tốt nhiệm vụ được giao.
+                  </p>
+                <p style="margin-bottom: 4px; font-style: italic;">
+                  Giấy giới thiệu này có giá trị đến hết ngày: <b>${dd + 5 > 30 ? 30 : dd + 5}/${mm}/${yyyy}</b>.
+                </p>
+              </div>
+
+              <!-- Chân trang nơi nhận & chữ ký Giám đốc -->
+              <table style="width: 100%; border: none; border-collapse: collapse; margin-top: 10px; page-break-inside: avoid;">
+                <tr>
+                  <td style="width: 48%; vertical-align: top; font-size: 9pt; line-height: 1.35; border: none; padding: 0;">
+                    <div style="font-weight: bold; font-style: italic; font-size: 9.5pt; margin-bottom: 1px;">Nơi nhận:</div>
+                    <div>- Như trên;</div>
+                    <div>- Lưu: VT, TYT.</div>
+                  </td>
+                  <td style="width: 52%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.25;">
+                    <div style="font-size: 10.5pt; font-weight: bold; text-transform: uppercase;">GIÁM ĐỐC</div>
+                    <div style="font-size: 8pt; font-style: italic; margin-top: 1px; margin-bottom: 38px;"></div>
+                    <div style="font-size: 10.5pt; font-weight: bold;">Phạm Minh Đức</div>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          `;
+        }
+
+        return `
+          <!-- BỐ CỤC KHỔ NGANG A4 (LANDSCAPE): BẢNG 02 CỘT SONG SONG TRÁI - PHẢI -->
+          <table style="width: 100%; border: none; border-collapse: collapse; table-layout: fixed;">
+            <tr>
+              <!-- CỘT TRÁI: LIÊN 1 (CUỐNG LƯU TẠI TRẠM Y TẾ) -->
+              <td style="width: 47.5%; vertical-align: top; border: none; padding: 0 8px 0 0;">
+                ${buildLienColumn("Liên 1", "Lưu tại Trạm Y tế", false)}
+              </td>
+
+              <!-- RÃNH KẺ CẮT DỌC CHIA ĐÔI MẶT GIẤY A4 NGANG KÈM BIỂU TƯỢNG KÉO -->
+              <td style="width: 5%; vertical-align: top; text-align: center; border: none; padding: 0; position: relative;">
+                <div style="border-left: 1.5px dashed #64748b; height: 168mm; margin: 0 auto; position: relative;">
+                  <span style="position: absolute; top: 48%; left: -11px; background: #ffffff; padding: 4px 1px; font-size: 11pt; color: #475569; display: inline-block;">
+                    ✂
+                  </span>
+                </div>
+              </td>
+
+              <!-- CỘT PHẢI: LIÊN 2 (GIAO CHO CÁN BỘ ĐI CÔNG TÁC) -->
+              <td style="width: 47.5%; vertical-align: top; border: none; padding: 0 0 0 8px;">
+                ${buildLienColumn("Liên 2", "Giao cho người được giới thiệu", true)}
+              </td>
+            </tr>
+          </table>
+        `;
+      },
+
+      // 3. DỰ TRÙ VẮC XIN - VẬT TƯ TIÊM CHỦNG MỞ RỘNG (MẪU 06D/BV-01 CHUẨN 16 MỤC)
+      du_tru_vaccin: function(staff) {
+        const now = new Date();
+        const dd = now.getDate();
+        const mm = now.getMonth() + 1;
+        const yyyy = now.getFullYear();
+        const sName = staff ? staff.name : "Trần Thị Lài";
+
+        return `
+          <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
+            <tr>
+              <td style="width: 38%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 11pt; text-transform: uppercase;">UBND XÃ MỘ ĐỨC</div>
+                <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">TRẠM Y TẾ</div>
+                <div style="width: 65px; height: 1px; background-color: black; margin: 3px auto 4px auto;"></div>
+              </td>
+              <td style="width: 42%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 13.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">DỰ TRÙ VACCIN</div>
+                <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">CHƯƠNG TRÌNH: TCMR</div>
+                <div style="font-size: 11pt; font-weight: bold; margin-top: 2px;">THÁNG ${mm < 10 ? '0' + mm : mm} NĂM ${yyyy}</div>
+              </td>
+              <td style="width: 20%; vertical-align: top; text-align: right; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 10pt; font-weight: bold;">MS: 06D/BV-01</div>
+                <div style="font-size: 10pt;">Số: <b>${dd < 10 ? '0' + dd : dd}/DT-VC</b></div>
+              </td>
+            </tr>
+          </table>
+
+          <table class="table-bordered" style="width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 10px; margin-bottom: 12px; text-align: center; border: 1px solid black;">
+            <thead>
+              <tr style="background-color: #f1f5f9; font-weight: bold;">
+                <th style="border: 1px solid black; padding: 5px 3px; width: 40px;">Số TT</th>
+                <th style="border: 1px solid black; padding: 5px 6px; text-align: left;">Tên vaccin, vật tư</th>
+                <th style="border: 1px solid black; padding: 5px 3px; width: 70px;">Đơn vị tính</th>
+                <th style="border: 1px solid black; padding: 5px 3px; width: 100px;">Số đối tượng cần tiêm</th>
+                <th style="border: 1px solid black; padding: 5px 3px; width: 75px;">Dự trù</th>
+                <th style="border: 1px solid black; padding: 5px 3px; width: 75px;">Duyệt</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">1</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">VAT</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Liều</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">10</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">20</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">2</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">DPT(3in1)</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Liều</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">4</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">4</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">3</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">VNNB B 0.5 ml</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Liều</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">30</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">30</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">4</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">Sởi</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Liều</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">6</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">10</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">5</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left;">Nước pha Sởi</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Liều</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">6</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">10</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">6</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">BCG</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Liều</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">10</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">20</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">7</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left;">Nước pha BCG</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Liều</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">10</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">20</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">8</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">Sởi - Rubella</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Liều</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">4</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">10</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">9</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left;">Nước pha Sởi - Rubella</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Liều</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">4</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">10</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">10</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">IPV</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Liều</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">9</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">10</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">11</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">SII (5in1)</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Liều</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">20</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">20</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">12</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">bOpv</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Liều</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">20</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">20</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">13</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left;">BKT 0.5ml</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Cái</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">&nbsp;</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">14</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left;">BKT BCG</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Cái</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">&nbsp;</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">15</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left;">BKT 5ml</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Cái</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">&nbsp;</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">16</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left;">HAT</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Cái</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">&nbsp;</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="text-align: right; font-style: italic; font-size: 10.5pt; margin-bottom: 12px;">
+            Mộ Đức, ngày ${dd} tháng ${mm} năm ${yyyy}
+          </div>
+
+          <table style="width: 100%; border: none; border-collapse: collapse; text-align: center; font-size: 10pt; line-height: 1.35; page-break-inside: avoid;">
+            <tr>
+              <td style="width: 25%; vertical-align: top; border: none; padding: 0;">
+                <div style="font-weight: bold; font-size: 10.5pt; text-transform: uppercase;">GIÁM ĐỐC</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, đóng dấu)</div>
+              </td>
+              <td style="width: 25%; vertical-align: top; border: none; padding: 0;">
+                <div style="font-weight: bold; font-size: 10.5pt; text-transform: uppercase;">KHOA DƯỢC</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, ghi rõ họ tên)</div>
+              </td>
+              <td style="width: 25%; vertical-align: top; border: none; padding: 0;">
+                <div style="font-weight: bold; font-size: 10.5pt; text-transform: uppercase;">TRẠM Y TẾ</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, ghi rõ họ tên)</div>
+                <div style="font-weight: bold; font-size: 10.5pt;">BS. Phạm Minh Đức</div>
+              </td>
+              <td style="width: 25%; vertical-align: top; border: none; padding: 0;">
+                <div style="font-weight: bold; font-size: 10.5pt; text-transform: uppercase;">NGƯỜI DỰ TRÙ</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, ghi rõ họ tên)</div>
+                <div style="font-weight: bold; font-size: 10.5pt;">${sName}</div>
+              </td>
+            </tr>
+          </table>
+        `;
+      },
+
+      // 4. PHIẾU TRẢ VẮC XIN TIÊM CHỦNG MỞ RỘNG (MẪU 05D/BV-01)
+      phieu_tra_vaccin: function(staff) {
+        const now = new Date();
+        const mm = now.getMonth() + 1;
+        const yyyy = now.getFullYear();
+        const sName = staff ? staff.name : "Huỳnh Thị Anh Tin";
+
+        return `
+          <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
+            <tr>
+              <td style="width: 40%; vertical-align: top; text-align: left; border: none; padding: 0; line-height: 1.3;">
+                <div style="font-size: 10pt; font-weight: bold;">UBND XÃ MỘ ĐỨC</div>
+                <div style="font-size: 10.5pt; font-weight: bold;">TRẠM Y TẾ</div>
+              </td>
+              <td style="width: 40%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.3;">
+                <div style="font-size: 13pt; font-weight: bold;">PHIẾU TRẢ VACCIN</div>
+                <div style="font-size: 10.5pt; font-weight: bold;">CHƯƠNG TRÌNH: TCMR</div>
+                <div style="font-size: 10.5pt; font-style: italic; margin-top: 2px;">Tháng ${mm < 10 ? '0' + mm : mm} Năm ${yyyy}</div>
+              </td>
+              <td style="width: 20%; vertical-align: top; text-align: right; border: none; padding: 0; line-height: 1.3;">
+                <div style="font-size: 9.5pt; font-weight: bold;">MS: 05D/BV-01</div>
+                <div style="font-size: 9.5pt;">Số:   /TV-TCMR</div>
+              </td>
+            </tr>
+          </table>
+
+          <table style="width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 10px; margin-bottom: 12px; text-align: center;">
+            <thead>
+              <tr style="background-color: #f1f5f9; font-weight: bold;">
+                <th style="border: 1px solid black; padding: 5px; width: 35px;">Số TT</th>
+                <th style="border: 1px solid black; padding: 5px; text-align: left;">Tên vaccin</th>
+                <th style="border: 1px solid black; padding: 5px; width: 70px;">Đơn vị tính</th>
+                <th style="border: 1px solid black; padding: 5px; width: 65px;">Số lượng</th>
+                <th style="border: 1px solid black; padding: 5px; width: 150px;">Số lô, hạn dùng</th>
+                <th style="border: 1px solid black; padding: 5px; width: 70px;">Đơn giá</th>
+                <th style="border: 1px solid black; padding: 5px; width: 80px;">Thành tiền</th>
+                <th style="border: 1px solid black; padding: 5px; text-align: left;">Ghi chú / Lý do trả</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px;">1</td>
+                <td style="border: 1px solid black; padding: 4px; text-align: left; font-weight: bold;">Viêm gan B sơ sinh</td>
+                <td style="border: 1px solid black;">Liều</td>
+                <td style="border: 1px solid black; font-weight: bold;">02</td>
+                <td style="border: 1px solid black;">SL: GB-030720E<br>HD: 12/2026</td>
+                <td style="border: 1px solid black;"></td>
+                <td style="border: 1px solid black;"></td>
+                <td style="border: 1px solid black; text-align: left;"></td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px;">2</td>
+                <td style="border: 1px solid black; padding: 4px; text-align: left; font-weight: bold;">BCG (Lao)</td>
+                <td style="border: 1px solid black;">Liều</td>
+                <td style="border: 1px solid black; font-weight: bold;">05</td>
+                <td style="border: 1px solid black;">SL: BCG-110825<br>HD: 11/2026</td>
+                <td style="border: 1px solid black;"></td>
+                <td style="border: 1px solid black;"></td>
+                <td style="border: 1px solid black; text-align: left;">Không sử dụng hết trong buổi tiêm chủng</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px;">3</td>
+                <td style="border: 1px solid black; padding: 4px; text-align: left;">Nước pha BCG</td>
+                <td style="border: 1px solid black;">Liều</td>
+                <td style="border: 1px solid black; font-weight: bold;">05</td>
+                <td style="border: 1px solid black;">SL: NP-110825<br>HD: 11/2026</td>
+                <td style="border: 1px solid black;"></td>
+                <td style="border: 1px solid black;"></td>
+                <td style="border: 1px solid black; text-align: left;">Nước pha đi kèm vắc xin BCG</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="text-align: right; font-style: italic; font-size: 10.5pt; margin-bottom: 14px;">
+            Mộ Đức, ngày ${now.getDate()} tháng ${mm} năm ${yyyy}
+          </div>
+
+          <table style="width: 100%; border: none; border-collapse: collapse; text-align: center; font-size: 10.5pt; page-break-inside: avoid;">
+            <tr>
+              <td style="width: 25%; vertical-align: top; border: none;">
+                <div style="font-weight: bold;">TRƯỞNG KHOA DƯỢC</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 50px;"></div>
+              </td>
+              <td style="width: 25%; vertical-align: top; border: none;">
+                <div style="font-weight: bold;">NGƯỜI NHẬN</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 50px;"></div>
+              </td>
+              <td style="width: 25%; vertical-align: top; border: none;">
+                <div style="font-weight: bold;">NGƯỜI TRẢ</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 50px;"></div>
+                <div style="font-weight: bold;">${sName}</div>
+              </td>
+              <td style="width: 25%; vertical-align: top; border: none;">
+                <div style="font-weight: bold;">TRẠM Y TẾ</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 50px;"></div>
+                <div style="font-weight: bold;">Phạm Minh Đức</div>
+              </td>
+            </tr>
+          </table>
+        `;
+      },
+
+      // 5. DỰ TRÙ THUỐC & VẬT TƯ Y TẾ (QUÝ / THÁNG)
+      du_tru_thuoc: function(staff) {
+        const now = new Date();
+        const mm = now.getMonth() + 1;
+        const yyyy = now.getFullYear();
+        const curQ = Math.ceil(mm / 3);
+        const sName = staff ? staff.name : "Huỳnh Thị Thùy Yên";
+
+        return `
+          <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
+            <tr>
+              <td style="width: 40%; vertical-align: top; text-align: left; border: none; padding: 0; line-height: 1.3;">
+                <div style="font-size: 10pt; font-weight: bold;">UBND XÃ MỘ ĐỨC</div>
+                <div style="font-size: 10.5pt; font-weight: bold;">TRẠM Y TẾ</div>
+              </td>
+              <td style="width: 40%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.3;">
+                <div style="font-size: 13pt; font-weight: bold;">DỰ TRÙ THUỐC - VẬT TƯ</div>
+                <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">QUÝ ${curQ} NĂM ${yyyy}</div>
+              </td>
+              <td style="width: 20%; vertical-align: top; text-align: right; border: none; padding: 0; line-height: 1.3;">
+                <div style="font-size: 9.5pt; font-weight: bold;">MS: 06D/BV-01</div>
+                <div style="font-size: 9.5pt;">Số: 05/DT-TH</div>
+              </td>
+            </tr>
+          </table>
+
+          <table class="table-bordered" style="width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-top: 10px; margin-bottom: 12px; text-align: center; border: 1px solid black;">
+            <thead>
+              <tr style="background-color: #f1f5f9; font-weight: bold;">
+                <th style="border: 1px solid black; padding: 4px; width: 30px;">STT</th>
+                <th style="border: 1px solid black; padding: 4px; text-align: left;">Tên thuốc - Nồng độ, hàm lượng</th>
+                <th style="border: 1px solid black; padding: 4px; width: 45px;">ĐVT</th>
+                <th style="border: 1px solid black; padding: 4px; width: 55px;">Tồn đầu</th>
+                <th style="border: 1px solid black; padding: 4px; width: 50px;">Nhập</th>
+                <th style="border: 1px solid black; padding: 4px; width: 50px;">Xuất</th>
+                <th style="border: 1px solid black; padding: 4px; width: 55px;">Tồn cuối</th>
+                <th style="border: 1px solid black; padding: 4px; width: 65px;">Dự trù</th>
+                <th style="border: 1px solid black; padding: 4px; width: 65px;">Duyệt</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">1</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">Paracetamol 500mg</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Viên</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">150</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">500</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">450</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">200</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">600</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">2</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">Amoxicillin 500mg</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Viên</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">80</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">300</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">320</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">60</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">400</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">3</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">Oresol 27.9g pha 1 lít</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Gói</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">60</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">200</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">180</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">80</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">300</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">4</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">Cồn 70 độ chai 500ml</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Chai</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">05</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">20</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">18</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">07</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">25</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">5</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">Nước muối sinh lý NaCl 0.9% 500ml</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Chai</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">12</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">50</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">48</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">14</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">60</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">6</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">Bơm tiêm 5ml dùng 1 lần</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Cái</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">45</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">150</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">160</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">35</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">200</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">7</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">Găng tay y tế có bột (Hộp 100 chiếc)</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Hộp</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">04</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">15</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">14</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">05</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">20</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid black; padding: 4px 3px;">8</td>
+                <td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">Băng gạc tiệt trùng cuộn</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">Cuộn</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">20</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">80</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">75</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">25</td>
+                <td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">100</td>
+                <td style="border: 1px solid black; padding: 4px 3px;">&nbsp;</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="text-align: right; font-style: italic; font-size: 10pt; margin-bottom: 12px;">
+            Mộ Đức, ngày ${now.getDate()} tháng ${mm} năm ${yyyy}
+          </div>
+
+          <table style="width: 100%; border: none; border-collapse: collapse; text-align: center; font-size: 10pt; page-break-inside: avoid;">
+            <tr>
+              <td style="width: 25%; vertical-align: top; border: none;">
+                <div style="font-weight: bold;">GIÁM ĐỐC</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 45px;"></div>
+              </td>
+              <td style="width: 25%; vertical-align: top; border: none;">
+                <div style="font-weight: bold;">TRƯỞNG KHOA DƯỢC</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 45px;"></div>
+              </td>
+              <td style="width: 25%; vertical-align: top; border: none;">
+                <div style="font-weight: bold;">TRẠM Y TẾ</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 45px;"></div>
+                <div style="font-weight: bold;">Phạm Minh Đức</div>
+              </td>
+              <td style="width: 25%; vertical-align: top; border: none;">
+                <div style="font-weight: bold;">NGƯỜI DỰ TRÙ</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 45px;"></div>
+                <div style="font-weight: bold;">${sName}</div>
+              </td>
+            </tr>
+          </table>
+        `;
+      },
+
+      // 6. PHIẾU HOÀN TRẢ THUỐC & VẬT TƯ Y TẾ
+      phieu_tra_thuoc: function(staff) {
+        const now = new Date();
+        const mm = now.getMonth() + 1;
+        const yyyy = now.getFullYear();
+        const sName = staff ? staff.name : "Bùi Đạt Hiếu";
+
+        return `
+          <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
+            <tr>
+              <td style="width: 45%; vertical-align: top; text-align: left; border: none; padding: 0; line-height: 1.3;">
+                <div style="font-size: 10pt; font-weight: bold;">UBND XÃ MỘ ĐỨC</div>
+                <div style="font-size: 10.5pt; font-weight: bold;">TRẠM Y TẾ</div>
+              </td>
+              <td style="width: 55%; vertical-align: top; text-align: right; border: none; padding: 0; line-height: 1.3;">
+                <div style="font-size: 9.5pt; font-weight: bold;">Mẫu số: 05D/BV-01</div>
+                <div style="font-size: 9.5pt;">Số: 02/HT-THUOC</div>
+              </td>
+            </tr>
+          </table>
+
+          <div style="text-align: center; margin-top: 10px; margin-bottom: 14px;">
+            <div style="font-size: 14pt; font-weight: bold; text-transform: uppercase;">PHIẾU HOÀN TRẢ THUỐC, VẬT TƯ Y TẾ</div>
+            <div style="font-size: 10.5pt; font-style: italic;">Tháng ${mm < 10 ? '0' + mm : mm} năm ${yyyy}</div>
+          </div>
+
+          <div style="font-size: 11pt; line-height: 1.5; margin-bottom: 8px;">
+            <div>Bộ phận hoàn trả: <b>Trạm Y tế xã Mộ Đức (04 Điểm trạm)</b></div>
+            <div>Nhập về kho: <b>Kho Dược - BVĐK Khu vực Mộ Đức</b></div>
+            <div>Lý do hoàn trả: <b>Thuốc cận hạn dùng dưới 03 tháng / Thuốc không còn nhu cầu sử dụng</b>.</div>
+          </div>
+
+          <table class="table-bordered" style="width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-top: 8px; margin-bottom: 14px; text-align: center; border: 1px solid black;">
+            <thead>
+              <tr style="background-color: #f1f5f9; font-weight: bold;">
+                <th style="border: 1px solid black; padding: 5px; width: 35px;">STT</th>
+                <th style="border: 1px solid black; padding: 5px; text-align: left;">Tên thuốc, nồng độ, hàm lượng</th>
+                <th style="border: 1px solid black; padding: 5px; width: 60px;">ĐVT</th>
+                <th style="border: 1px solid black; padding: 5px; width: 70px;">Số lượng</th>
+                <th style="border: 1px solid black; padding: 5px; width: 140px;">Số lô, hạn dùng</th>
+                <th style="border: 1px solid black; padding: 5px; text-align: left;">Lý do chi tiết</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="border: 1px solid black; padding: 4px 3px;">1</td><td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">Ciprofloxacin 500mg</td><td style="border: 1px solid black; padding: 4px 3px;">Viên</td><td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">120</td><td style="border: 1px solid black; padding: 4px 3px;">Lô: 020424 - HD: 11/2026</td><td style="border: 1px solid black; padding: 4px 6px; text-align: left;">Thuốc cận hạn sử dụng</td></tr>
+              <tr><td style="border: 1px solid black; padding: 4px 3px;">2</td><td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">Dung dịch sát khuẩn Povidone Iodine 10% 20ml</td><td style="border: 1px solid black; padding: 4px 3px;">Lọ</td><td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">15</td><td style="border: 1px solid black; padding: 4px 3px;">Lô: 140924 - HD: 12/2026</td><td style="border: 1px solid black; padding: 4px 6px; text-align: left;">Hỏng nhãn mác trong bảo quản</td></tr>
+              <tr><td style="border: 1px solid black; padding: 4px 3px;">3</td><td style="border: 1px solid black; padding: 4px 6px; text-align: left; font-weight: bold;">Kim cánh bướm lấy máu 23G</td><td style="border: 1px solid black; padding: 4px 3px;">Cái</td><td style="border: 1px solid black; padding: 4px 3px; font-weight: bold;">50</td><td style="border: 1px solid black; padding: 4px 3px;">Lô: 220323 - HD: 01/2027</td><td style="border: 1px solid black; padding: 4px 6px; text-align: left;">Không còn nhu cầu chỉ định</td></tr>
+            </tbody>
+          </table>
+
+          <div style="text-align: right; font-style: italic; font-size: 10pt; margin-bottom: 14px;">
+            Mộ Đức, ngày ${now.getDate()} tháng ${mm} năm ${yyyy}
+          </div>
+
+          <table style="width: 100%; border: none; border-collapse: collapse; text-align: center; font-size: 10pt; page-break-inside: avoid;">
+            <tr>
+              <td style="width: 25%; vertical-align: top; border: none;">
+                <div style="font-weight: bold;">TRƯỞNG KHOA DƯỢC</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;"></div>
+              </td>
+              <td style="width: 25%; vertical-align: top; border: none;">
+                <div style="font-weight: bold;">NGƯỜI NHẬN HÀNG</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;"></div>
+              </td>
+              <td style="width: 25%; vertical-align: top; border: none;">
+                <div style="font-weight: bold;">NGƯỜI TRẢ HÀNG</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;"></div>
+                <div style="font-weight: bold;">${sName}</div>
+              </td>
+              <td style="width: 25%; vertical-align: top; border: none;">
+                <div style="font-weight: bold;">TRẠM Y TẾ</div>
+                <div style="font-style: italic; font-size: 8.5pt; margin-top: 2px; margin-bottom: 50px;"></div>
+                <div style="font-weight: bold;">Phạm Minh Đức</div>
+              </td>
+            </tr>
+          </table>
+        `;
+      },
+
+      // 7. THÔNG BÁO LỊCH TIÊM CHỦNG MỞ RỘNG ĐỊNH KỲ 04 ĐIỂM TRẠM
+      thong_bao_tiem_chung: function(staff) {
+        const now = new Date();
+        const dd = now.getDate();
+        const mm = now.getMonth() + 1;
+        const yyyy = now.getFullYear();
+
+        return `
+          <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
+            <tr>
+              <td style="width: 45%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 11pt; text-transform: uppercase;">UBND XÃ MỘ ĐỨC</div>
+                <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">TRẠM Y TẾ</div>
+                <div style="width: 65px; height: 1px; background-color: black; margin: 3px auto 4px auto;"></div>
+                <div style="font-size: 11pt; margin-top: 2px;">Số: <b>42/TB-TYT</b></div>
+              </td>
+              <td style="width: 55%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                <div style="font-size: 12pt; font-weight: bold;">Độc lập - Tự do - Hạnh phúc</div>
+                <div style="width: 140px; height: 1px; background-color: black; margin: 3px auto 5px auto;"></div>
+                <div style="font-size: 11.5pt; font-style: italic; margin-top: 3px;">Mộ Đức, ngày ${dd} tháng ${mm} năm ${yyyy}</div>
+              </td>
+            </tr>
+          </table>
+
+          <div style="text-align: center; margin-top: 12px; margin-bottom: 14px;">
+            <div style="font-size: 15pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">THÔNG BÁO</div>
+            <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase; margin-top: 2px;">
+              Về lịch tiêm chủng mở rộng định kỳ tháng ${mm < 10 ? '0' + mm : mm} năm ${yyyy}
+            </div>
+          </div>
+
+          <div style="line-height: 1.45; font-size: 12.5pt; text-align: justify; margin-bottom: 12px;">
+            <p style="text-indent: 25px; margin-bottom: 6px;">
+              Thực hiện Kế hoạch tiêm chủng mở rộng năm ${yyyy}, Trạm Y tế xã Mộ Đức thông báo lịch tiêm chủng thường xuyên tháng ${mm} năm ${yyyy} như sau:
+            </p>
+            
+            <p style="font-weight: bold; margin-top: 8px; margin-bottom: 4px;">1. Đối tượng tiêm chủng:</p>
+            <p style="margin-left: 15px; margin-bottom: 3px;">- Trẻ em từ 0 đến 24 tháng tuổi theo lịch tiêm chủng mở rộng quốc gia.</p>
+            <p style="margin-left: 15px; margin-bottom: 3px;">- Phụ nữ có thai đến lịch tiêm vắc xin phòng uốn ván (VAT).</p>
+            <p style="margin-left: 15px; margin-bottom: 6px;">- Các trường hợp trẻ em và phụ nữ có thai cần tiêm vét, tiêm bù do chưa được tiêm trong các tháng trước.</p>
+
+            <p style="font-weight: bold; margin-top: 8px; margin-bottom: 4px;">2. Thời gian và địa điểm tiêm chủng tại 04 điểm trạm:</p>
+            <p style="margin-left: 15px; margin-bottom: 3px;">• <b>Điểm tiêm Trụ sở chính (Trạm Y tế Đức Tân cũ):</b> Tiêm vào sáng Thứ 6, ngày <b>18/${mm}/${yyyy}</b>.</p>
+            <p style="margin-left: 15px; margin-bottom: 3px;">• <b>Điểm Y tế 1 (Trạm Y tế Thị trấn Mộ Đức cũ):</b> Tiêm vào sáng Thứ 6, ngày <b>18/${mm}/${yyyy}</b>.</p>
+            <p style="margin-left: 15px; margin-bottom: 3px;">• <b>Điểm Y tế 2 (Trạm Y tế Đức Hòa cũ):</b> Tiêm vào sáng Thứ 7, ngày <b>19/${mm}/${yyyy}</b>.</p>
+            <p style="margin-left: 15px; margin-bottom: 6px;">• <b>Điểm Y tế 3 (Trạm Y tế Đức Phú cũ):</b> Tiêm vào sáng Thứ 7, ngày <b>19/${mm}/${yyyy}</b>.</p>
+
+            <p style="font-weight: bold; margin-top: 8px; margin-bottom: 4px;">3. Các loại vắc xin tiêm trong chương trình:</p>
+            <p style="margin-left: 15px; margin-bottom: 6px;">
+              BCG (Lao); SII / 5 trong 1 (Bạch hầu - Ho gà - Uốn ván - Viêm gan B - Hib); OPV (Bại liệt uống); IPV (Bại liệt tiêm); Rota (Tiêu chảy cấp); Sởi đơn; VNNBB (Viêm não Nhật Bản); MR (Sởi - Rubella).
+            </p>
+
+            <p style="text-indent: 25px; margin-bottom: 6px;">
+              Đề nghị cha mẹ hoặc người giám hộ đưa trẻ đến đúng thời gian và địa điểm quy định, mang theo <b>Sổ tiêm chủng của trẻ, Giấy khai sinh hoặc Căn cước công dân của trẻ</b>. Đối với phụ nữ có thai, vui lòng mang theo <b>Sổ khám thai</b>.
+            </p>
+            <p style="text-indent: 25px;">
+              Trạm Y tế kính đề nghị Đài truyền thanh xã Mộ Đức, các thôn và các hội đoàn thể phối hợp tuyên truyền, vận động Nhân dân đưa trẻ đi tiêm đầy đủ, đúng lịch./.
+            </p>
+          </div>
+
+          <table style="width: 100%; border: none; border-collapse: collapse; margin-top: 18px; page-break-inside: avoid;">
+            <tr>
+              <td style="width: 50%; vertical-align: top; font-size: 10pt; line-height: 1.35; border: none; padding: 0;">
+                <div style="font-weight: bold; font-style: italic; font-size: 11pt; margin-bottom: 2px;">Nơi nhận:</div>
+                <div>- Trung tâm CUDVC xã (phát thanh);</div>
+                <div>- UBND xã Mộ Đức (b/c);</div>
+                <div>- 12 thôn trên địa bàn xã (t/h);</div>
+                <div>- Lưu: VT, TYT.</div>
+              </td>
+              <td style="width: 50%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 11.5pt; font-weight: bold; text-transform: uppercase;">KT. GIÁM ĐỐC</div>
+                <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">PHÓ GIÁM ĐỐC</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 55px;">(Ký, đóng dấu)</div>
+                <div style="font-weight: bold; font-size: 12.5pt;">BS. Nguyễn Thị Như Nguyện</div>
+              </td>
+            </tr>
+          </table>
+        `;
+      },
+
+      // 8. CÔNG VĂN BÁO CÁO & ĐĂNG KÝ DANH SÁCH TẬP HUẤN NVYTT 12 THÔN
+      cong_van_bao_cao_nvytt: function(staff) {
+        const now = new Date();
+        const dd = now.getDate();
+        const mm = now.getMonth() + 1;
+        const yyyy = now.getFullYear();
+
+        return `
+          <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
+            <tr>
+              <td style="width: 45%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 11pt; text-transform: uppercase;">UBND XÃ MỘ ĐỨC</div>
+                <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">TRẠM Y TẾ</div>
+                <div style="width: 65px; height: 1px; background-color: black; margin: 3px auto 4px auto;"></div>
+                <div style="font-size: 11pt; margin-top: 2px;">Số: <b>38/TYT-BC</b></div>
+              </td>
+              <td style="width: 55%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                <div style="font-size: 12pt; font-weight: bold;">Độc lập - Tự do - Hạnh phúc</div>
+                <div style="width: 140px; height: 1px; background-color: black; margin: 3px auto 5px auto;"></div>
+                <div style="font-size: 11.5pt; font-style: italic; margin-top: 3px;">Mộ Đức, ngày ${dd} tháng ${mm} năm ${yyyy}</div>
+              </td>
+            </tr>
+          </table>
+
+          <div style="text-align: center; margin-top: 12px; margin-bottom: 12px;">
+            <div style="font-size: 14pt; font-weight: bold; text-transform: uppercase;">CÔNG VĂN BÁO CÁO</div>
+            <div style="font-size: 12pt; font-style: italic; max-width: 90%; margin: 3px auto 0 auto;">
+              V/v báo cáo, đăng ký nhân viên y tế thôn tham gia tập huấn nâng cao năng lực đợt 1 năm ${yyyy}
+            </div>
+          </div>
+
+          <div style="margin-left: 20px; margin-bottom: 12px; font-size: 12.5pt;">
+            <div>Kính gửi: <b>Sở Y tế tỉnh Quảng Ngãi</b>.</div>
+          </div>
+
+          <div style="line-height: 1.45; font-size: 12pt; text-align: justify; margin-bottom: 10px;">
+            <p style="text-indent: 25px; margin-bottom: 6px;">
+              Thực hiện Kế hoạch số 3403/KH-SYT của Sở Y tế tỉnh Quảng Ngãi về việc nâng cao năng lực cho nhân viên y tế thôn bản về chăm sóc và nâng cao sức khỏe nhân dân tại cộng đồng;
+            </p>
+            <p style="text-indent: 25px; margin-bottom: 6px;">
+              Trạm Y tế xã Mộ Đức đã rà soát mạng lưới nhân viên y tế thôn trên địa bàn và tổng hợp danh sách đăng ký tham gia tập huấn. Kết quả báo cáo như sau:
+            </p>
+            <p style="margin-left: 15px; margin-bottom: 4px;">1. Địa bàn xã Mộ Đức có <b>12 thôn</b> với khoảng cách tham khảo từ trung tâm hành chính xã đến trung tâm đào tạo là 22 km.</p>
+            <p style="margin-left: 15px; margin-bottom: 4px;">2. Tổng số nhân viên y tế thôn đăng ký tham gia lớp tập huấn: <b>12 người</b> (Có bảng phụ lục danh sách chi tiết đính kèm).</p>
+            <p style="margin-left: 15px; margin-bottom: 4px;">3. Về hồ sơ nhân viên y tế thôn: Trạm Y tế phối hợp UBND xã rà soát quyết định công nhận và cập nhật đầy đủ thông tin chuyên môn theo quy định.</p>
+            <p style="text-indent: 25px;">
+              Trạm Y tế xã Mộ Đức kính báo cáo Sở Y tế tỉnh Quảng Ngãi xem xét, tổng hợp và phân lớp đào tạo./.
+            </p>
+          </div>
+
+          <!-- BẢNG PHỤ LỤC DANH SÁCH 12 NHÂN VIÊN Y TẾ THÔN CHUẨN XÁC -->
+          <div style="font-weight: bold; font-size: 11pt; text-transform: uppercase; margin-top: 14px; margin-bottom: 6px; text-align: center;">
+            PHỤ LỤC: DANH SÁCH ĐĂNG KÝ TẬP HUẤN NHÂN VIÊN Y TẾ THÔN XÃ MỘ ĐỨC
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; font-size: 9.5pt; text-align: center; margin-bottom: 12px;">
+            <thead>
+              <tr style="background-color: #f1f5f9; font-weight: bold;">
+                <th style="border: 1px solid black; padding: 4px; width: 35px;">TT</th>
+                <th style="border: 1px solid black; padding: 4px; text-align: left;">Họ và tên</th>
+                <th style="border: 1px solid black; padding: 4px; width: 65px;">Năm sinh</th>
+                <th style="border: 1px solid black; padding: 4px; text-align: left;">Trình độ chuyên môn</th>
+                <th style="border: 1px solid black; padding: 4px; width: 120px;">Địa chỉ / Thôn</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="border: 1px solid black;">1</td><td style="border: 1px solid black; text-align: left; font-weight: bold;">Trần Thị Hạnh</td><td style="border: 1px solid black;">1983</td><td style="border: 1px solid black; text-align: left;">Đại học Quản lý nhà nước</td><td style="border: 1px solid black;">Đồng Cát</td></tr>
+              <tr><td style="border: 1px solid black;">2</td><td style="border: 1px solid black; text-align: left; font-weight: bold;">Cao Thị Ngàn</td><td style="border: 1px solid black;">1986</td><td style="border: 1px solid black; text-align: left;">Đại học Quản lý nhà nước</td><td style="border: 1px solid black;">Vĩnh Phú</td></tr>
+              <tr><td style="border: 1px solid black;">3</td><td style="border: 1px solid black; text-align: left; font-weight: bold;">Nguyễn Thị Kim Quy</td><td style="border: 1px solid black;">1989</td><td style="border: 1px solid black; text-align: left;">Đại học Luật</td><td style="border: 1px solid black;">Thiết Trường</td></tr>
+              <tr><td style="border: 1px solid black;">4</td><td style="border: 1px solid black; text-align: left; font-weight: bold;">Nguyễn Thị Sen</td><td style="border: 1px solid black;">1987</td><td style="border: 1px solid black; text-align: left;">Trung cấp Giáo dục mầm non</td><td style="border: 1px solid black;">Phước Khánh</td></tr>
+              <tr><td style="border: 1px solid black;">5</td><td style="border: 1px solid black; text-align: left; font-weight: bold;">Cao Thị Lệ Trâm</td><td style="border: 1px solid black;">1994</td><td style="border: 1px solid black; text-align: left;">Trung cấp kế toán</td><td style="border: 1px solid black;">Đức Tân</td></tr>
+              <tr><td style="border: 1px solid black;">6</td><td style="border: 1px solid black; text-align: left; font-weight: bold;">Trần Thị Thuyền</td><td style="border: 1px solid black;">1973</td><td style="border: 1px solid black; text-align: left;">Chứng chỉ đào tạo YTT</td><td style="border: 1px solid black;">Vạn Phước</td></tr>
+              <tr><td style="border: 1px solid black;">7</td><td style="border: 1px solid black; text-align: left; font-weight: bold;">Trần Thị Diệu Hòa</td><td style="border: 1px solid black;">1971</td><td style="border: 1px solid black; text-align: left;">Chứng chỉ đào tạo YTT</td><td style="border: 1px solid black;">Nam Hòa</td></tr>
+              <tr><td style="border: 1px solid black;">8</td><td style="border: 1px solid black; text-align: left; font-weight: bold;">Huỳnh Thị Thư</td><td style="border: 1px solid black;">1974</td><td style="border: 1px solid black; text-align: left;">Chứng chỉ đào tạo YTT</td><td style="border: 1px solid black;">Đức Hòa</td></tr>
+              <tr><td style="border: 1px solid black;">9</td><td style="border: 1px solid black; text-align: left; font-weight: bold;">Nguyễn Thị Thúy Uyển</td><td style="border: 1px solid black;">1993</td><td style="border: 1px solid black; text-align: left;">Đại học kế toán</td><td style="border: 1px solid black;">Bắc Hòa</td></tr>
+              <tr><td style="border: 1px solid black;">10</td><td style="border: 1px solid black; text-align: left; font-weight: bold;">Hoàng Thị Minh Nguyệt</td><td style="border: 1px solid black;">1984</td><td style="border: 1px solid black; text-align: left;">Trung cấp Y</td><td style="border: 1px solid black;">Đức Phú</td></tr>
+              <tr><td style="border: 1px solid black;">11</td><td style="border: 1px solid black; text-align: left; font-weight: bold;">Nguyễn Thị Thanh Thiện</td><td style="border: 1px solid black;">1993</td><td style="border: 1px solid black; text-align: left;">Cao đẳng Sư phạm Kỹ thuật</td><td style="border: 1px solid black;">Đức Vĩnh</td></tr>
+              <tr><td style="border: 1px solid black;">12</td><td style="border: 1px solid black; text-align: left; font-weight: bold;">Nguyễn Thị Duyên</td><td style="border: 1px solid black;">1996</td><td style="border: 1px solid black; text-align: left;">Cao đẳng kế toán</td><td style="border: 1px solid black;">Phước Hòa</td></tr>
+            </tbody>
+          </table>
+
+          <table style="width: 100%; border: none; border-collapse: collapse; margin-top: 15px; page-break-inside: avoid;">
+            <tr>
+              <td style="width: 50%; vertical-align: top; font-size: 10pt; line-height: 1.35; border: none; padding: 0;">
+                <div style="font-weight: bold; font-style: italic; font-size: 11pt; margin-bottom: 2px;">Nơi nhận:</div>
+                <div>- Như trên;</div>
+                <div>- UBND xã Mộ Đức (để phối hợp);</div>
+                <div>- Lưu: VT, TYT.</div>
+              </td>
+              <td style="width: 50%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 12.5pt; font-weight: bold; text-transform: uppercase;">GIÁM ĐỐC</div>
+                <div style="font-style: italic; font-size: 9.5pt; margin-top: 2px; margin-bottom: 55px;">(Ký, đóng dấu)</div>
+                <div style="font-weight: bold; font-size: 12.5pt;">BS. Phạm Minh Đức</div>
+              </td>
+            </tr>
+          </table>
+        `;
+      },
+
+      // 9. GIẤY MỜI GIAO BAN Y TẾ DỰ PHÒNG
+      giay_moi_giao_ban: function(staff) {
+        const now = new Date();
+        const dd = now.getDate();
+        const mm = now.getMonth() + 1;
+        const yyyy = now.getFullYear();
+
+        return `
+          <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
+            <tr>
+              <td style="width: 45%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 11pt; text-transform: uppercase;">UBND XÃ MỘ ĐỨC</div>
+                <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">TRẠM Y TẾ</div>
+                <div style="width: 65px; height: 1px; background-color: black; margin: 3px auto 4px auto;"></div>
+                <div style="font-size: 11pt; margin-top: 2px;">Số: <b>18/GM-TYT</b></div>
+              </td>
+              <td style="width: 55%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                <div style="font-size: 12pt; font-weight: bold;">Độc lập - Tự do - Hạnh phúc</div>
+                <div style="width: 140px; height: 1px; background-color: black; margin: 3px auto 5px auto;"></div>
+                <div style="font-size: 11.5pt; font-style: italic; margin-top: 3px;">Mộ Đức, ngày ${dd} tháng ${mm} năm ${yyyy}</div>
+              </td>
+            </tr>
+          </table>
+
+          <div style="text-align: center; margin-top: 14px; margin-bottom: 16px;">
+            <div style="font-size: 15.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">GIẤY MỜI</div>
+            <div style="font-size: 12pt; font-weight: bold; margin-top: 2px;">
+              Tham dự Hội nghị giao ban công tác y tế dự phòng tháng ${mm < 10 ? '0' + mm : mm} năm ${yyyy}
+            </div>
+          </div>
+
+          <div style="margin-left: 20px; margin-bottom: 12px; font-size: 13pt;">
+            <div>Kính gửi: <b>Phòng Văn hóa - Xã hội xã Mộ Đức</b>.</div>
+          </div>
+
+          <div style="line-height: 1.5; font-size: 12.5pt; text-align: justify; margin-bottom: 12px;">
+            <p style="text-indent: 25px; margin-bottom: 6px;">
+              Căn cứ Thông báo của Trung tâm Kiểm soát bệnh tật tỉnh Quảng Ngãi về việc tổ chức Hội nghị giao ban công tác y tế dự phòng tháng ${mm} năm ${yyyy};
+            </p>
+            <p style="text-indent: 25px; margin-bottom: 8px;">
+              Trạm Y tế xã Mộ Đức trân trọng kính mời đại diện chuyên viên phụ trách lĩnh vực y tế thuộc Phòng Văn hóa - Xã hội xã Mộ Đức tham dự hội nghị giao ban với các nội dung sau:
+            </p>
+            
+            <p style="margin-left: 15px; margin-bottom: 4px;">1. <b>Thời gian:</b> Vào lúc <b>08 giờ 00 phút, ngày ${dd + 2 > 30 ? 30 : dd + 2} tháng ${mm} năm ${yyyy}</b>.</p>
+            <p style="margin-left: 15px; margin-bottom: 4px;">2. <b>Hình thức:</b> Hội nghị trực tuyến qua nền tảng Google Meet / Zoom.</p>
+            <p style="margin-left: 15px; margin-bottom: 4px;">3. <b>Địa điểm tham dự:</b> Phòng họp giao ban Trạm Y tế xã Mộ Đức (điểm cầu trực tuyến của xã).</p>
+            <p style="margin-left: 15px; margin-bottom: 4px;">4. <b>Thông tin kết nối trực tuyến:</b> ID cuộc họp: <b>611 215 5153</b> | Mật khẩu: <b>cdc@${yyyy}</b>.</p>
+            <p style="margin-left: 15px; margin-bottom: 6px;">
+              5. <b>Nội dung:</b> Đánh giá kết quả phòng chống dịch bệnh sốt xuất huyết, tay chân miệng; công tác tiêm chủng mở rộng; triển khai chỉ tiêu y tế dự phòng và tháo gỡ khó khăn tại tuyến cơ sở.
+            </p>
+            
+            <p style="text-indent: 25px; margin-top: 8px;">
+              Trạm Y tế xã Mộ Đức kính đề nghị Phòng Văn hóa - Xã hội bố trí đại biểu tham dự đúng thời gian để hội nghị đạt kết quả tốt. Trân trọng kính mời!
+            </p>
+          </div>
+
+          <table style="width: 100%; border: none; border-collapse: collapse; margin-top: 22px; page-break-inside: avoid;">
+            <tr>
+              <td style="width: 50%; vertical-align: top; font-size: 10pt; line-height: 1.35; border: none; padding: 0;">
+                <div style="font-weight: bold; font-style: italic; font-size: 11pt; margin-bottom: 2px;">Nơi nhận:</div>
+                <div>- Như trên;</div>
+                <div>- UBND xã Mộ Đức (b/c);</div>
+                <div>- Lưu: VT, TYT.</div>
+              </td>
+              <td style="width: 50%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 12.5pt; font-weight: bold; text-transform: uppercase;">GIÁM ĐỐC TRẠM Y TẾ</div>
+                <div style="font-style: italic; font-size: 9.5pt; margin-top: 2px; margin-bottom: 60px;">(Ký, ghi rõ họ tên, đóng dấu)</div>
+                <div style="font-weight: bold; font-size: 12.5pt;">BS. Phạm Minh Đức</div>
+              </td>
+            </tr>
+          </table>
+        `;
+      },
+
+      // 10. KẾ HOẠCH XỬ LÝ Ổ DỊCH SỐT XUẤT HUYẾT TẠI THÔN
+      ke_hoach_sxh: function(staff) {
+        const now = new Date();
+        const dd = now.getDate();
+        const mm = now.getMonth() + 1;
+        const yyyy = now.getFullYear();
+
+        return `
+          <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 6px;">
+            <tr>
+              <td style="width: 45%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 11pt; text-transform: uppercase;">UBND XÃ MỘ ĐỨC</div>
+                <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">TRẠM Y TẾ</div>
+                <div style="width: 65px; height: 1px; background-color: black; margin: 3px auto 4px auto;"></div>
+                <div style="font-size: 11pt; margin-top: 2px;">Số: <b>15/KH-TYT</b></div>
+              </td>
+              <td style="width: 55%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                <div style="font-size: 12pt; font-weight: bold;">Độc lập - Tự do - Hạnh phúc</div>
+                <div style="width: 140px; height: 1px; background-color: black; margin: 3px auto 5px auto;"></div>
+                <div style="font-size: 11.5pt; font-style: italic; margin-top: 3px;">Mộ Đức, ngày ${dd} tháng ${mm} năm ${yyyy}</div>
+              </td>
+            </tr>
+          </table>
+
+          <div style="text-align: center; margin-top: 12px; margin-bottom: 14px;">
+            <div style="font-size: 15pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">KẾ HOẠCH</div>
+            <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase; margin-top: 2px;">
+              Về việc xử lý ổ dịch Sốt xuất huyết Dengue tại thôn Đồng Cát, xã Mộ Đức
+            </div>
+          </div>
+
+          <div style="line-height: 1.45; font-size: 12pt; text-align: justify; margin-bottom: 12px;">
+            <p style="text-indent: 25px; margin-bottom: 6px;">
+              Căn cứ tình hình dịch tễ ghi nhận ca bệnh sốt xuất huyết tại xóm 3, thôn Đồng Cát và kết quả điều tra chỉ số véc tơ truyền bệnh (chỉ số Breteau BI > 40, chỉ số mật độ muỗi DI > 0.5 con/nhà);
+            </p>
+            <p style="text-indent: 25px; margin-bottom: 6px;">
+              Trạm Y tế xã Mộ Đức xây dựng Kế hoạch can thiệp xử lý ổ dịch khẩn cấp nhằm khống chế, không để dịch bệnh bùng phát lan rộng như sau:
+            </p>
+
+            <p style="font-weight: bold; margin-top: 8px; margin-bottom: 4px;">I. MỤC TIÊU</p>
+            <p style="margin-left: 15px; margin-bottom: 3px;">1. Hạ nhanh mật độ muỗi truyền bệnh và chỉ số lăng quăng/bọ gậy tại ổ dịch xuống dưới ngưỡng nguy cơ (BI < 20).</p>
+            <p style="margin-left: 15px; margin-bottom: 3px;">2. Không để xuất hiện thêm ca mắc thứ phát và không có trường hợp chuyển nặng, tử vong do sốt xuất huyết.</p>
+            <p style="margin-left: 15px; margin-bottom: 6px;">3. 100% hộ gia đình trong bán kính 200m quanh ổ dịch được kiểm tra diệt lăng quăng và phun hóa chất diệt muỗi.</p>
+
+            <p style="font-weight: bold; margin-top: 8px; margin-bottom: 4px;">II. NỘI DUNG VÀ BIỆN PHÁP TRIỂN KHAI</p>
+            <p style="margin-left: 15px; margin-bottom: 3px;">• <b>1. Chiến dịch vệ sinh môi trường, diệt lăng quăng bọ gậy:</b> Huy động Tổ y tế thôn, Đoàn Thanh niên, Hội Phụ nữ đến từng nhà lật úp vật dụng phế thải đọng nước, thả cá bảy màu vào bể chứa, phát tờ rơi truyền thông.</p>
+            <p style="margin-left: 15px; margin-bottom: 3px;">• <b>2. Phun hóa chất diệt muỗi ULV:</b> Sử dụng máy phun hóa chất đeo vai, phun không gian diệt muỗi trưởng thành đợt 1 vào ngày <b>${dd + 1}/${mm}/${yyyy}</b> và phun nhắc lại đợt 2 sau 7 ngày.</p>
+            <p style="margin-left: 15px; margin-bottom: 6px;">• <b>3. Giám sát ca bệnh và truyền thông:</b> Trạm y tế phân công cán bộ trực theo dõi sát các bệnh nhân sốt trên địa bàn, hướng dẫn người dân đến trạm khám sớm khi có dấu hiệu sốt cao đột ngột.</p>
+
+            <p style="font-weight: bold; margin-top: 8px; margin-bottom: 4px;">III. KINH PHÍ VÀ CƠ SỞ VẬT CHẤT</p>
+            <p style="margin-left: 15px; margin-bottom: 6px;">
+              Sử dụng nguồn hóa chất diệt muỗi, máy phun và vật tư y tế được cấp phát từ Trung tâm Kiểm soát bệnh tật tỉnh Quảng Ngãi kết hợp nguồn kinh phí phòng chống dịch của địa phương.
+            </p>
+          </div>
+
+          <table style="width: 100%; border: none; border-collapse: collapse; margin-top: 18px; page-break-inside: avoid;">
+            <tr>
+              <td style="width: 50%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">DUYỆT CỦA UBND XÃ MỘ ĐỨC</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 55px;">(Ký, đóng dấu)</div>
+                <div style="font-weight: bold; font-size: 12pt;">CHỦ TỊCH</div>
+              </td>
+              <td style="width: 50%; vertical-align: top; text-align: center; border: none; padding: 0; line-height: 1.35;">
+                <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">TRẠM Y TẾ XÃ MỘ ĐỨC</div>
+                <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">GIÁM ĐỐC</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top: 2px; margin-bottom: 55px;">(Ký, đóng dấu)</div>
+                <div style="font-weight: bold; font-size: 12.5pt;">BS. Phạm Minh Đức</div>
+              </td>
+            </tr>
+          </table>
+        `;
+      }
+    };
+
+
+    // 4. QUẢN LÝ TRẠNG THÁI ỨNG DỤNG & LỰA CHỌN MẪU
+    let currentTemplateId = "don_nghi_phep";
+    let activeCategoryFilter = "all";
+    let isDirectEditMode = false;
+    let selectedStaffMember = null;
+
+    window.onload = function() {
+      initStaffDropdown();
+      renderTemplateCardsList();
+      loadActiveTemplate();
+    };
+
+    function initStaffDropdown() {
+      const select = document.getElementById('staff-autofill-select');
+      if (!select) return;
+
+      const staffList = getStaffList();
+      const groups = {};
+      staffList.forEach(s => {
+        if (!groups[s.point]) groups[s.point] = [];
+        groups[s.point].push(s);
+      });
+
+      let html = '<option value="">-- Chọn cán bộ để tự động điền thông tin --</option>';
+      for (const pt in groups) {
+        html += `<optgroup label="${pt}">`;
+        groups[pt].forEach(s => {
+          html += `<option value="${s.name}">${s.name} (${s.shortName} - ${s.position})</option>`;
+        });
+        html += '</optgroup>';
+      }
+      select.innerHTML = html;
+    }
+
+    function onStaffAutofillChange(staffName) {
+      if (!staffName) {
+        selectedStaffMember = null;
+        return;
+      }
+      const staffList = getStaffList();
+      selectedStaffMember = staffList.find(s => s.name === staffName) || null;
+      if (selectedStaffMember) {
+        loadActiveTemplate(true);
+        showToast(`Đã tự động điền thông tin của đồng chí ${selectedStaffMember.name}!`, "success");
+      }
+    }
+
+    function setCategoryFilter(cat) {
+      activeCategoryFilter = cat;
+      const cats = ['all', 'admin', 'pharmacy', 'medical'];
+      cats.forEach(c => {
+        const btn = document.getElementById(`cat-btn-${c}`);
+        if (!btn) return;
+        if (c === cat) {
+          btn.className = "px-2.5 py-1 rounded-lg bg-teal-700 text-white transition shadow-2xs font-bold text-[11px]";
+        } else {
+          btn.className = "px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition font-bold text-[11px]";
+        }
+      });
+      renderTemplateCardsList();
+    }
+
+    function filterTemplateCards() {
+      renderTemplateCardsList();
+    }
+
+    function renderTemplateCardsList() {
+      const listEl = document.getElementById('template-cards-list');
+      const badgeCount = document.getElementById('filtered-count-badge');
+      const search = (document.getElementById('template-search-input')?.value || '').toLowerCase().trim();
+      if (!listEl) return;
+
+      const filtered = TEMPLATES_CATALOG.filter(item => {
+        const matchCat = (activeCategoryFilter === 'all') || (item.category === activeCategoryFilter);
+        const matchSearch = !search || 
+          item.title.toLowerCase().includes(search) || 
+          item.code.toLowerCase().includes(search) ||
+          item.desc.toLowerCase().includes(search);
+        return matchCat && matchSearch;
+      });
+
+      if (badgeCount) badgeCount.innerText = `${filtered.length} mẫu hiển thị`;
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `
+          <div class="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+            <div class="text-2xl mb-1">🔍</div>
+            <div class="font-bold text-xs">Không tìm thấy mẫu phù hợp</div>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(item => {
+        const isActive = (item.id === currentTemplateId);
+        return `
+          <div onclick="selectTemplate('${item.id}')" class="p-3 rounded-xl border transition-all cursor-pointer ${
+            isActive 
+              ? 'bg-teal-50 border-teal-500 shadow-xs ring-2 ring-teal-500/20' 
+              : 'bg-white border-slate-200 hover:border-teal-300 hover:bg-slate-50'
+          }">
+            <div class="flex items-center justify-between gap-1 mb-1">
+              <span class="px-2 py-0.5 rounded font-mono text-[10px] font-black uppercase ${item.badgeColor}">
+                ${item.code}
+              </span>
+              <span class="text-[10px] text-slate-400 font-bold">
+                ${item.catName}
+              </span>
+            </div>
+
+            <h3 class="font-black text-xs sm:text-sm text-slate-900 leading-snug line-clamp-2 mt-0.5">
+              ${item.title}
+            </h3>
+
+            <p class="text-[11px] text-slate-500 font-medium line-clamp-2 mt-1">
+              ${item.desc}
+            </p>
+
+            <div class="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10.5px]">
+              <span class="text-slate-400 font-semibold truncate max-w-[180px]">
+                Ký duyệt: ${item.signer}
+              </span>
+              <span class="font-black ${isActive ? 'text-teal-700' : 'text-slate-400'}">
+                ${isActive ? '● Đang xem' : 'Chọn mẫu →'}
+              </span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectTemplate(templateId) {
+      currentTemplateId = templateId;
+      renderTemplateCardsList();
+      loadActiveTemplate();
+    }
+
+    // Cập nhật thẻ hiển thị định dạng trang in (Dọc / Ngang) và điều chỉnh CSS in ấn
+    function updatePageOrientationUI(isLandscape) {
+      const badge = document.getElementById('page-orientation-badge');
+      const icon = document.getElementById('page-orientation-icon');
+      const text = document.getElementById('page-orientation-text');
+
+      if (badge && icon && text) {
+        if (isLandscape) {
+          badge.className = "px-2.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-800 border border-indigo-200 text-xs font-black flex items-center gap-1 shadow-2xs";
+          icon.className = "fa-solid fa-file-powerpoint text-indigo-600";
+          text.innerText = "Khổ A4 Ngang (Landscape)";
+        } else {
+          badge.className = "px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold flex items-center gap-1";
+          icon.className = "fa-solid fa-file-lines text-teal-600";
+          text.innerText = "Khổ A4 Dọc (Portrait)";
+        }
+      }
+
+      // Cập nhật quy tắc @page cho lệnh in trình duyệt
+      let styleEl = document.getElementById('dynamic-print-orientation-style');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'dynamic-print-orientation-style';
+        document.head.appendChild(styleEl);
+      }
+
+      if (isLandscape) {
+        styleEl.innerHTML = `
+          @media print {
+            @page {
+              size: A4 landscape !important;
+              margin: 10mm 12mm 10mm 14mm !important;
+            }
+          }
+        `;
+      } else {
+        styleEl.innerHTML = `
+          @media print {
+            @page {
+              size: A4 portrait !important;
+              margin: 15mm 12mm 15mm 20mm !important;
+            }
+          }
+        `;
+      }
+    }
+
+    function loadActiveTemplate(forceNewStaff = false) {
+      const paper = document.getElementById('a4-document-paper');
+      if (!paper) return;
+
+      const activeMeta = TEMPLATES_CATALOG.find(t => t.id === currentTemplateId);
+      const isLandscape = (activeMeta && activeMeta.orientation === 'landscape');
+
+      // Tự động xoay mặt giấy mô phỏng sang khổ ngang nếu là Giấy Giới Thiệu
+      if (isLandscape) {
+        paper.classList.add('is-landscape');
+      } else {
+        paper.classList.remove('is-landscape');
+      }
+      updatePageOrientationUI(isLandscape);
+
+      const cacheKey = `TYT_TEMPLATE_SAVED_V5_${currentTemplateId}`;
+      let cachedHtml = null;
+
+      if (!forceNewStaff) {
+        try {
+          cachedHtml = localStorage.getItem(cacheKey);
+        } catch(e) {}
+      }
+
+      if (cachedHtml && !forceNewStaff) {
+        paper.innerHTML = cachedHtml;
+      } else if (TEMPLATE_BUILDERS[currentTemplateId]) {
+        paper.innerHTML = TEMPLATE_BUILDERS[currentTemplateId](selectedStaffMember);
+      }
+
+      if (isDirectEditMode) {
+        enableDirectEditAttributes();
+      }
+
+      // Tự động lưu nháp sau khi người dùng gõ
+      paper.oninput = function() {
+        try {
+          localStorage.setItem(cacheKey, paper.innerHTML);
+        } catch(e) {}
+      };
+    }
+
+    function resetCurrentTemplateToDefault() {
+      const cacheKey = `TYT_TEMPLATE_SAVED_V5_${currentTemplateId}`;
+      try {
+        localStorage.removeItem(cacheKey);
+      } catch(e) {}
+      loadActiveTemplate(true);
+      showToast("Đã khôi phục nội dung văn bản về mẫu ban đầu!", "info");
+    }
+
+
+    // 5. CHẾ ĐỘ CHỈNH SỬA TRỰC TIẾP TRÊN MẶT GIẤY A4
+    function toggleDirectEditMode() {
+      isDirectEditMode = !isDirectEditMode;
+      const paper = document.getElementById('a4-document-paper');
+      const btn = document.getElementById('btn-toggle-edit');
+      const icon = document.getElementById('edit-mode-icon');
+      const label = document.getElementById('edit-mode-label');
+
+      if (isDirectEditMode) {
+        paper.classList.add('editable-mode-active');
+        enableDirectEditAttributes();
+        btn.className = "px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs";
+        icon.className = "fa-solid fa-lock-open text-white";
+        label.innerText = "Đang mở sửa (Khóa lại)";
+        showToast("Đã bật chế độ gõ trực tiếp! Nhấp chuột vào bất kỳ chữ nào trên giấy để sửa.", "success");
+      } else {
+        paper.classList.remove('editable-mode-active');
+        disableDirectEditAttributes();
+        btn.className = "px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs transition flex items-center gap-1.5 shadow-2xs";
+        icon.className = "fa-solid fa-pen-to-square text-teal-600";
+        label.innerText = "Chỉnh sửa trực tiếp";
+        showToast("Đã khóa và lưu toàn bộ nội dung sửa đổi vào bản in!", "info");
+      }
+    }
+
+    function enableDirectEditAttributes() {
+      const paper = document.getElementById('a4-document-paper');
+      if (!paper) return;
+      const editables = paper.querySelectorAll('p, div, td, th, h2, b, span');
+      editables.forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+      });
+    }
+
+    function disableDirectEditAttributes() {
+      const paper = document.getElementById('a4-document-paper');
+      if (!paper) return;
+      const editables = paper.querySelectorAll('[contenteditable]');
+      editables.forEach(el => {
+        el.setAttribute('contenteditable', 'false');
+      });
+    }
+
+    // 6. XUẤT FILE MICROSOFT WORD (.DOC) CHUẨN THỂ THỨC NGHỊ ĐỊNH 30
+    function exportCurrentDocToWord() {
+      const paper = document.getElementById('a4-document-paper');
+      if (!paper) return;
+
+      const innerContent = paper.innerHTML;
+      const activeMeta = TEMPLATES_CATALOG.find(t => t.id === currentTemplateId);
+      const isLandscape = (activeMeta && activeMeta.orientation === 'landscape');
+      const safeTitle = (activeMeta ? activeMeta.title : 'Van_Ban_Y_Te').replace(/[^a-zA-Z0-9\p{L}]/gu, '_').slice(0, 35);
+
+      const pageSizeCss = isLandscape
+        ? `size: 29.7cm 21.0cm; margin: 1.5cm 1.4cm 1.5cm 1.6cm; mso-page-orientation: landscape;`
+        : `size: 21.0cm 29.7cm; margin: 2.0cm 1.5cm 2.0cm 2.5cm; mso-page-orientation: portrait;`;
+
+      const wordTemplate = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset='utf-8'>
+          <title>${safeTitle}</title>
+          <!--[if gte mso 9]>
+          <xml>
+            <w:WordDocument>
+              <w:View>Print</w:View>
+              <w:Zoom>100</w:Zoom>
+              <w:DoNotOptimizeForBrowser/>
+            </w:WordDocument>
+          </xml>
+          <![endif]-->
+          <style>
+            @page {
+              ${pageSizeCss}
+            }
+            body {
+              font-family: 'Times New Roman', Times, serif;
+              font-size: ${isLandscape ? '11pt' : '13pt'};
+              line-height: ${isLandscape ? '1.35' : '1.4'};
+              color: #000000;
+            }
+            table {
+              border-collapse: collapse;
+              width: 100%;
+            }
+            table.table-bordered,
+            table.table-bordered th,
+            table.table-bordered td {
+              border: 1px solid #000000;
+            }
+            td, th {
+              vertical-align: top;
+            }
+            p {
+              margin-top: 0;
+              margin-bottom: 4pt;
+              text-align: justify;
+            }
+          </style>
+        </head>
+        <body>
+          ${innerContent}
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob(['\ufeff', wordTemplate], { type: 'application/msword;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${safeTitle}_TYT_MoDuc.doc`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast(`Đã xuất file Word (.doc) khổ ${isLandscape ? 'ngang (Landscape)' : 'dọc (Portrait)'} thành công!`, "success");
+    }
+
+    // 7. IN PDF A4 CHUẨN THỂ THỨC NGHỊ ĐỊNH 30/2020
+    function printCurrentA4Doc() {
+      const paper = document.getElementById('a4-document-paper');
+      const printBox = document.getElementById('print-workspace-container');
+      if (!paper || !printBox) return;
+
+      const activeMeta = TEMPLATES_CATALOG.find(t => t.id === currentTemplateId);
+      const isLandscape = (activeMeta && activeMeta.orientation === 'landscape');
+      updatePageOrientationUI(isLandscape);
+
+      printBox.innerHTML = paper.innerHTML;
+      if (isLandscape) {
+        printBox.classList.add('is-landscape');
+      } else {
+        printBox.classList.remove('is-landscape');
+      }
+
+      setTimeout(() => {
+        window.print();
+      }, 250);
+    }
+
+    // 8. SAO CHÉP TOÀN BỘ VĂN BẢN (DẠNG VĂN BẢN RÕ RÀNG)
+    function copyDocumentPlainText() {
+      const paper = document.getElementById('a4-document-paper');
+      if (!paper) return;
+
+      const range = document.createRange();
+      range.selectNode(paper);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+
+      try {
+        const ok = document.execCommand('copy');
+        if (ok) {
+          showToast("Đã sao chép toàn bộ nội dung văn bản vào Clipboard!", "success");
+        } else {
+          showToast("Vui lòng nhấn phím Ctrl+C để sao chép.", "warning");
+        }
+      } catch (err) {
+        showToast("Trình duyệt không hỗ trợ lệnh tự động sao chép.", "warning");
+      }
+      window.getSelection().removeAllRanges();
+    }
+
+    // 9. TOAST THÔNG BÁO TỔNG QUAN
+    function showToast(msg, type = "info") {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-emerald-800 text-white border border-emerald-900',
+        info: 'bg-slate-900 text-white border border-slate-800',
+        warning: 'bg-amber-800 text-white border border-amber-900'
+      };
+
+      toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 text-xs font-bold transition-all duration-200 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+      toast.innerHTML = `<span>${msg}</span>`;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 250);
+      }, 3200);
+    }
+  </script>
+</body>
+</html>
