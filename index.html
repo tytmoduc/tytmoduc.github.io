@@ -15,7 +15,6 @@
   <meta name="description" content="Trung tâm điều hành y tế số Trạm Y Tế Xã Mộ Đức - Trực ban 4 điểm trạm, Lịch họp, Tập huấn, Nhiệm vụ & Báo cáo tổng quan lãnh đạo">
 
   <!-- Dynamic PWA Manifest & App Icons -->
-  <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" id="dynamic-apple-icon">
   <link rel="icon" id="dynamic-favicon" type="image/png">
   <link rel="manifest" id="dynamic-manifest">
@@ -301,7 +300,7 @@
         </a>
 
         <!-- THẺ 3: LIÊN KẾT ĐẾN LỊCH CÔNG VIỆC & NHIỆM VỤ -->
-        <a href="cong-viec.html" class="p-4 rounded-xl bg-rose-50 hover:bg-rose-100/80 border border-rose-200 hover:border-rose-400 flex items-center justify-between transition shadow-xs group cursor-pointer" title="Xem Công Việc & Nhiệm Vụ Được Giao">
+        <a href="cong-viec-nhiem-vu.html" class="p-4 rounded-xl bg-rose-50 hover:bg-rose-100/80 border border-rose-200 hover:border-rose-400 flex items-center justify-between transition shadow-xs group cursor-pointer" title="Xem Công Việc & Nhiệm Vụ Được Giao">
           <div>
             <div class="text-xs sm:text-sm font-extrabold text-rose-800 uppercase tracking-wide group-hover:text-rose-950 transition flex items-center gap-1">
               <span>NHIỆM VỤ TRỌNG TÂM</span>
@@ -585,29 +584,53 @@
           </p>
         </a>
 
-        <!-- 5. THƯ VIỆN TÀI LIỆU SỐ & PHÁC ĐỒ Y TẾ -->
-        <div onclick="openLibraryModal()" class="contrast-card block p-4 bg-white border border-slate-300 hover:border-indigo-600 transition cursor-pointer group">
+        <!-- 5. KHO VĂN BẢN MẪU & BIỂU MẪU Y TẾ -->
+        <a href="van-ban-mau.html" class="contrast-card block p-4 bg-white border border-slate-300 hover:border-indigo-600 transition group" title="Kho văn bản mẫu, đơn xin nghỉ phép, giấy giới thiệu, dự trù vắc xin, thuốc và kế hoạch TCMR">
           <div class="flex items-start justify-between gap-2 mb-1.5">
             <div class="flex items-center gap-2.5">
               <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-800 flex items-center justify-center text-base shrink-0 font-bold">
-                <i class="fa-solid fa-book-medical"></i>
+                <i class="fa-solid fa-file-signature"></i>
               </div>
               <div>
                 <span class="px-2 py-0.2 rounded bg-indigo-100 text-indigo-800 text-[11px] font-black uppercase">
-                  DOWNLOAD
+                  BIỂU MẪU SẴN DÙNG
                 </span>
                 <h4 class="text-base font-black text-slate-900 group-hover:text-indigo-700 transition mt-0.5">
-                  THƯ VIỆN
+                  Kho Văn Bản Mẫu
                 </h4>
               </div>
             </div>
+            <i class="fa-solid fa-arrow-right text-slate-400 group-hover:text-indigo-700 transition"></i>
           </div>
           <p class="text-xs text-slate-600 font-medium pl-11">
-            Văn bản, tài liệu y tế quan trọng
+            Đơn nghỉ phép • Giấy giới thiệu 2 liên • Dự trù vắc xin, thuốc • Kế hoạch TCMR
+          </p>
+        </a>
+
+        <!-- 6. THƯ VIỆN TÀI LIỆU SỐ & PHÁC ĐỒ Y TẾ -->
+        <div onclick="openLibraryModal()" class="contrast-card block p-4 bg-white border border-slate-300 hover:border-teal-600 transition cursor-pointer group" title="Tra cứu phác đồ cấp cứu, sốc phản vệ, Thông tư 51...">
+          <div class="flex items-start justify-between gap-2 mb-1.5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center text-base shrink-0 font-bold">
+                <i class="fa-solid fa-book-medical"></i>
+              </div>
+              <div>
+                <span class="px-2 py-0.2 rounded bg-teal-100 text-teal-800 text-[11px] font-black uppercase">
+                  TÀI LIỆU CHUYÊN MÔN
+                </span>
+                <h4 class="text-base font-black text-slate-900 group-hover:text-teal-700 transition mt-0.5">
+                  Thư Viện Phác Đồ & Văn Bản
+                </h4>
+              </div>
+            </div>
+            <i class="fa-solid fa-arrow-right text-slate-400 group-hover:text-teal-700 transition"></i>
+          </div>
+          <p class="text-xs text-slate-600 font-medium pl-11">
+            Phác đồ cấp cứu sốc phản vệ • Thông tư 51 • Quyết định 130 BHYT
           </p>
         </div>
 
-        <!-- 6. CỔNG LIÊN KẾT NHANH HỆ THỐNG Y TẾ -->
+        <!-- 7. CỔNG LIÊN KẾT NHANH HỆ THỐNG Y TẾ -->
         <div class="contrast-card p-4 bg-white border border-slate-300">
           <div class="flex items-center justify-between gap-2 mb-2">
             <div class="flex items-center gap-2">
@@ -1161,10 +1184,10 @@
     }
 
     const STATIONS_INFO = [
-      { id: "station_chinh", code: "ĐỨC TÂN", short: "Điểm trạm chính", phone: "", defaultDoctor: "Bs Thuyên", address: "" },
-      { id: "station_1", code: "MỘ ĐỨC", short: "Điểm y tế số 1", phone: "", defaultDoctor: "BS Đức", address: "" },
-      { id: "station_2", code: "ĐỨC HÒA", short: "Điểm y tế số 2", phone: "", defaultDoctor: "BS Phu", address: "" },
-      { id: "station_3", code: "ĐỨC PHÚ", short: "Điểm y tế số 3", phone: "", defaultDoctor: "CN Thu", address: "" }
+      { id: "station_chinh", code: "ĐỨC TÂN", short: "Điểm trạm chính", phone: "0949544799", defaultDoctor: "Bs Thuyên", address: "Thôn 2, Đức Tân, Mộ Đức" },
+      { id: "station_1", code: "MỘ ĐỨC", short: "Điểm y tế số 1", phone: "0914158350", defaultDoctor: "BS Đức", address: "Khu Phố 1, Mộ Đức" },
+      { id: "station_2", code: "ĐỨC HÒA", short: "Điểm y tế số 2", phone: "0777401717", defaultDoctor: "BS Phu", address: "Thôn Phước Thịnh, Đức Hòa" },
+      { id: "station_3", code: "ĐỨC PHÚ", short: "Điểm y tế số 3", phone: "0379949880", defaultDoctor: "CN Thu", address: "Thôn Phước Hòa, Đức Phú" }
     ];
 
     const STAFF_PERSONAL_PHONES = {
