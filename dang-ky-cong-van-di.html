@@ -126,11 +126,11 @@
                 <span>ĐĂNG KÝ & TRA CỨU CÔNG VĂN ĐI</span>
               </h1>
               <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 border border-emerald-300 text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 shrink-0">
-                <i class="fa-solid fa-lock text-[9px]"></i> Văn bản số
+                <i class="fa-solid fa-lock text-[9px]"></i> Bảo vệ sổ
               </span>
             </div>
             <p class="text-[11px] text-slate-500 font-medium truncate">
-              Trạm Y Tế Xã Mộ Đức
+              Trạm Y Tế Xã Mộ Đức • Mới nhất lên đầu • Lọc theo ngày
             </p>
           </div>
         </div>
@@ -164,6 +164,10 @@
           <span class="hidden md:inline">Excel</span>
         </button>
 
+        <a href="quan-ly-cong-van-di.html" class="hidden sm:flex px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs transition items-center gap-1.5" title="Trang Quản trị sổ công văn (có quyền sửa/xóa)">
+          <i class="fa-solid fa-user-shield text-teal-700"></i>
+          <span class="hidden lg:inline">Trang Quản Trị</span>
+        </a>
       </div>
 
     </div>
@@ -191,6 +195,7 @@
         <div>
           <span class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-blue-700 block">BÁO CÁO & KH</span>
           <div class="text-xl sm:text-2xl font-black text-blue-950 mt-0.5 leading-tight" id="kpi-reports-plans">4</div>
+          <span class="text-[10.5px] text-blue-700 font-semibold">Chuyên môn & Dịch</span>
         </div>
         <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center text-base font-bold shrink-0">
           <i class="fa-solid fa-chart-pie"></i>
@@ -359,7 +364,7 @@
       <div class="p-3 bg-slate-50 border-t border-slate-200 flex flex-wrap justify-between items-center text-xs text-slate-600 font-medium">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-shield-halved text-teal-600"></i>
-          <span>Safe</span>
+          <span>Chế độ bảo vệ dữ liệu sổ công văn đi (Chỉ cho phép xem & đăng ký công văn mới, không có nút sửa/xóa).</span>
         </div>
         <span class="text-slate-500 font-bold font-mono">Trạm Y tế xã Mộ Đức</span>
       </div>
@@ -549,7 +554,7 @@
         <!-- Ghi chú lưu trữ -->
         <div>
           <label class="block font-bold text-slate-700 mb-1">Ghi chú hồ sơ lưu trữ:</label>
-          <input type="text" id="entry-doc-note" placeholder="" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
+          <input type="text" id="entry-doc-note" placeholder="VD: Bản chính lưu văn thư; gửi TTYT huyện..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
         </div>
 
         <!-- BẢO MẬT 2 LỚP GOOGLE AUTHENTICATOR (LẤY MÃ TRƯỚC, LƯU SAU - 180 GIÂY) -->
@@ -559,7 +564,7 @@
               <div class="w-7 h-7 rounded-lg bg-teal-600 text-amber-300 flex items-center justify-center font-black text-xs shrink-0">
                 <i class="fa-solid fa-shield-halved"></i>
               </div>
-              <span class="font-black text-teal-950 text-xs uppercase">Mã xác thực <span class="text-rose-600">*</span></span>
+              <span class="font-black text-teal-950 text-xs uppercase">Mã Google Authenticator <span class="text-rose-600">*</span></span>
             </div>
 
             <div class="flex items-center gap-1 text-[11px] bg-white px-2.5 py-0.5 rounded-lg border border-teal-300 font-bold text-teal-900 shrink-0">
@@ -586,11 +591,20 @@
 
           <!-- Mở mã QR cài đặt lần đầu -->
           <div class="border-t border-teal-200/60 pt-2">
-            <button type="button" class="text-teal-700 hover:text-teal-900 font-bold text-[11px] flex items-center gap-1.5">
+            <button type="button" onclick="toggleEntryQrAccordion()" class="text-teal-700 hover:text-teal-900 font-bold text-[11px] flex items-center gap-1.5">
               <i class="fa-solid fa-qrcode"></i>
-              <span>Liên hệ DS. Hiếu để lấy mã xác thực</span>
+              <span>Bấm để xem mã QR cài Google Authenticator (dathieu102@gmail.com)</span>
               <i class="fa-solid fa-chevron-down text-[9px]" id="entry-qr-icon"></i>
             </button>
+
+            <div id="entry-qr-container" class="hidden mt-2 p-3 bg-white rounded-xl border border-teal-200 text-center space-y-2">
+              <div class="flex justify-center">
+                <img id="entry-qr-image" src="" alt="QR Code" class="w-32 h-32 bg-white p-1 rounded-xl border border-slate-300">
+              </div>
+              <div class="text-[11px] text-slate-500">
+                Khóa nhập tay: <code class="font-mono font-black text-teal-900 bg-slate-100 px-2 py-0.5 rounded select-all">TYTMODUCDATHIEU2</code>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -614,6 +628,17 @@
   <div id="print-single-doc-container" class="w-full text-black font-times"></div>
 
   <script>
+    const DEFAULT_CLOUD_API_URL = "https://script.google.com/macros/s/AKfycbzYSzxEosrD-HfcXELRC3QISXtToGf9nIlb8cJ7-47F7Rsc-ATp6PJ0yrcUwnayY2uhvg/exec";
+
+    function getCloudApiUrl() {
+      const saved = localStorage.getItem('TYT_DISPATCH_DRIVE_API_URL');
+      if (saved && saved.trim().startsWith('https://script.google.com/')) {
+        return saved.trim();
+      }
+      localStorage.setItem('TYT_DISPATCH_DRIVE_API_URL', DEFAULT_CLOUD_API_URL);
+      return DEFAULT_CLOUD_API_URL;
+    }
+
     const DOC_TYPES = {
       "BC": "Báo cáo",
       "KH": "Kế hoạch",
@@ -1099,7 +1124,61 @@
       return false;
     }
 
+    /* XEM TRƯỚC VĂN BẢN A4 & TỆP GỐC */
+    function buildGeneralOfficialDocumentHtml(doc) {
+      const isoDate = normalizeDocDateToIso(doc.date || '2026-10-20');
+      const dParts = isoDate.split('-');
+      const day = parseInt(dParts[2], 10) || 20;
+      const month = parseInt(dParts[1], 10) || 10;
+      const year = parseInt(dParts[0], 10) || 2026;
+      const typeFullName = (DOC_TYPES[doc.type] || doc.type || 'CÔNG VĂN').toUpperCase();
 
+      return `
+        <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 8px;">
+          <tr>
+            <td style="width: 45%; vertical-align: top; text-align: center; line-height: 1.35;">
+              <div style="font-size: 11pt; text-transform: uppercase;">UBND XÃ MỘ ĐỨC</div>
+              <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">TRẠM Y TẾ</div>
+              <div style="width: 65px; height: 1px; background-color: black; margin: 3px auto 4px auto;"></div>
+              <div style="font-size: 11pt;">Số: <b>${doc.fullNumber}</b></div>
+            </td>
+            <td style="width: 55%; vertical-align: top; text-align: center; line-height: 1.35;">
+              <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+              <div style="font-size: 12pt; font-weight: bold;">Độc lập - Tự do - Hạnh phúc</div>
+              <div style="width: 140px; height: 1px; background-color: black; margin: 3px auto 5px auto;"></div>
+              <div style="font-size: 11.5pt; font-style: italic;">Mộ Đức, ngày ${day} tháng ${month} năm ${year}</div>
+            </td>
+          </tr>
+        </table>
+
+        <div style="text-align: center; margin-top: 14px; margin-bottom: 16px;">
+          <div style="font-size: 15pt; font-weight: bold; text-transform: uppercase;">${typeFullName}</div>
+          <div style="font-size: 12.5pt; font-style: italic; max-width: 90%; margin: 4px auto 0 auto;">V/v ${doc.title}</div>
+        </div>
+
+        <div style="line-height: 1.45; font-size: 12.5pt; text-align: justify; margin-bottom: 14px;">
+          <p style="text-indent: 28px; margin-bottom: 8px;">Căn cứ chức năng, nhiệm vụ và quyền hạn của Trạm Y tế xã Mộ Đức theo quy định hiện hành;</p>
+          <p style="font-weight: bold; margin-top: 10px; margin-bottom: 4px;">1. NỘI DUNG TRIỂN KHAI:</p>
+          <div style="padding: 10px 14px; background-color: #f8fafc; border-left: 3px solid #0d9488; margin-bottom: 10px;">${doc.title}</div>
+          ${doc.note ? `<div style="margin-top: 10px; padding: 8px 12px; background-color: #fefce8; border: 1px dashed #ca8a04; font-size: 11pt;"><b>Ghi chú lưu trữ:</b> ${doc.note}</div>` : ''}
+        </div>
+
+        <table style="width: 100%; border: none; border-collapse: collapse; margin-top: 25px;">
+          <tr>
+            <td style="width: 55%; vertical-align: top; font-size: 10pt; line-height: 1.35;">
+              <div style="font-weight: bold; font-style: italic; font-size: 11pt;">Nơi nhận:</div>
+              <div>- Như kính gửi;</div>
+              <div>- Lưu: VT, TYT.</div>
+            </td>
+            <td style="width: 45%; vertical-align: top; text-align: center; line-height: 1.35;">
+              <div style="font-size: 12.5pt; font-weight: bold; text-transform: uppercase;">GIÁM ĐỐC</div>
+              <div style="font-style: italic; font-size: 9.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, đóng dấu)</div>
+              <div style="font-weight: bold; font-size: 12.5pt;">BS. Phạm Minh Đức</div>
+            </td>
+          </tr>
+        </table>
+      `;
+    }
 
     function getDriveEmbedPreviewUrl(url) {
       if (!url) return '';
@@ -1445,8 +1524,50 @@
       const note = document.getElementById('entry-doc-note').value.trim();
       const dYear = parseInt(date.split('-')[0], 10) || new Date().getFullYear();
 
+      const docId = `doc_${dYear}_${Date.now()}`;
+      let finalFileName = tempAttachedFile?.name || '';
+      let finalFileUrl = tempAttachedFile?.url || '';
+      let finalFileData = tempAttachedFile?.data || '';
+
+      const submitBtn = document.getElementById('submit-doc-btn');
+      const submitText = document.getElementById('submit-doc-text');
+      if (submitBtn) submitBtn.disabled = true;
+      if (submitText) submitText.innerText = "Đang Lưu Lên Cloud...";
+
+      const cloudApiUrl = getCloudApiUrl();
+      if (cloudApiUrl) {
+        try {
+          const res = await fetch(cloudApiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+              action: "saveDispatch",
+              doc: {
+                id: docId,
+                year: dYear,
+                seq: seq,
+                type: type,
+                fullNumber: fullNumber,
+                date: date,
+                title: title,
+                note: note,
+                fileName: finalFileName,
+                fileType: tempAttachedFile?.type || 'application/pdf',
+                base64Data: finalFileData,
+                fileUrl: finalFileUrl
+              }
+            })
+          });
+          const result = await res.json();
+          if (result && result.status === "success") {
+            if (result.fileUrl) finalFileUrl = result.fileUrl;
+            if (result.fileName) finalFileName = result.fileName;
+          }
+        } catch (err) {}
+      }
+
       const newDoc = {
-        id: `doc_${dYear}_${Date.now()}`,
+        id: docId,
         year: dYear,
         seq: seq,
         type: type,
@@ -1454,10 +1575,13 @@
         date: date,
         title: title,
         note: note,
-        fileName: tempAttachedFile?.name || '',
-        fileUrl: tempAttachedFile?.url || '',
-        fileData: tempAttachedFile?.data || ''
+        fileName: finalFileName,
+        fileUrl: finalFileUrl,
+        fileData: finalFileData
       };
+
+      if (submitBtn) submitBtn.disabled = false;
+      if (submitText) submitText.innerText = "Xác Nhận & Lưu Vào Sổ";
 
       dispatchDocsList.unshift(newDoc);
       saveDocsToStorage(true);
@@ -1536,7 +1660,7 @@
     }
 
     async function syncFromCloud(isAuto = false) {
-      const cloudApiUrl = localStorage.getItem('TYT_DISPATCH_DRIVE_API_URL');
+      const cloudApiUrl = getCloudApiUrl();
       if (!cloudApiUrl) {
         if (!isAuto) showToast("Đang dùng dữ liệu lưu trên thiết bị.", "info");
         return;
