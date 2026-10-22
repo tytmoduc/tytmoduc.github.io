@@ -1,0 +1,1804 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quản Lý Sổ Công Văn Đi - Trạm Y Tế Xã Mộ Đức</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&family=Times+New+Roman&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+
+    .font-times {
+      font-family: 'Times New Roman', Times, serif;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Mô phỏng mặt giấy A4 chuẩn Nghị định 30/2020/NĐ-CP */
+    .a4-simulation-paper {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 20mm 15mm 20mm 25mm;
+      margin: 10px auto;
+      background: #ffffff;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+      box-sizing: border-box;
+      position: relative;
+      color: #000000;
+      font-family: 'Times New Roman', Times, serif;
+      line-height: 1.4;
+      font-size: 13pt;
+      transform-origin: top center;
+      transition: transform 0.15s ease-in-out;
+    }
+
+    .a4-simulation-paper.is-landscape {
+      width: 297mm !important;
+      min-height: 210mm !important;
+      padding: 15mm 14mm 15mm 16mm !important;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      body.print-register-mode > *:not(#print-dispatch-container) { display: none !important; }
+      body.print-single-mode > *:not(#print-single-doc-container) { display: none !important; }
+
+      #print-dispatch-container {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 8mm 10mm !important;
+        font-family: 'Times New Roman', Times, serif;
+        color: #000000;
+        background: #ffffff !important;
+      }
+
+      #print-single-doc-container {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 18mm 15mm 18mm 22mm !important;
+        font-family: 'Times New Roman', Times, serif;
+        color: #000000;
+        background: #ffffff !important;
+        font-size: 13pt;
+        line-height: 1.4;
+      }
+
+      table.print-table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+      }
+
+      table.print-table th, table.print-table td {
+        border: 1px solid #000000 !important;
+        padding: 5px 4px !important;
+        vertical-align: middle !important;
+      }
+    }
+    #print-dispatch-container, #print-single-doc-container { display: none; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-teal-100 selection:text-teal-900">
+
+  <!-- TOAST THÔNG BÁO -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-[90vw]"></div>
+
+  <header class="sticky top-0 z-40 bg-white border-b border-slate-200 px-3 sm:px-6 py-2.5 shadow-xs">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+      
+      <!-- Tiêu đề & Nút quay lại -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <a href="index.html" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 flex items-center justify-center transition shrink-0" title="Về Cổng điều hành chính">
+            <i class="fa-solid fa-arrow-left text-sm"></i>
+          </a>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <h1 class="font-extrabold text-sm sm:text-lg text-slate-900 truncate flex items-center gap-1.5">
+                <i class="fa-solid fa-user-shield text-teal-600"></i>
+                <span>QUẢN LÝ SỔ CÔNG VĂN ĐI</span>
+              </h1>
+              <span class="px-2 py-0.5 rounded-md bg-teal-100 text-teal-900 border border-teal-300 text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 shrink-0">
+                <i class="fa-solid fa-sliders text-[9px]"></i> Quản trị
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-500 font-medium truncate">
+              Trạm Y Tế Xã Mộ Đức • Hỗ trợ nhiều tệp đính kèm • Thêm/Sửa/Xóa nhanh
+            </p>
+          </div>
+        </div>
+
+        <!-- Nút Trang Nhân Viên thu gọn trên mobile -->
+        <a href="dang-ky-cong-van-di.html" class="sm:hidden px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 border border-slate-300 font-bold text-[11px] flex items-center gap-1 shrink-0" title="Trang Nhân Viên">
+          <i class="fa-solid fa-eye text-teal-700"></i>
+          <span>Trang NV</span>
+        </a>
+      </div>
+
+      <!-- Cụm nút thao tác chính -->
+      <div class="flex items-center gap-1.5 sm:gap-2 justify-end flex-wrap">
+        <button onclick="openDocEntryModal()" class="flex-1 sm:flex-none justify-center px-3.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 active:scale-95 text-white font-extrabold text-xs transition flex items-center gap-1.5 shadow-xs">
+          <i class="fa-solid fa-plus text-amber-300"></i>
+          <span>Vào Sổ Công Văn Mới</span>
+        </button>
+
+        <button onclick="syncFromCloud(false)" id="sync-cloud-btn" class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs" title="Đồng bộ từ Google Sheets">
+          <i class="fa-solid fa-arrows-rotate" id="sync-cloud-icon"></i>
+          <span class="hidden md:inline">Đồng Bộ</span>
+        </button>
+
+        <button onclick="printDispatchRegister()" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs" title="In Sổ A4 ngang">
+          <i class="fa-solid fa-print"></i>
+          <span class="hidden md:inline">In Sổ</span>
+        </button>
+
+        <button onclick="exportToExcel()" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs" title="Xuất file Excel">
+          <i class="fa-solid fa-file-excel"></i>
+          <span class="hidden md:inline">Excel</span>
+        </button>
+
+        <a href="dang-ky-cong-van-di.html" class="hidden sm:flex px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs transition items-center gap-1.5" title="Chuyển sang trang Đăng ký dành cho nhân viên (chế độ bảo vệ)">
+          <i class="fa-solid fa-shield-halved text-teal-700"></i>
+          <span class="hidden lg:inline">Trang Nhân Viên</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-2.5 sm:px-6 py-3.5 flex-1 w-full space-y-3.5">
+
+    <!-- 4 THẺ THỐNG KÊ KPI -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+      
+      <!-- Thẻ 1: Tổng số công văn đi -->
+      <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
+        <div>
+          <span class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-slate-500 block">TỔNG CÔNG VĂN ĐI</span>
+          <div class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 leading-tight" id="kpi-total-docs">8</div>
+          <span class="text-[10.5px] text-teal-700 font-bold" id="kpi-year-label">Năm 2026</span>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center text-base font-bold shrink-0">
+          <i class="fa-solid fa-envelopes-bulk"></i>
+        </div>
+      </div>
+
+      <!-- Thẻ 2: Báo cáo, Kế hoạch & Lịch trực -->
+      <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
+        <div>
+          <span class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-blue-700 block">BC • KH • LỊCH TRỰC</span>
+          <div class="text-xl sm:text-2xl font-black text-blue-950 mt-0.5 leading-tight" id="kpi-reports-plans">5</div>
+          <span class="text-[10.5px] text-blue-700 font-semibold">Chuyên môn & Trực</span>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center text-base font-bold shrink-0">
+          <i class="fa-solid fa-chart-pie"></i>
+        </div>
+      </div>
+
+      <!-- Thẻ 3: Thông báo & Giấy mời -->
+      <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
+        <div>
+          <span class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-indigo-700 block">THÔNG BÁO & GM</span>
+          <div class="text-xl sm:text-2xl font-black text-indigo-950 mt-0.5 leading-tight" id="kpi-notices-invitations">2</div>
+          <span class="text-[10.5px] text-indigo-700 font-semibold">Điều hành & Giao ban</span>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-base font-bold shrink-0">
+          <i class="fa-solid fa-bullhorn"></i>
+        </div>
+      </div>
+
+      <!-- Thẻ 4: Đã đính kèm tệp -->
+      <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
+        <div>
+          <span class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 block">CÓ TỆP ĐÍNH KÈM</span>
+          <div class="text-xl sm:text-2xl font-black text-emerald-950 mt-0.5 leading-tight" id="kpi-attached-files">8</div>
+          <span class="text-[10.5px] text-emerald-700 font-semibold">Lưu trữ Google Drive</span>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-base font-bold shrink-0">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- BỘ LỌC TỐI ƯU ĐIỆN THOẠI: TÌM KIẾM, NĂM, LỌC THEO NGÀY & LOẠI VĂN BẢN -->
+    <section class="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+      
+      <!-- Hàng 1: Chọn Năm + Ô tìm kiếm nhanh -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-xl border border-slate-300 shrink-0">
+            <label for="filter-year-select" class="text-xs font-extrabold text-slate-600 uppercase">Năm:</label>
+            <select id="filter-year-select" onchange="onFilterParamsChange()" class="bg-transparent border-none outline-none font-extrabold text-xs text-teal-900 cursor-pointer">
+              <option value="2026" selected>2026</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+              <option value="all">Tất cả</option>
+            </select>
+          </div>
+
+          <div class="sm:hidden ml-auto flex items-center gap-1.5 text-[11px] font-bold text-slate-600">
+            <span class="px-2 py-1 rounded-lg bg-teal-50 text-teal-800 border border-teal-200 font-extrabold flex items-center gap-1">
+              <i class="fa-solid fa-arrow-down-wide-short text-teal-600"></i> Mới nhất
+            </span>
+            <span>(<b id="filtered-records-count-mobile" class="text-teal-900 font-black">8</b>)</span>
+          </div>
+        </div>
+
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="filter-search-input" placeholder="Tìm số hiệu (VD: 14/LT-TYT), trích yếu nội dung, tên tệp..." oninput="onFilterParamsChange()" class="w-full pl-8 pr-8 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white">
+          <button type="button" id="clear-search-btn" onclick="clearSearchInput()" class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 p-0.5">
+            <i class="fa-solid fa-circle-xmark text-xs"></i>
+          </button>
+        </div>
+
+        <div class="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 font-bold shrink-0">
+          <span class="px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800 border border-teal-200 text-[11px] font-extrabold flex items-center gap-1">
+            <i class="fa-solid fa-arrow-down-wide-short text-teal-600"></i> Mới nhất lên đầu
+          </span>
+          <span>• Hiện: <b id="filtered-records-count" class="text-teal-900 font-black">8</b></span>
+        </div>
+      </div>
+
+      <!-- Hàng 2: Lọc theo khoảng ngày -->
+      <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2">
+        <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 flex-1">
+          <div class="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-slate-300">
+            <span class="text-[11px] font-bold text-slate-500 shrink-0">Từ:</span>
+            <input type="date" id="filter-date-from" onchange="onFilterParamsChange()" class="w-full bg-transparent font-bold text-xs text-slate-800 outline-none cursor-pointer">
+          </div>
+          <div class="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-slate-300">
+            <span class="text-[11px] font-bold text-slate-500 shrink-0">Đến:</span>
+            <input type="date" id="filter-date-to" onchange="onFilterParamsChange()" class="w-full bg-transparent font-bold text-xs text-slate-800 outline-none cursor-pointer">
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 justify-end flex-wrap">
+          <button type="button" onclick="setQuickDateFilter('today')" class="px-2.5 py-1.5 rounded-lg bg-teal-100 hover:bg-teal-200 active:scale-95 text-teal-900 font-extrabold text-[11px] transition flex items-center gap-1">
+            <i class="fa-regular fa-calendar-check"></i> Hôm nay
+          </button>
+          <button type="button" onclick="setQuickDateFilter('week')" class="px-2.5 py-1.5 rounded-lg bg-sky-100 hover:bg-sky-200 active:scale-95 text-sky-900 font-extrabold text-[11px] transition">
+            Tuần này
+          </button>
+          <button type="button" onclick="setQuickDateFilter('month')" class="px-2.5 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 active:scale-95 text-blue-900 font-extrabold text-[11px] transition">
+            Tháng này
+          </button>
+          <button type="button" id="clear-date-filter-btn" onclick="clearDateFilter()" class="hidden px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-extrabold text-[11px] transition flex items-center gap-1 shadow-2xs">
+            <i class="fa-solid fa-xmark"></i> Bỏ lọc ngày
+          </button>
+        </div>
+      </div>
+
+      <!-- Hàng 3: Thanh trượt chọn thể thức loại văn bản (Đã bổ sung Lịch Trực LT) -->
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 text-xs font-bold" id="doc-type-filter-bar">
+        <button onclick="setFilterType('all')" id="type-btn-all" class="px-3 py-1.5 rounded-xl bg-teal-700 text-white transition shadow-2xs whitespace-nowrap">
+          Tất cả
+        </button>
+        <button onclick="setFilterType('BC')" id="type-btn-BC" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap">
+          Báo Cáo (BC)
+        </button>
+        <button onclick="setFilterType('KH')" id="type-btn-KH" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap">
+          Kế Hoạch (KH)
+        </button>
+        <button onclick="setFilterType('LT')" id="type-btn-LT" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap">
+          Lịch Trực (LT)
+        </button>
+        <button onclick="setFilterType('TB')" id="type-btn-TB" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap">
+          Thông Báo (TB)
+        </button>
+        <button onclick="setFilterType('TTr')" id="type-btn-TTr" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap">
+          Tờ Trình (TTr)
+        </button>
+        <button onclick="setFilterType('QĐ')" id="type-btn-QĐ" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap">
+          Quyết Định (QĐ)
+        </button>
+        <button onclick="setFilterType('GGT')" id="type-btn-GGT" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap">
+          Giấy Giới Thiệu (GGT)
+        </button>
+        <button onclick="setFilterType('GM')" id="type-btn-GM" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap">
+          Giấy Mời (GM)
+        </button>
+        <button onclick="setFilterType('CV')" id="type-btn-CV" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap">
+          Công Văn (CV)
+        </button>
+      </div>
+
+    </section>
+
+    <!-- DANH SÁCH THẺ CÔNG VĂN TRÊN ĐIỆN THOẠI (MOBILE CARD VIEW) -->
+    <section id="mobile-dispatch-cards" class="md:hidden space-y-2.5">
+      <!-- Render tự động bằng JavaScript -->
+    </section>
+
+    <!-- BẢNG SỔ ĐĂNG KÝ VĂN BẢN ĐI TRÊN MÁY TÍNH / TABLET -->
+    <section class="hidden md:flex bg-white rounded-2xl border border-slate-300 shadow-xs overflow-hidden flex-col">
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-100 text-slate-800 uppercase font-black text-[11px] border-b border-slate-300">
+              <th class="p-3 w-12 text-center">STT</th>
+              <th class="p-3 w-32 text-center">Số, Ký Hiệu</th>
+              <th class="p-3 w-36 text-center">Loại Văn Bản</th>
+              <th class="p-3 w-28 text-center">Ngày Ký</th>
+              <th class="p-3">Tên Loại Và Trích Yếu Nội Dung</th>
+              <th class="p-3 w-56 text-center">Tệp Đính Kèm (Nhiều Tệp)</th>
+              <th class="p-3 w-36 text-center">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="dispatch-table-body" class="divide-y divide-slate-200">
+            <!-- Render động bằng JavaScript -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex flex-wrap justify-between items-center text-xs text-slate-600 font-medium">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-user-shield text-teal-600"></i>
+          <span>Phân hệ Quản trị Sổ công văn đi: Cho phép thêm mới, chỉnh sửa, đính kèm nhiều tệp và xóa công văn trực tiếp.</span>
+        </div>
+        <span class="text-slate-500 font-bold font-mono">Trạm Y tế xã Mộ Đức</span>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER CHÂN TRANG -->
+  <footer class="border-t border-slate-200 bg-white py-3 px-4 text-center text-xs text-slate-600 font-medium mt-auto">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5">
+      <div>© 2026 <b>Trạm Y Tế Xã Mộ Đức</b> • Tỉnh Quảng Ngãi</div>
+      <div class="flex items-center gap-2 font-semibold text-slate-700">
+        <span>SỔ VĂN BẢN ĐI NĐ 30/2020/NĐ-CP</span>
+        <span>•</span>
+        <a href="index.html" class="text-teal-700 hover:underline">Về Cổng Chính</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL PREVIEW XEM TRƯỚC CÔNG VĂN (HỖ TRỢ CHUYỂN ĐỔI NHIỀU TỆP ĐÍNH KÈM) -->
+  <div id="preview-doc-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xs z-50 hidden flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl border border-slate-300 overflow-hidden flex flex-col h-[92vh]">
+      
+      <!-- Header Preview Modal -->
+      <div class="p-2.5 sm:p-3.5 bg-slate-900 text-white flex flex-wrap justify-between items-center gap-2 flex-none">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <div class="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black text-xs shrink-0">
+            <i class="fa-solid fa-file-lines"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span id="preview-modal-badge" class="px-2 py-0.5 rounded bg-teal-800 text-teal-200 font-mono text-[10.5px] font-bold">14/BC-TYT</span>
+              <h3 class="font-extrabold text-xs sm:text-sm leading-tight truncate" id="preview-modal-title">Xem Trước Công Văn</h3>
+            </div>
+            <p class="text-[10.5px] text-slate-300 truncate mt-0.5 hidden sm:block" id="preview-modal-sub">Trích yếu nội dung công văn</p>
+          </div>
+        </div>
+
+        <!-- Cụm công cụ Tải tệp & Đóng -->
+        <div class="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-auto flex-wrap">
+          <button id="preview-download-btn" onclick="downloadCurrentOriginalFile()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition flex items-center gap-1.5" title="Tải tệp đang xem">
+            <i class="fa-solid fa-download"></i>
+            <span>Tải Tệp Đính Kèm</span>
+          </button>
+
+          <button onclick="closePreviewModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center transition" title="Đóng">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- THANH CHỌN NHIỀU TỆP ĐÍNH KÈM TRONG PREVIEW -->
+      <div id="preview-files-switcher" class="hidden bg-slate-100 border-b border-slate-300 px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-none text-xs">
+        <!-- Render động danh sách các tab tệp 1, 2, 3... -->
+      </div>
+
+      <!-- Khung hiển thị nội dung tệp xem trước -->
+      <div class="flex-1 bg-slate-200/90 overflow-auto custom-scrollbar relative p-2 sm:p-4 flex flex-col items-center justify-start w-full" id="preview-modal-body">
+        <!-- Render động qua JS -->
+      </div>
+
+      <!-- Footer Preview Modal -->
+      <div class="p-2.5 bg-white border-t border-slate-200 flex flex-wrap justify-between items-center gap-2 text-xs flex-none">
+        <div class="text-slate-600 font-medium truncate max-w-[200px] sm:max-w-md flex items-center gap-1.5 text-[11px]">
+          <i class="fa-solid fa-circle-check text-teal-600"></i>
+          <span id="preview-file-source-text" class="truncate">Hiển thị trực tiếp tệp công văn</span>
+        </div>
+        <div class="flex items-center gap-1.5 ml-auto">
+          <button onclick="copyCurrentViewDocText()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-[11px] transition flex items-center gap-1">
+            <i class="fa-solid fa-copy text-teal-700"></i> Copy Zalo
+          </button>
+          <button onclick="closePreviewModal()" class="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-[11px] transition">
+            Đóng
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: VÀO SỔ HOẶC CHỈNH SỬA CÔNG VĂN ĐI (KHÔNG CẦN MÃ XÁC THỰC - HỖ TRỢ NHIỀU TỆP) -->
+  <div id="doc-entry-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto">
+    <div class="bg-white border border-slate-300 rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden my-auto flex flex-col max-h-[94vh]">
+      
+      <!-- Header Modal -->
+      <div class="p-3.5 bg-slate-900 text-white flex justify-between items-center flex-none">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold">
+            <i class="fa-solid fa-file-circle-plus"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base leading-tight" id="entry-modal-heading">
+              Vào Sổ Công Văn Đi Mới
+            </h3>
+            <p class="text-[11px] text-slate-300">
+              Cấp số hiệu tự động • Hỗ trợ đính kèm nhiều tệp lên Google Drive & Sheet
+            </p>
+          </div>
+        </div>
+        <button onclick="closeDocEntryModal()" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Form nhập liệu -->
+      <form onsubmit="handleDocEntrySubmit(event)" class="p-3.5 sm:p-5 space-y-3.5 text-xs overflow-y-auto custom-scrollbar flex-1">
+        <input type="hidden" id="entry-doc-id" value="">
+
+        <!-- Thể thức loại văn bản & Số thứ tự gợi ý -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Loại văn bản: <span class="text-rose-600">*</span></label>
+            <select id="entry-doc-type" onchange="onDocTypeChange(this.value)" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-teal-900 outline-none focus:ring-2 focus:ring-teal-500">
+              <option value="BC">Báo cáo (BC)</option>
+              <option value="KH">Kế hoạch (KH)</option>
+              <option value="LT">Lịch trực (LT)</option>
+              <option value="TB">Thông báo (TB)</option>
+              <option value="TTr">Tờ trình (TTr)</option>
+              <option value="QĐ">Quyết định (QĐ)</option>
+              <option value="GGT">Giấy giới thiệu (GGT)</option>
+              <option value="GM">Giấy mời (GM)</option>
+              <option value="CV">Công văn hành chính (CV)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Số thứ tự & Ký hiệu: <span class="text-rose-600">*</span></label>
+            <div class="flex items-center gap-1.5">
+              <input type="number" id="entry-doc-seq" min="1" max="9999" required oninput="updateFullNumberPreview()" class="w-20 p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-black text-center text-slate-900 outline-none focus:ring-2 focus:ring-teal-500">
+              <span class="text-slate-400 font-bold">→</span>
+              <input type="text" id="entry-doc-fullnumber" class="flex-1 p-2.5 bg-teal-50 border border-teal-300 rounded-xl font-mono font-black text-teal-950 text-center outline-none focus:ring-2 focus:ring-teal-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Ngày ký ban hành -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Ngày ký ban hành: <span class="text-rose-600">*</span></label>
+          <input type="date" id="entry-doc-date" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500">
+        </div>
+
+        <!-- Tên loại và Trích yếu nội dung -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Tên loại và Trích yếu nội dung: <span class="text-rose-600">*</span></label>
+          <textarea id="entry-doc-title" rows="3" required placeholder="Nhập trích yếu nội dung văn bản..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500 leading-relaxed"></textarea>
+        </div>
+
+        <!-- TỆP ĐÍNH KÈM (HỖ TRỢ NHIỀU FILE CÙNG LÚC) -->
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label class="font-bold text-teal-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-paperclip text-teal-600"></i>
+              <span>Tệp đính kèm (Có thể chọn nhiều tệp):</span>
+            </label>
+            <span class="text-[10px] text-emerald-700 font-extrabold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              Hỗ trợ nhiều file
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+            <div class="sm:col-span-6">
+              <input type="file" id="entry-doc-file" multiple onchange="handleFileSelect(event)" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-100 file:text-teal-800 hover:file:bg-teal-200 cursor-pointer">
+            </div>
+            <div class="sm:col-span-6 flex items-center gap-1">
+              <input type="url" id="entry-doc-url" placeholder="Dán link Drive rồi bấm +" class="flex-1 p-2 bg-white border border-slate-300 rounded-xl text-xs font-mono text-slate-800 outline-none focus:ring-1 focus:ring-teal-500">
+              <button type="button" onclick="addUrlAttachmentFromInput()" class="px-2.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs shrink-0" title="Thêm link này vào danh sách tệp">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Danh sách các tệp đã chọn -->
+          <div id="entry-files-list-wrapper" class="hidden space-y-1.5 pt-1">
+            <div class="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
+              <span>Đã đính kèm (<b id="entry-files-count" class="text-teal-800">0</b> tệp):</span>
+              <button type="button" onclick="clearSelectedFile()" class="text-rose-600 hover:underline font-bold">Xóa tất cả tệp</button>
+            </div>
+            <div id="entry-files-list" class="space-y-1 max-h-36 overflow-y-auto custom-scrollbar pr-1">
+              <!-- Render động từng tệp -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Ghi chú lưu trữ -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Ghi chú hồ sơ lưu trữ:</label>
+          <input type="text" id="entry-doc-note" placeholder="VD: Bản chính lưu văn thư; gửi TTYT huyện..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
+        </div>
+
+        <!-- Footer Modal -->
+        <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
+          <button type="button" onclick="closeDocEntryModal()" class="px-4 py-2.5 rounded-xl text-slate-600 font-bold hover:bg-slate-200 transition">
+            Hủy Bỏ
+          </button>
+          <button type="submit" id="submit-doc-btn" class="px-5 py-2.5 bg-teal-700 hover:bg-teal-800 text-white font-black rounded-xl transition shadow-xs flex items-center gap-1.5">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span id="submit-doc-text">Lưu Vào Sổ & Drive</span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- MODAL XÁC NHẬN XÓA -->
+  <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 p-5 space-y-3">
+      <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg">
+        <i class="fa-solid fa-trash-can"></i>
+      </div>
+      <div>
+        <h3 class="font-extrabold text-slate-900 text-sm" id="confirm-modal-title">Xác nhận xóa công văn</h3>
+        <p class="text-xs text-slate-600 mt-1 leading-relaxed" id="confirm-modal-msg">Bạn có chắc chắn muốn xóa công văn này khỏi sổ?</p>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeConfirmModal(false)" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Hủy</button>
+        <button onclick="closeConfirmModal(true)" class="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white transition">Xóa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KHUNG IN A4 DÀNH CHO TRÌNH DUYỆT -->
+  <div id="print-dispatch-container" class="w-full text-black font-times"></div>
+  <div id="print-single-doc-container" class="w-full text-black font-times"></div>
+
+  <script>
+    const DEFAULT_CLOUD_API_URL = "https://script.google.com/macros/s/AKfycbzYSzxEosrD-HfcXELRC3QISXtToGf9nIlb8cJ7-47F7Rsc-ATp6PJ0yrcUwnayY2uhvg/exec";
+
+    function getCloudApiUrl() {
+      const saved = localStorage.getItem('TYT_DISPATCH_DRIVE_API_URL');
+      if (saved && saved.trim().startsWith('https://script.google.com/')) {
+        return saved.trim();
+      }
+      localStorage.setItem('TYT_DISPATCH_DRIVE_API_URL', DEFAULT_CLOUD_API_URL);
+      return DEFAULT_CLOUD_API_URL;
+    }
+
+    const DOC_TYPES = {
+      "BC": "Báo cáo",
+      "KH": "Kế hoạch",
+      "LT": "Lịch trực",
+      "TB": "Thông báo",
+      "TTr": "Tờ trình",
+      "QĐ": "Quyết định",
+      "GGT": "Giấy giới thiệu",
+      "GM": "Giấy mời",
+      "CV": "Công văn"
+    };
+
+    const INITIAL_DISPATCH_DOCS = [
+      {
+        id: "doc_2026_08",
+        year: 2026,
+        seq: 14,
+        type: "LT",
+        fullNumber: "14/LT-TYT",
+        date: "2026-10-20",
+        title: "Lịch trực cấp cứu ban đầu 24/24 tại 04 điểm trạm thuộc Trạm Y tế xã Mộ Đức (Từ ngày 16/10/2026 đến ngày 31/10/2026)",
+        note: "Bản chính lưu VT; thông báo công khai tại 04 điểm trạm",
+        fileName: "Lich_truc_T10_2026_Dot2.pdf | Bang_phan_cong_truc_4_diem.xlsx",
+        fileUrl: "",
+        files: [
+          { name: "Lich_truc_T10_2026_Dot2.pdf", url: "", data: "" },
+          { name: "Bang_phan_cong_truc_4_diem.xlsx", url: "", data: "" }
+        ]
+      },
+      {
+        id: "doc_2026_01",
+        year: 2026,
+        seq: 14,
+        type: "BC",
+        fullNumber: "14/BC-TYT",
+        date: "2026-10-18",
+        title: "Báo cáo tổng hợp tình hình công tác y tế cơ sở, giám sát dịch bệnh và trực cấp cứu ban đầu tuần 42 năm 2026",
+        note: "Bản chính lưu VT; gửi TTYT huyện Mộ Đức và UBND xã",
+        fileName: "Bao_cao_tuan_42_TYT_MoDuc.pdf",
+        fileUrl: "",
+        files: [{ name: "Bao_cao_tuan_42_TYT_MoDuc.pdf", url: "", data: "" }]
+      },
+      {
+        id: "doc_2026_02",
+        year: 2026,
+        seq: 41,
+        type: "KH",
+        fullNumber: "41/KH-TYT",
+        date: "2026-10-15",
+        title: "Kế hoạch tổ chức tiêm chủng mở rộng thường xuyên tháng 10 năm 2026 tại 04 điểm trạm",
+        note: "Triển khai tại 04 điểm trạm: Trụ sở chính, Điểm 1, Điểm 2, Điểm 3",
+        fileName: "Ke_hoach_TCMR_Thang_10_2026.docx",
+        fileUrl: "",
+        files: [{ name: "Ke_hoach_TCMR_Thang_10_2026.docx", url: "", data: "" }]
+      },
+      {
+        id: "doc_2026_06",
+        year: 2026,
+        seq: 18,
+        type: "GM",
+        fullNumber: "18/GM-TYT",
+        date: "2026-10-14",
+        title: "Giấy mời tham dự Hội nghị giao ban công tác y tế dự phòng tháng 10 năm 2026",
+        note: "Kính mời Phòng Văn hóa - Xã hội dự trực tuyến Google Meet/Zoom",
+        fileName: "Giay_moi_giao_ban_Y_te_du_phong.docx",
+        fileUrl: "",
+        files: [{ name: "Giay_moi_giao_ban_Y_te_du_phong.docx", url: "", data: "" }]
+      },
+      {
+        id: "doc_2026_04",
+        year: 2026,
+        seq: 38,
+        type: "CV",
+        fullNumber: "38/TYT-BC",
+        date: "2026-10-12",
+        title: "Công văn về việc báo cáo, đăng ký nhân viên y tế thôn tham gia tập huấn đợt 1 năm 2026",
+        note: "Kèm bảng phụ lục danh sách 12 nhân viên y tế thôn",
+        fileName: "CV_bao_cao_dang_ky_tap_huan_NVYTT.docx | Phu_luc_12_NVYTT.xlsx",
+        fileUrl: "",
+        files: [
+          { name: "CV_bao_cao_dang_ky_tap_huan_NVYTT.docx", url: "", data: "" },
+          { name: "Phu_luc_12_NVYTT.xlsx", url: "", data: "" }
+        ]
+      },
+      {
+        id: "doc_2026_05",
+        year: 2026,
+        seq: 15,
+        type: "KH",
+        fullNumber: "15/KH-TYT",
+        date: "2026-10-08",
+        title: "Kế hoạch về việc xử lý ổ dịch Sốt xuất huyết Dengue tại thôn Đồng Cát, xã Mộ Đức",
+        note: "Trình UBND xã phê duyệt kinh phí và huy động lực lượng diệt bọ gậy",
+        fileName: "Ke_hoach_xu_ly_dich_SXH_DongCat.doc",
+        fileUrl: "",
+        files: [{ name: "Ke_hoach_xu_ly_dich_SXH_DongCat.doc", url: "", data: "" }]
+      },
+      {
+        id: "doc_2026_07",
+        year: 2026,
+        seq: 5,
+        type: "GGT",
+        fullNumber: "05/GGT-TYT",
+        date: "2026-10-02",
+        title: "Giấy giới thiệu cử Dược sĩ Bùi Đạt Hiếu liên hệ nhận thuốc hướng thần Quý 4/2026",
+        note: "In 2 liên khổ A4 ngang: Liên 1 lưu văn thư, Liên 2 giao cán bộ",
+        fileName: "Giay_gioi_thieu_nhan_thuoc_Q4.doc",
+        fileUrl: "",
+        files: [{ name: "Giay_gioi_thieu_nhan_thuoc_Q4.doc", url: "", data: "" }]
+      },
+      {
+        id: "doc_2026_03",
+        year: 2026,
+        seq: 42,
+        type: "TB",
+        fullNumber: "42/TB-TYT",
+        date: "2026-09-16",
+        title: "Thông báo về lịch tiêm chủng mở rộng định kỳ tháng 9 năm 2026 cho trẻ em và phụ nữ mang thai",
+        note: "Gửi Đài truyền thanh xã Mộ Đức phát thanh thông báo Nhân dân",
+        fileName: "Thong_bao_tiem_chung_T9_2026.docx",
+        fileUrl: "",
+        files: [{ name: "Thong_bao_tiem_chung_T9_2026.docx", url: "", data: "" }]
+      }
+    ];
+
+    let dispatchDocsList = [];
+    let currentTypeFilter = 'all';
+    let currentActivePreviewDoc = null;
+    let currentPreviewFileIndex = 0;
+    let tempAttachedFiles = [];
+    let currentPreviewActiveTab = 'file';
+    let confirmCallback = null;
+
+    /* CHUẨN HÓA DANH SÁCH NHIỀU TỆP ĐÍNH KÈM CỦA 1 VĂN BẢN */
+    function getDocFiles(doc) {
+      if (!doc) return [];
+      if (Array.isArray(doc.files) && doc.files.length > 0) {
+        return doc.files.filter(f => f && (f.name || f.url || f.data));
+      }
+      const names = (doc.fileName || '')
+        .split(/\s*\|\s*|\r?\n/)
+        .map(s => s.trim())
+        .filter(Boolean);
+      const urls = (doc.fileUrl || '')
+        .split(/\s*\|\s*|\r?\n/)
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      if (names.length === 0 && urls.length === 0 && !doc.fileData) return [];
+
+      const count = Math.max(names.length, urls.length, doc.fileData ? 1 : 0);
+      const result = [];
+      for (let i = 0; i < count; i++) {
+        result.push({
+          name: names[i] || (urls[i] ? `Tệp đính kèm ${i + 1}` : `Tệp ${i + 1}`),
+          url: urls[i] || '',
+          data: i === 0 ? (doc.fileData || '') : ''
+        });
+      }
+      return result;
+    }
+
+    window.onload = function() {
+      loadDocsFromStorage();
+      renderTable();
+      renderKPIs();
+      syncFromCloud(true);
+
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'TYT_DISPATCH_DOCS_V3') {
+          loadDocsFromStorage();
+          renderTable();
+          renderKPIs();
+        }
+      });
+    };
+
+    function loadDocsFromStorage() {
+      try {
+        const stored = localStorage.getItem('TYT_DISPATCH_DOCS_V3');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            dispatchDocsList = parsed;
+            if (!dispatchDocsList.some(d => d.type === 'LT')) {
+              dispatchDocsList.unshift(INITIAL_DISPATCH_DOCS[0]);
+            }
+            return;
+          }
+        }
+      } catch (e) {}
+      dispatchDocsList = [...INITIAL_DISPATCH_DOCS];
+      saveDocsToStorage(false);
+    }
+
+    function saveDocsToStorage(notify = false) {
+      try {
+        localStorage.setItem('TYT_DISPATCH_DOCS_V3', JSON.stringify(dispatchDocsList));
+        if (notify) showToast("Đã lưu dữ liệu sổ công văn đi an toàn!", "success");
+      } catch (e) {}
+    }
+
+    function normalizeDocDateToIso(dateStr) {
+      if (!dateStr) return '1970-01-01';
+      const s = String(dateStr).trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      const parts = s.split(/[\/\-]/);
+      if (parts.length === 3) {
+        if (parts[0].length === 4) {
+          return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+        } else {
+          return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        }
+      }
+      return s;
+    }
+
+    function sortDocsNewestFirst(list) {
+      return [...list].sort((a, b) => {
+        const dateA = normalizeDocDateToIso(a.date);
+        const dateB = normalizeDocDateToIso(b.date);
+        if (dateA !== dateB) {
+          return dateB.localeCompare(dateA);
+        }
+        const timeA = parseInt((a.id || '').split('_')[2], 10) || 0;
+        const timeB = parseInt((b.id || '').split('_')[2], 10) || 0;
+        if (timeA !== timeB) return timeB - timeA;
+        return (parseInt(b.seq, 10) || 0) - (parseInt(a.seq, 10) || 0);
+      });
+    }
+
+    function setQuickDateFilter(mode) {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const fromInput = document.getElementById('filter-date-from');
+      const toInput = document.getElementById('filter-date-to');
+      const yearSelect = document.getElementById('filter-year-select');
+
+      if (yearSelect && yearSelect.value !== 'all' && yearSelect.value !== String(yyyy)) {
+        yearSelect.value = String(yyyy);
+      }
+
+      if (mode === 'today') {
+        const todayIso = `${yyyy}-${mm}-${dd}`;
+        if (fromInput) fromInput.value = todayIso;
+        if (toInput) toInput.value = todayIso;
+      } else if (mode === 'week') {
+        const dayOfWeek = now.getDay() === 0 ? 6 : now.getDay() - 1;
+        const mon = new Date(now);
+        mon.setDate(now.getDate() - dayOfWeek);
+        const sun = new Date(mon);
+        sun.setDate(mon.getDate() + 6);
+        const toIso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        if (fromInput) fromInput.value = toIso(mon);
+        if (toInput) toInput.value = toIso(sun);
+      } else if (mode === 'month') {
+        const firstDay = `${yyyy}-${mm}-01`;
+        const lastDate = new Date(yyyy, now.getMonth() + 1, 0).getDate();
+        const lastDay = `${yyyy}-${mm}-${String(lastDate).padStart(2, '0')}`;
+        if (fromInput) fromInput.value = firstDay;
+        if (toInput) toInput.value = lastDay;
+      }
+      onFilterParamsChange();
+    }
+
+    function clearDateFilter() {
+      const fromInput = document.getElementById('filter-date-from');
+      const toInput = document.getElementById('filter-date-to');
+      if (fromInput) fromInput.value = '';
+      if (toInput) toInput.value = '';
+      onFilterParamsChange();
+    }
+
+    function clearSearchInput() {
+      const searchInput = document.getElementById('filter-search-input');
+      if (searchInput) searchInput.value = '';
+      onFilterParamsChange();
+    }
+
+    function getFilteredDocs() {
+      const yearFilter = document.getElementById('filter-year-select')?.value || '2026';
+      const search = (document.getElementById('filter-search-input')?.value || '').toLowerCase().trim();
+      const dateFrom = document.getElementById('filter-date-from')?.value || '';
+      const dateTo = document.getElementById('filter-date-to')?.value || '';
+
+      const clearDateBtn = document.getElementById('clear-date-filter-btn');
+      if (clearDateBtn) clearDateBtn.classList.toggle('hidden', !(dateFrom || dateTo));
+
+      const clearSearchBtn = document.getElementById('clear-search-btn');
+      if (clearSearchBtn) clearSearchBtn.classList.toggle('hidden', !search);
+
+      const filtered = dispatchDocsList.filter(d => {
+        const docIsoDate = normalizeDocDateToIso(d.date);
+        const matchYear = (yearFilter === 'all') || (String(d.year) === yearFilter) || docIsoDate.startsWith(yearFilter);
+        const matchType = (currentTypeFilter === 'all') || (d.type === currentTypeFilter);
+        const matchDateFrom = !dateFrom || (docIsoDate >= dateFrom);
+        const matchDateTo = !dateTo || (docIsoDate <= dateTo);
+
+        const filesNames = getDocFiles(d).map(f => f.name).join(' ').toLowerCase();
+        const matchSearch = !search ||
+          (d.fullNumber && d.fullNumber.toLowerCase().includes(search)) ||
+          (d.title && d.title.toLowerCase().includes(search)) ||
+          (d.note && d.note.toLowerCase().includes(search)) ||
+          filesNames.includes(search);
+
+        return matchYear && matchType && matchDateFrom && matchDateTo && matchSearch;
+      });
+
+      return sortDocsNewestFirst(filtered);
+    }
+
+    function renderAttachmentsChips(doc) {
+      const files = getDocFiles(doc);
+      if (files.length === 0) {
+        return `<span class="text-slate-400 italic text-[11px]"><i class="fa-regular fa-file mr-1"></i>Không có tệp đính kèm</span>`;
+      }
+      if (files.length === 1) {
+        return `
+          <button onclick="previewDocument('${doc.id}', 0)" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-300 font-bold text-[11px] inline-flex items-center gap-1.5 transition max-w-[180px]" title="${files[0].name}">
+            <i class="fa-solid fa-paperclip text-teal-700 shrink-0"></i>
+            <span class="truncate">${files[0].name}</span>
+          </button>
+        `;
+      }
+      return `
+        <div class="flex flex-col items-center gap-1">
+          <button onclick="previewDocument('${doc.id}', 0)" class="px-2.5 py-0.5 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300 font-extrabold text-[10.5px] inline-flex items-center gap-1 transition">
+            <i class="fa-solid fa-layer-group text-emerald-700"></i>
+            <span>${files.length} tệp đính kèm</span>
+          </button>
+          <div class="flex flex-wrap justify-center gap-1 max-w-[200px]">
+            ${files.map((f, fIdx) => `
+              <button onclick="previewDocument('${doc.id}', ${fIdx})" class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-teal-100 text-slate-700 hover:text-teal-900 border border-slate-300 text-[10px] font-semibold truncate max-w-[92px]" title="Xem tệp ${fIdx + 1}: ${f.name}">
+                #${fIdx + 1} ${f.name}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('dispatch-table-body');
+      const mobileContainer = document.getElementById('mobile-dispatch-cards');
+      const counterEl = document.getElementById('filtered-records-count');
+      const counterMobileEl = document.getElementById('filtered-records-count-mobile');
+
+      const list = getFilteredDocs();
+      if (counterEl) counterEl.innerText = list.length;
+      if (counterMobileEl) counterMobileEl.innerText = list.length;
+
+      if (list.length === 0) {
+        const emptyHtml = `
+          <div class="bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-400">
+            <div class="text-2xl mb-1">🔍</div>
+            <div class="font-bold text-xs text-slate-600">Không tìm thấy công văn đi nào phù hợp</div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Hãy thử chọn khoảng ngày khác hoặc bấm "Bỏ lọc ngày"</p>
+          </div>
+        `;
+        if (mobileContainer) mobileContainer.innerHTML = emptyHtml;
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 bg-slate-50 font-bold text-xs">🔍 Không tìm thấy công văn đi nào phù hợp với bộ lọc</td></tr>`;
+        }
+        return;
+      }
+
+      // 1. Render Thẻ Mobile (Có nút Xem, Sửa, Xóa & hiển thị nhiều tệp)
+      if (mobileContainer) {
+        mobileContainer.innerHTML = list.map((doc, idx) => {
+          const typeFullName = DOC_TYPES[doc.type] || doc.type;
+          const isoDate = normalizeDocDateToIso(doc.date || '2026-10-20');
+          const dParts = isoDate.split('-');
+          const dateFormatted = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
+          const files = getDocFiles(doc);
+          const isNewest = (idx === 0);
+
+          return `
+            <div class="bg-white p-3.5 rounded-2xl border ${isNewest ? 'border-teal-500 ring-1 ring-teal-500/20 bg-teal-50/20' : 'border-slate-200'} shadow-2xs space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="w-6 h-6 rounded-lg bg-slate-100 text-slate-600 font-black text-[11px] flex items-center justify-center">${idx + 1}</span>
+                  <span class="font-mono font-black text-teal-950 text-xs px-2.5 py-0.5 rounded-lg bg-teal-100 border border-teal-300">
+                    ${doc.fullNumber}
+                  </span>
+                  ${isNewest ? `<span class="px-2 py-0.5 rounded-md bg-rose-600 text-white text-[9.5px] font-black uppercase">Mới nhất</span>` : ''}
+                  <span class="px-2 py-0.5 rounded-md text-[10.5px] font-bold ${getTypeBadgeClass(doc.type)}">
+                    ${typeFullName}
+                  </span>
+                </div>
+                <span class="text-xs font-mono font-bold text-slate-600 shrink-0">
+                  <i class="fa-regular fa-calendar text-teal-600 mr-1"></i>${dateFormatted}
+                </span>
+              </div>
+
+              <div class="font-bold text-slate-900 text-xs sm:text-sm leading-snug break-words cursor-pointer hover:text-teal-700" onclick="previewDocument('${doc.id}', 0)">
+                ${doc.title}
+              </div>
+
+              ${doc.note ? `<div class="text-[11px] text-slate-500 italic bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">${doc.note}</div>` : ''}
+
+              ${files.length > 0 ? `
+                <div class="flex flex-wrap gap-1 pt-0.5">
+                  ${files.map((f, fIdx) => `
+                    <button onclick="previewDocument('${doc.id}', ${fIdx})" class="px-2 py-1 rounded-lg bg-teal-50 text-teal-900 border border-teal-200 font-bold text-[10.5px] inline-flex items-center gap-1 max-w-full truncate">
+                      <i class="fa-solid fa-paperclip text-teal-600 shrink-0"></i>
+                      <span class="truncate">${files.length > 1 ? `#${fIdx + 1} ` : ''}${f.name}</span>
+                    </button>
+                  `).join('')}
+                </div>
+              ` : `<div class="text-[11px] text-slate-400 italic pt-0.5"><i class="fa-regular fa-file mr-1"></i>Không có tệp đính kèm</div>`}
+
+              <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-1.5">
+                <button onclick="previewDocument('${doc.id}', 0)" class="px-3 py-1.5 rounded-xl bg-teal-700 hover:bg-teal-800 active:scale-95 text-white font-extrabold text-xs inline-flex items-center gap-1 shadow-2xs">
+                  <i class="fa-solid fa-eye text-xs"></i>
+                  <span>${files.length > 0 ? `Xem (${files.length})` : 'Xem'}</span>
+                </button>
+                <button onclick="editDocument('${doc.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs inline-flex items-center gap-1" title="Chỉnh sửa">
+                  <i class="fa-solid fa-pen"></i>
+                  <span>Sửa</span>
+                </button>
+                <button onclick="deleteDocument('${doc.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs inline-flex items-center gap-1" title="Xóa">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 2. Render Bảng Desktop
+      if (tbody) {
+        tbody.innerHTML = list.map((doc, idx) => {
+          const typeFullName = DOC_TYPES[doc.type] || doc.type;
+          const isoDate = normalizeDocDateToIso(doc.date || '2026-10-20');
+          const dParts = isoDate.split('-');
+          const dateFormatted = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
+          const isNewest = (idx === 0);
+
+          return `
+            <tr class="hover:bg-slate-50/90 transition ${isNewest ? 'bg-teal-50/30' : ''}">
+              <td class="p-3 text-center font-bold text-slate-500">${idx + 1}</td>
+              <td class="p-3 text-center">
+                <div class="inline-flex flex-col items-center gap-0.5">
+                  <span class="font-mono font-black text-teal-950 text-xs px-2 py-0.5 rounded bg-teal-50 border border-teal-200">${doc.fullNumber}</span>
+                  ${isNewest ? `<span class="px-1.5 py-0.2 rounded bg-rose-600 text-white text-[9px] font-black uppercase">Mới nhất</span>` : ''}
+                </div>
+              </td>
+              <td class="p-3 text-center">
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold ${getTypeBadgeClass(doc.type)}">${typeFullName} (${doc.type})</span>
+              </td>
+              <td class="p-3 text-center font-semibold text-slate-600 font-mono whitespace-nowrap">${dateFormatted}</td>
+              <td class="p-3">
+                <div class="font-bold text-slate-900 leading-snug hover:text-teal-700 cursor-pointer" onclick="previewDocument('${doc.id}', 0)">${doc.title}</div>
+                ${doc.note ? `<div class="text-[11px] text-slate-500 font-medium mt-0.5 italic">${doc.note}</div>` : ''}
+              </td>
+              <td class="p-3 text-center">
+                ${renderAttachmentsChips(doc)}
+              </td>
+              <td class="p-3 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <button onclick="previewDocument('${doc.id}', 0)" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-teal-700 text-slate-700 hover:text-white font-bold text-[11px] inline-flex items-center gap-1 transition" title="Xem văn bản">
+                    <i class="fa-solid fa-eye text-xs"></i>
+                  </button>
+                  <button onclick="editDocument('${doc.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200 font-bold text-[11px] inline-flex items-center gap-1 transition" title="Chỉnh sửa">
+                    <i class="fa-solid fa-pen text-xs"></i>
+                  </button>
+                  <button onclick="deleteDocument('${doc.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 font-bold text-[11px] inline-flex items-center gap-1 transition" title="Xóa">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    function getTypeBadgeClass(type) {
+      switch (type) {
+        case 'BC': return 'bg-blue-100 text-blue-900 border border-blue-200';
+        case 'KH': return 'bg-emerald-100 text-emerald-900 border border-emerald-200';
+        case 'LT': return 'bg-rose-100 text-rose-900 border border-rose-300';
+        case 'TB': return 'bg-indigo-100 text-indigo-900 border border-indigo-200';
+        case 'TTr': return 'bg-purple-100 text-purple-900 border border-purple-200';
+        case 'QĐ': return 'bg-amber-100 text-amber-900 border border-amber-300';
+        case 'GGT': return 'bg-sky-100 text-sky-900 border border-sky-200';
+        case 'GM': return 'bg-orange-100 text-orange-900 border border-orange-200';
+        default: return 'bg-slate-100 text-slate-800 border border-slate-300';
+      }
+    }
+
+    function renderKPIs() {
+      const yearFilter = document.getElementById('filter-year-select')?.value || '2026';
+      const yearDocs = dispatchDocsList.filter(d => {
+        const iso = normalizeDocDateToIso(d.date);
+        return (yearFilter === 'all') || (String(d.year) === yearFilter) || iso.startsWith(yearFilter);
+      });
+
+      const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+      setEl('kpi-total-docs', yearDocs.length);
+      setEl('kpi-year-label', (yearFilter === 'all') ? 'Tất cả năm' : `Năm ${yearFilter}`);
+      setEl('kpi-reports-plans', yearDocs.filter(d => d.type === 'BC' || d.type === 'KH' || d.type === 'LT').length);
+      setEl('kpi-notices-invitations', yearDocs.filter(d => d.type === 'TB' || d.type === 'GM').length);
+      setEl('kpi-attached-files', yearDocs.filter(d => getDocFiles(d).length > 0).length);
+    }
+
+    function onFilterParamsChange() {
+      renderTable();
+      renderKPIs();
+    }
+
+    function setFilterType(type) {
+      currentTypeFilter = type;
+      const allButtons = document.querySelectorAll('#doc-type-filter-bar button');
+      allButtons.forEach(btn => {
+        btn.className = "px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap";
+      });
+      const activeBtn = document.getElementById(`type-btn-${type}`);
+      if (activeBtn) {
+        activeBtn.className = "px-3 py-1.5 rounded-xl bg-teal-700 text-white transition shadow-2xs whitespace-nowrap font-bold";
+      }
+      renderTable();
+    }
+
+    function buildGeneralOfficialDocumentHtml(doc) {
+      const isoDate = normalizeDocDateToIso(doc.date || '2026-10-20');
+      const dParts = isoDate.split('-');
+      const day = parseInt(dParts[2], 10) || 20;
+      const month = parseInt(dParts[1], 10) || 10;
+      const year = parseInt(dParts[0], 10) || 2026;
+      const typeFullName = (DOC_TYPES[doc.type] || doc.type || 'CÔNG VĂN').toUpperCase();
+
+      return `
+        <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 8px;">
+          <tr>
+            <td style="width: 45%; vertical-align: top; text-align: center; line-height: 1.35;">
+              <div style="font-size: 11pt; text-transform: uppercase;">UBND XÃ MỘ ĐỨC</div>
+              <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">TRẠM Y TẾ</div>
+              <div style="width: 65px; height: 1px; background-color: black; margin: 3px auto 4px auto;"></div>
+              <div style="font-size: 11pt;">Số: <b>${doc.fullNumber}</b></div>
+            </td>
+            <td style="width: 55%; vertical-align: top; text-align: center; line-height: 1.35;">
+              <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+              <div style="font-size: 12pt; font-weight: bold;">Độc lập - Tự do - Hạnh phúc</div>
+              <div style="width: 140px; height: 1px; background-color: black; margin: 3px auto 5px auto;"></div>
+              <div style="font-size: 11.5pt; font-style: italic;">Mộ Đức, ngày ${day} tháng ${month} năm ${year}</div>
+            </td>
+          </tr>
+        </table>
+
+        <div style="text-align: center; margin-top: 14px; margin-bottom: 16px;">
+          <div style="font-size: 15pt; font-weight: bold; text-transform: uppercase;">${typeFullName}</div>
+          <div style="font-size: 12.5pt; font-style: italic; max-width: 90%; margin: 4px auto 0 auto;">V/v ${doc.title}</div>
+        </div>
+
+        <div style="line-height: 1.45; font-size: 12.5pt; text-align: justify; margin-bottom: 14px;">
+          <p style="text-indent: 28px; margin-bottom: 8px;">Căn cứ chức năng, nhiệm vụ và quyền hạn của Trạm Y tế xã Mộ Đức theo quy định hiện hành;</p>
+          <p style="font-weight: bold; margin-top: 10px; margin-bottom: 4px;">1. NỘI DUNG TRIỂN KHAI:</p>
+          <div style="padding: 10px 14px; background-color: #f8fafc; border-left: 3px solid #0d9488; margin-bottom: 10px;">${doc.title}</div>
+          ${doc.note ? `<div style="margin-top: 10px; padding: 8px 12px; background-color: #fefce8; border: 1px dashed #ca8a04; font-size: 11pt;"><b>Ghi chú lưu trữ:</b> ${doc.note}</div>` : ''}
+        </div>
+
+        <table style="width: 100%; border: none; border-collapse: collapse; margin-top: 25px;">
+          <tr>
+            <td style="width: 55%; vertical-align: top; font-size: 10pt; line-height: 1.35;">
+              <div style="font-weight: bold; font-style: italic; font-size: 11pt;">Nơi nhận:</div>
+              <div>- Như kính gửi;</div>
+              <div>- Lưu: VT, TYT.</div>
+            </td>
+            <td style="width: 45%; vertical-align: top; text-align: center; line-height: 1.35;">
+              <div style="font-size: 12.5pt; font-weight: bold; text-transform: uppercase;">GIÁM ĐỐC</div>
+              <div style="font-style: italic; font-size: 9.5pt; margin-top: 2px; margin-bottom: 50px;">(Ký, đóng dấu)</div>
+              <div style="font-weight: bold; font-size: 12.5pt;">BS. Phạm Minh Đức</div>
+            </td>
+          </tr>
+        </table>
+      `;
+    }
+
+    function getDriveEmbedPreviewUrl(url) {
+      if (!url) return '';
+      if (url.includes('drive.google.com')) {
+        const matchId = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        if (matchId && matchId[1]) return `https://drive.google.com/file/d/${matchId[1]}/preview`;
+      }
+      return url;
+    }
+
+    function previewDocument(docId, fileIdx = 0) {
+      const doc = dispatchDocsList.find(d => d.id === docId);
+      if (!doc) return;
+
+      currentActivePreviewDoc = doc;
+      currentPreviewFileIndex = fileIdx || 0;
+
+      const modal = document.getElementById('preview-doc-modal');
+      const titleEl = document.getElementById('preview-modal-title');
+      const badgeEl = document.getElementById('preview-modal-badge');
+      const subEl = document.getElementById('preview-modal-sub');
+
+      const typeFullName = DOC_TYPES[doc.type] || doc.type;
+      const isoDate = normalizeDocDateToIso(doc.date || '2026-10-20');
+      const dParts = isoDate.split('-');
+
+      if (titleEl) titleEl.innerText = `${typeFullName}: ${doc.title}`;
+      if (badgeEl) badgeEl.innerText = `${doc.fullNumber} • ${dParts[2]}/${dParts[1]}/${dParts[0]}`;
+      if (subEl) subEl.innerText = doc.title;
+
+      renderPreviewFilesSwitcher();
+      renderPreviewContent();
+      modal.classList.remove('hidden');
+    }
+
+    function renderPreviewFilesSwitcher() {
+      const switcher = document.getElementById('preview-files-switcher');
+      if (!switcher || !currentActivePreviewDoc) return;
+
+      const files = getDocFiles(currentActivePreviewDoc);
+      if (files.length <= 1) {
+        switcher.classList.add('hidden');
+        return;
+      }
+
+      switcher.classList.remove('hidden');
+      switcher.innerHTML = `
+        <span class="font-extrabold text-slate-600 shrink-0 mr-1"><i class="fa-solid fa-layer-group text-teal-600 mr-1"></i>Chọn tệp (${files.length}):</span>
+        ${files.map((f, idx) => {
+          const active = (idx === currentPreviewFileIndex);
+          return `
+            <button type="button" onclick="selectPreviewFileIndex(${idx})" class="px-2.5 py-1 rounded-lg font-bold transition whitespace-nowrap flex items-center gap-1 ${active ? 'bg-teal-700 text-white shadow-2xs' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-300'}">
+              <span>#${idx + 1}. ${f.name}</span>
+            </button>
+          `;
+        }).join('')}
+      `;
+    }
+
+    function selectPreviewFileIndex(idx) {
+      currentPreviewFileIndex = idx;
+      renderPreviewFilesSwitcher();
+      renderPreviewContent();
+    }
+
+    function renderPreviewContent() {
+      const doc = currentActivePreviewDoc;
+      const bodyEl = document.getElementById('preview-modal-body');
+      const sourceText = document.getElementById('preview-file-source-text');
+      const downloadBtn = document.getElementById('preview-download-btn');
+      if (!doc || !bodyEl) return;
+
+      const files = getDocFiles(doc);
+      const activeFile = files[currentPreviewFileIndex] || files[0] || null;
+      const hasFileContent = activeFile && Boolean((activeFile.data && activeFile.data.startsWith('data:')) || (activeFile.url && activeFile.url.trim().length > 5));
+
+      if (downloadBtn) {
+        downloadBtn.classList.toggle('hidden', !hasFileContent);
+      }
+
+      if (activeFile && hasFileContent) {
+        const targetUrl = activeFile.url ? activeFile.url.trim() : '';
+        const targetData = activeFile.data || '';
+        const targetFileName = activeFile.name || 'Tệp đính kèm';
+
+        if (sourceText) {
+          sourceText.innerHTML = `Tệp đính kèm (${currentPreviewFileIndex + 1}/${files.length}): <b>${targetFileName}</b>`;
+        }
+
+        if (targetData && targetData.startsWith('data:image/')) {
+          bodyEl.innerHTML = `<div class="w-full h-full p-2 flex items-center justify-center"><img src="${targetData}" class="max-w-full max-h-[75vh] object-contain rounded-xl shadow-md"></div>`;
+          return;
+        }
+        if (targetData && targetData.startsWith('data:application/pdf')) {
+          bodyEl.innerHTML = `<iframe src="${targetData}" class="w-full h-full rounded-xl border border-slate-300 bg-white" style="min-height: 75vh;"></iframe>`;
+          return;
+        }
+        if (targetUrl && targetUrl.includes('drive.google.com')) {
+          bodyEl.innerHTML = `<iframe src="${getDriveEmbedPreviewUrl(targetUrl)}" class="w-full h-full rounded-xl border border-slate-300 bg-white" style="min-height: 75vh;" allow="autoplay"></iframe>`;
+          return;
+        }
+        if (targetUrl) {
+          bodyEl.innerHTML = `
+            <div class="w-full max-w-md p-6 bg-white rounded-2xl border border-slate-300 shadow-md my-auto text-center space-y-3">
+              <div class="w-14 h-14 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center text-2xl mx-auto"><i class="fa-solid fa-file-lines"></i></div>
+              <h4 class="font-extrabold text-slate-900 text-sm break-all">${targetFileName}</h4>
+              <div class="flex justify-center gap-2 pt-2">
+                <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl font-bold text-xs inline-flex items-center gap-1.5">
+                  <i class="fa-solid fa-up-right-from-square"></i> Mở Tệp Đính Kèm
+                </a>
+              </div>
+            </div>
+          `;
+          return;
+        }
+        if (targetData && targetData.startsWith('data:')) {
+          bodyEl.innerHTML = `
+            <div class="w-full max-w-md p-6 bg-white rounded-2xl border border-slate-300 shadow-md my-auto text-center space-y-3">
+              <div class="w-14 h-14 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center text-2xl mx-auto"><i class="fa-solid fa-file-word"></i></div>
+              <h4 class="font-extrabold text-slate-900 text-sm break-all">${targetFileName}</h4>
+              <div class="flex justify-center gap-2 pt-2">
+                <button onclick="downloadCurrentOriginalFile()" class="px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl font-bold text-xs inline-flex items-center gap-1.5">
+                  <i class="fa-solid fa-download"></i> Tải Tệp Này
+                </button>
+              </div>
+            </div>
+          `;
+          return;
+        }
+      }
+
+      // Trường hợp văn bản không có tệp đính kèm: chỉ thông báo không có tệp, không tạo file A4 mới
+      const isoDate = normalizeDocDateToIso(doc.date || '2026-10-20');
+      const dParts = isoDate.split('-');
+      const typeFullName = DOC_TYPES[doc.type] || doc.type;
+
+      if (sourceText) sourceText.innerHTML = `Văn bản số <b>${doc.fullNumber}</b> • Không có tệp đính kèm`;
+
+      bodyEl.innerHTML = `
+        <div class="w-full max-w-lg p-6 sm:p-8 bg-white rounded-2xl border border-slate-300 shadow-sm my-auto text-center space-y-4">
+          <div class="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-3xl mx-auto border border-slate-200">
+            <i class="fa-regular fa-file-excel"></i>
+          </div>
+          <div class="space-y-1">
+            <h4 class="font-extrabold text-slate-800 text-base">Văn bản không có tệp đính kèm</h4>
+            <p class="text-xs text-slate-500">Công văn này chỉ đăng ký thông tin vào sổ, không có tệp tải lên.</p>
+          </div>
+          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-left text-xs space-y-1.5 text-slate-700">
+            <div><span class="font-bold text-slate-500">Số, ký hiệu:</span> <span class="font-mono font-black text-teal-900">${doc.fullNumber}</span></div>
+            <div><span class="font-bold text-slate-500">Loại văn bản:</span> <span class="font-bold">${typeFullName} (${doc.type})</span></div>
+            <div><span class="font-bold text-slate-500">Ngày ký:</span> <span class="font-mono font-semibold">${dParts[2]}/${dParts[1]}/${dParts[0]}</span></div>
+            <div><span class="font-bold text-slate-500">Trích yếu:</span> <span class="font-semibold text-slate-900">${doc.title}</span></div>
+            ${doc.note ? `<div><span class="font-bold text-slate-500">Ghi chú:</span> <span class="italic">${doc.note}</span></div>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function closePreviewModal() {
+      const modal = document.getElementById('preview-doc-modal');
+      if (modal) modal.classList.add('hidden');
+      currentActivePreviewDoc = null;
+    }
+
+    function downloadCurrentOriginalFile() {
+      const doc = currentActivePreviewDoc;
+      if (!doc) return;
+      const files = getDocFiles(doc);
+      const activeFile = files[currentPreviewFileIndex] || files[0];
+
+      if (activeFile && activeFile.data) {
+        const a = document.createElement('a');
+        a.href = activeFile.data;
+        a.download = activeFile.name || `Van_Ban_${doc.fullNumber.replace(/[\/\\:*?"<>|]/g, '_')}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast(`Đã tải tệp ${activeFile.name}!`, "success");
+      } else if (activeFile && activeFile.url) {
+        window.open(activeFile.url, '_blank');
+      } else {
+        showToast("Văn bản này không có tệp đính kèm!", "warning");
+      }
+    }
+
+    function copyCurrentViewDocText() {
+      const doc = currentActivePreviewDoc;
+      if (!doc) return;
+      const typeFullName = DOC_TYPES[doc.type] || doc.type;
+      const isoDate = normalizeDocDateToIso(doc.date);
+      const filesCount = getDocFiles(doc).length;
+      const textToCopy = `📌 [CÔNG VĂN ĐI - TYT XÃ MỘ ĐỨC]\n• Số hiệu: ${doc.fullNumber}\n• Loại: ${typeFullName}\n• Ngày ký: ${isoDate.split('-').reverse().join('/')}\n• Nội dung: ${doc.title}\n• Đính kèm: ${filesCount} tệp`;
+      const textarea = document.createElement('textarea');
+      textarea.value = textToCopy;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showToast("Đã sao chép trích yếu gửi Zalo!", "success");
+    }
+
+    function getNextSequenceNumber(type, year) {
+      const docsOfType = dispatchDocsList.filter(d => d.type === type && (d.year === year || normalizeDocDateToIso(d.date).startsWith(String(year))));
+      if (docsOfType.length === 0) return 1;
+      const maxSeq = Math.max(...docsOfType.map(d => parseInt(d.seq, 10) || 0));
+      return maxSeq + 1;
+    }
+
+    function onDocTypeChange(newType) {
+      const editingId = document.getElementById('entry-doc-id')?.value || '';
+      if (!editingId) {
+        const year = new Date().getFullYear();
+        const seqInput = document.getElementById('entry-doc-seq');
+        if (seqInput) seqInput.value = getNextSequenceNumber(newType, year);
+      }
+      updateFullNumberPreview();
+    }
+
+    function updateFullNumberPreview() {
+      const type = document.getElementById('entry-doc-type')?.value || 'BC';
+      const seqVal = document.getElementById('entry-doc-seq')?.value || '1';
+      const seqPad = parseInt(seqVal, 10) < 10 ? '0' + parseInt(seqVal, 10) : seqVal;
+      const fullInput = document.getElementById('entry-doc-fullnumber');
+      const suffix = (type === 'CV') ? '/TYT-CV' : `/${type}-TYT`;
+      if (fullInput) fullInput.value = `${seqPad}${suffix}`;
+    }
+
+    function openDocEntryModal() {
+      const now = new Date();
+      document.getElementById('entry-modal-heading').innerText = 'Vào Sổ Công Văn Đi Mới';
+      document.getElementById('entry-doc-id').value = '';
+      document.getElementById('entry-doc-type').value = 'BC';
+      document.getElementById('entry-doc-date').value = now.toISOString().slice(0, 10);
+      document.getElementById('entry-doc-title').value = '';
+      document.getElementById('entry-doc-note').value = 'Bản chính lưu VT; gửi TTYT huyện Mộ Đức và UBND xã';
+      clearSelectedFile();
+      onDocTypeChange('BC');
+      document.getElementById('doc-entry-modal').classList.remove('hidden');
+    }
+
+    function editDocument(docId) {
+      const doc = dispatchDocsList.find(d => d.id === docId);
+      if (!doc) return;
+
+      document.getElementById('entry-modal-heading').innerText = `Chỉnh Sửa Công Văn: ${doc.fullNumber}`;
+      document.getElementById('entry-doc-id').value = doc.id;
+      document.getElementById('entry-doc-type').value = doc.type || 'BC';
+      document.getElementById('entry-doc-seq').value = doc.seq || 1;
+      document.getElementById('entry-doc-fullnumber').value = doc.fullNumber || '';
+      document.getElementById('entry-doc-date').value = normalizeDocDateToIso(doc.date);
+      document.getElementById('entry-doc-title').value = doc.title || '';
+      document.getElementById('entry-doc-note').value = doc.note || '';
+
+      tempAttachedFiles = getDocFiles(doc).map(f => ({
+        name: f.name || 'Tệp đính kèm',
+        url: f.url || '',
+        data: f.data || '',
+        type: f.type || 'application/pdf',
+        size: f.size || 0
+      }));
+      renderSelectedFilesList();
+
+      document.getElementById('doc-entry-modal').classList.remove('hidden');
+    }
+
+    function deleteDocument(docId) {
+      const doc = dispatchDocsList.find(d => d.id === docId);
+      if (!doc) return;
+
+      showConfirmModal(
+        `Xóa công văn số ${doc.fullNumber}?`,
+        `Bạn có chắc chắn muốn xóa công văn "${doc.title}" khỏi sổ đăng ký?`,
+        async () => {
+          dispatchDocsList = dispatchDocsList.filter(d => d.id !== docId);
+          saveDocsToStorage(false);
+          renderTable();
+          renderKPIs();
+          showToast(`Đã xóa công văn ${doc.fullNumber}!`, "info");
+
+          const cloudApiUrl = getCloudApiUrl();
+          if (cloudApiUrl) {
+            try {
+              await fetch(cloudApiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "deleteDispatch", docId: docId })
+              });
+            } catch (err) {}
+          }
+        }
+      );
+    }
+
+    function closeDocEntryModal() {
+      document.getElementById('doc-entry-modal').classList.add('hidden');
+      clearSelectedFile();
+    }
+
+    function handleFileSelect(e) {
+      const files = Array.from(e.target.files || []);
+      if (files.length === 0) return;
+
+      let loaded = 0;
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          tempAttachedFiles.push({
+            name: file.name,
+            type: file.type || 'application/pdf',
+            size: file.size || 0,
+            data: evt.target.result,
+            url: ''
+          });
+          loaded++;
+          if (loaded === files.length) {
+            renderSelectedFilesList();
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+      e.target.value = '';
+    }
+
+    function addUrlAttachmentFromInput() {
+      const uInput = document.getElementById('entry-doc-url');
+      const val = uInput ? uInput.value.trim() : '';
+      if (!val) {
+        showToast("Vui lòng dán đường dẫn Google Drive trước khi bấm +", "warning");
+        return;
+      }
+      tempAttachedFiles.push({
+        name: `Tệp Drive #${tempAttachedFiles.length + 1}`,
+        type: 'application/pdf',
+        size: 0,
+        data: '',
+        url: val
+      });
+      if (uInput) uInput.value = '';
+      renderSelectedFilesList();
+    }
+
+    function removeSingleSelectedFile(idx) {
+      tempAttachedFiles.splice(idx, 1);
+      renderSelectedFilesList();
+    }
+
+    function renderSelectedFilesList() {
+      const wrapper = document.getElementById('entry-files-list-wrapper');
+      const listEl = document.getElementById('entry-files-list');
+      const countEl = document.getElementById('entry-files-count');
+      if (!wrapper || !listEl) return;
+
+      if (tempAttachedFiles.length === 0) {
+        wrapper.classList.add('hidden');
+        listEl.innerHTML = '';
+        return;
+      }
+
+      wrapper.classList.remove('hidden');
+      if (countEl) countEl.innerText = tempAttachedFiles.length;
+
+      listEl.innerHTML = tempAttachedFiles.map((f, i) => `
+        <div class="p-2 rounded-lg bg-teal-50 border border-teal-200 text-teal-950 font-bold text-[11px] flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 min-w-0 flex-1">
+            <span class="w-5 h-5 rounded bg-teal-700 text-white text-[10px] font-black flex items-center justify-center shrink-0">${i + 1}</span>
+            <span class="truncate">${f.name}</span>
+            ${f.size ? `<span class="text-[10px] text-teal-700 shrink-0">(${Math.round(f.size / 1024)} KB)</span>` : ''}
+          </div>
+          <button type="button" onclick="removeSingleSelectedFile(${i})" class="text-rose-600 hover:text-rose-800 px-1.5 py-0.5 rounded hover:bg-rose-50 font-black shrink-0" title="Gỡ tệp này">
+            ✕
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function clearSelectedFile() {
+      tempAttachedFiles = [];
+      const fInput = document.getElementById('entry-doc-file');
+      const uInput = document.getElementById('entry-doc-url');
+      if (fInput) fInput.value = '';
+      if (uInput) uInput.value = '';
+      renderSelectedFilesList();
+    }
+
+    async function handleDocEntrySubmit(e) {
+      e.preventDefault();
+
+      // Tự động gom thêm link ở ô URL nếu người dùng quên bấm nút +
+      const pendingUrl = document.getElementById('entry-doc-url')?.value.trim() || '';
+      if (pendingUrl) {
+        tempAttachedFiles.push({
+          name: `Tệp Drive #${tempAttachedFiles.length + 1}`,
+          type: 'application/pdf',
+          size: 0,
+          data: '',
+          url: pendingUrl
+        });
+        document.getElementById('entry-doc-url').value = '';
+      }
+
+      const editingId = document.getElementById('entry-doc-id').value;
+      const type = document.getElementById('entry-doc-type').value;
+      const seq = parseInt(document.getElementById('entry-doc-seq').value, 10) || 1;
+      const fullNumber = document.getElementById('entry-doc-fullnumber').value.trim();
+      const date = document.getElementById('entry-doc-date').value;
+      const title = document.getElementById('entry-doc-title').value.trim();
+      const note = document.getElementById('entry-doc-note').value.trim();
+      const dYear = parseInt(date.split('-')[0], 10) || new Date().getFullYear();
+
+      const docId = editingId || `doc_${dYear}_${Date.now()}`;
+      let uploadedFilesList = tempAttachedFiles.map(f => ({ ...f }));
+
+      const submitBtn = document.getElementById('submit-doc-btn');
+      const submitText = document.getElementById('submit-doc-text');
+      if (submitBtn) submitBtn.disabled = true;
+      if (submitText) submitText.innerText = "Đang Lưu Lên Cloud...";
+
+      const cloudApiUrl = getCloudApiUrl();
+      if (cloudApiUrl) {
+        try {
+          const res = await fetch(cloudApiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+              action: "saveDispatch",
+              doc: {
+                id: docId,
+                year: dYear,
+                seq: seq,
+                type: type,
+                fullNumber: fullNumber,
+                date: date,
+                title: title,
+                note: note,
+                files: uploadedFilesList.map(f => ({
+                  name: f.name,
+                  fileType: f.type || 'application/pdf',
+                  base64Data: f.data || '',
+                  url: f.url || ''
+                })),
+                fileName: uploadedFilesList.map(f => f.name).join(' | '),
+                fileType: uploadedFilesList[0]?.type || 'application/pdf',
+                base64Data: uploadedFilesList[0]?.data || '',
+                fileUrl: uploadedFilesList.map(f => f.url).filter(Boolean).join(' | ')
+              }
+            })
+          });
+          const result = await res.json();
+          if (result && result.status === "success") {
+            if (Array.isArray(result.files) && result.files.length > 0) {
+              uploadedFilesList = result.files.map((rf, idx) => ({
+                name: rf.name || uploadedFilesList[idx]?.name || `Tệp ${idx + 1}`,
+                url: rf.url || uploadedFilesList[idx]?.url || '',
+                data: uploadedFilesList[idx]?.data || '',
+                type: uploadedFilesList[idx]?.type || 'application/pdf'
+              }));
+            } else if (result.fileUrl && uploadedFilesList[0]) {
+              uploadedFilesList[0].url = result.fileUrl;
+              if (result.fileName) uploadedFilesList[0].name = result.fileName;
+            }
+          }
+        } catch (err) {}
+      }
+
+      const newDoc = {
+        id: docId,
+        year: dYear,
+        seq: seq,
+        type: type,
+        fullNumber: fullNumber,
+        date: date,
+        title: title,
+        note: note,
+        files: uploadedFilesList,
+        fileName: uploadedFilesList.map(f => f.name).join(' | '),
+        fileUrl: uploadedFilesList.map(f => f.url).filter(Boolean).join(' | '),
+        fileData: uploadedFilesList[0]?.data || ''
+      };
+
+      if (submitBtn) submitBtn.disabled = false;
+      if (submitText) submitText.innerText = "Lưu Vào Sổ & Drive";
+
+      if (editingId) {
+        const idx = dispatchDocsList.findIndex(d => d.id === editingId);
+        if (idx !== -1) dispatchDocsList[idx] = newDoc;
+      } else {
+        dispatchDocsList.unshift(newDoc);
+      }
+
+      saveDocsToStorage(true);
+      closeDocEntryModal();
+      renderTable();
+      renderKPIs();
+    }
+
+    function printDispatchRegister() {
+      const printBox = document.getElementById('print-dispatch-container');
+      const list = getFilteredDocs();
+      const filterYear = document.getElementById('filter-year-select')?.value || '2026';
+
+      document.body.classList.remove('print-single-mode');
+      document.body.classList.add('print-register-mode');
+
+      printBox.innerHTML = `
+        <div style="text-align: center; margin-bottom: 12px;">
+          <div style="font-size: 13pt; font-weight: bold;">TRẠM Y TẾ XÃ MỘ ĐỨC</div>
+          <div style="font-size: 14pt; font-weight: bold; margin-top: 4px;">SỔ ĐĂNG KÝ VĂN BẢN ĐI NĂM ${filterYear}</div>
+        </div>
+        <table class="print-table" style="width: 100%; border-collapse: collapse; font-size: 9pt;">
+          <thead>
+            <tr style="background-color: #f1f5f9; font-weight: bold; text-align: center;">
+              <th style="width: 35px;">STT</th>
+              <th style="width: 90px;">Số, Ký Hiệu</th>
+              <th style="width: 95px;">Loại Văn Bản</th>
+              <th style="width: 75px;">Ngày Ký</th>
+              <th>Tên Loại Và Trích Yếu Nội Dung</th>
+              <th style="width: 140px;">Tệp Đính Kèm</th>
+              <th style="width: 110px;">Ghi Chú</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list.map((d, i) => `
+              <tr>
+                <td style="text-align: center;">${i + 1}</td>
+                <td style="text-align: center; font-weight: bold;">${d.fullNumber}</td>
+                <td style="text-align: center;">${DOC_TYPES[d.type] || d.type}</td>
+                <td style="text-align: center;">${normalizeDocDateToIso(d.date).split('-').reverse().join('/')}</td>
+                <td>${d.title}</td>
+                <td>${getDocFiles(d).map(f => f.name).join('; ')}</td>
+                <td>${d.note || ''}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      setTimeout(() => window.print(), 250);
+    }
+
+    function exportToExcel() {
+      const list = getFilteredDocs();
+      const filterYear = document.getElementById('filter-year-select')?.value || '2026';
+      const wsData = [
+        ['UBND XÃ MỘ ĐỨC - TRẠM Y TẾ'],
+        [`SỔ ĐĂNG KÝ VĂN BẢN ĐI NĂM ${filterYear}`],
+        [],
+        ['STT', 'Số, Ký Hiệu', 'Loại Văn Bản', 'Ngày Ký', 'Tên Loại Và Trích Yếu Nội Dung', 'Danh Sách Tệp Đính Kèm', 'Ghi Chú']
+      ];
+      list.forEach((d, idx) => {
+        wsData.push([
+          idx + 1,
+          d.fullNumber,
+          `${DOC_TYPES[d.type] || d.type} (${d.type})`,
+          normalizeDocDateToIso(d.date).split('-').reverse().join('/'),
+          d.title,
+          getDocFiles(d).map(f => f.name).join(' | '),
+          d.note || ''
+        ]);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, `So_Cong_Van_Di_${filterYear}`);
+      XLSX.writeFile(wb, `So_Cong_Van_Di_${filterYear}_TYT_MoDuc.xlsx`);
+      showToast("Đã xuất file Excel thành công!", "success");
+    }
+
+    async function syncFromCloud(isAuto = false) {
+      const cloudApiUrl = getCloudApiUrl();
+      if (!cloudApiUrl) {
+        if (!isAuto) showToast("Đang dùng dữ liệu lưu trên thiết bị.", "info");
+        return;
+      }
+      const syncIcon = document.getElementById('sync-cloud-icon');
+      if (syncIcon) syncIcon.classList.add('fa-spin');
+      try {
+        const res = await fetch(`${cloudApiUrl}?action=loadDispatch&t=${Date.now()}`);
+        const data = await res.json();
+        if (data && data.status === "success" && Array.isArray(data.records) && data.records.length > 0) {
+          dispatchDocsList = data.records;
+          saveDocsToStorage(false);
+          renderTable();
+          renderKPIs();
+          if (!isAuto) showToast(`Đã đồng bộ ${data.records.length} công văn!`, "success");
+        }
+      } catch (err) {
+        if (!isAuto) showToast("Đang hiển thị dữ liệu trên máy.", "info");
+      } finally {
+        if (syncIcon) syncIcon.classList.remove('fa-spin');
+      }
+    }
+
+    function showConfirmModal(title, msg, onConfirm) {
+      document.getElementById('confirm-modal-title').innerText = title;
+      document.getElementById('confirm-modal-msg').innerText = msg;
+      confirmCallback = onConfirm;
+      document.getElementById('confirm-modal').classList.remove('hidden');
+    }
+
+    function closeConfirmModal(confirmed) {
+      document.getElementById('confirm-modal').classList.add('hidden');
+      if (confirmed && typeof confirmCallback === 'function') {
+        confirmCallback();
+      }
+      confirmCallback = null;
+    }
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-emerald-800 text-white',
+        error: 'bg-rose-800 text-white',
+        warning: 'bg-amber-800 text-white',
+        info: 'bg-slate-900 text-white'
+      };
+      toast.className = `px-4 py-2.5 rounded-xl shadow-lg text-xs font-bold transition-all ${colors[type] || colors.info}`;
+      toast.innerHTML = `<span>${msg}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+  </script>
+</body>
+</html>
