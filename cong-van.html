@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Đăng Ký & Tra Cứu Công Văn Đi - Trạm Y Tế Xã Mộ Đức</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&family=Times+New+Roman&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+    .font-times { font-family: 'Times New Roman', Times, serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    @media print {
+      body { background-color: #ffffff !important; margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body > *:not(#print-dispatch-container) { display: none !important; }
+      #print-dispatch-container { display: block !important; width: 100% !important; margin: 0 !important; padding: 8mm 10mm !important; font-family: 'Times New Roman', Times, serif; color: #000000; background: #ffffff !important; }
+      table.print-table { border-collapse: collapse !important; width: 100% !important; }
+      table.print-table th, table.print-table td { border: 1px solid #000000 !important; padding: 5px 4px !important; vertical-align: middle !important; }
+    }
+    #print-dispatch-container { display: none; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-teal-100 selection:text-teal-900">
+
+  <!-- TOAST THÔNG BÁO -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-[90vw]"></div>
+
+  <header class="sticky top-0 z-40 bg-white border-b border-slate-200 px-3 sm:px-6 py-2.5 shadow-xs">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+      
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <a href="index.html" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 flex items-center justify-center transition shrink-0" title="Về Cổng điều hành chính">
+            <i class="fa-solid fa-arrow-left text-sm"></i>
+          </a>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <h1 class="font-extrabold text-sm sm:text-lg text-slate-900 truncate flex items-center gap-1.5">
+                <i class="fa-solid fa-paper-plane text-teal-600"></i>
+                <span>ĐĂNG KÝ & TRA CỨU CÔNG VĂN ĐI</span>
+              </h1>
+              <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 border border-emerald-300 text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 shrink-0">
+                <i class="fa-solid fa-lock text-[9px]"></i> Bảo vệ sổ
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-500 font-medium truncate">
+              Trạm Y Tế Xã Mộ Đức • Mới nhất lên đầu • Lọc theo ngày • Hỗ trợ nhiều tệp
+            </p>
+          </div>
+        </div>
+
+        <a href="quan-ly-cong-van-di.html" class="sm:hidden px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 border border-slate-300 font-bold text-[11px] flex items-center gap-1 shrink-0">
+          <i class="fa-solid fa-user-shield text-teal-700"></i>
+          <span>Quản trị</span>
+        </a>
+      </div>
+
+      <div class="flex items-center gap-1.5 sm:gap-2 justify-end flex-wrap">
+        <button type="button" id="btn-open-new-doc" onclick="window.openDocEntryModal()" class="flex-1 sm:flex-none justify-center px-3.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 active:scale-95 text-white font-extrabold text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+          <i class="fa-solid fa-plus text-amber-300"></i>
+          <span>Đăng Ký Công Văn Mới</span>
+        </button>
+
+        <button type="button" onclick="window.syncFromCloud(false)" id="sync-cloud-btn" class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="Đồng bộ từ Google Sheets">
+          <i class="fa-solid fa-arrows-rotate" id="sync-cloud-icon"></i>
+          <span class="hidden md:inline">Đồng Bộ</span>
+        </button>
+
+        <button type="button" onclick="window.printDispatchRegister()" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="In Sổ A4 ngang">
+          <i class="fa-solid fa-print"></i>
+          <span class="hidden md:inline">In Sổ</span>
+        </button>
+
+        <button type="button" onclick="window.exportToExcel()" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="Xuất file Excel">
+          <i class="fa-solid fa-file-excel"></i>
+          <span class="hidden md:inline">Excel</span>
+        </button>
+
+        <a href="quan-ly-cong-van-di.html" class="hidden sm:flex px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs transition items-center gap-1.5">
+          <i class="fa-solid fa-user-shield text-teal-700"></i>
+          <span class="hidden lg:inline">Trang Quản Trị</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-2.5 sm:px-6 py-3.5 flex-1 w-full space-y-3.5">
+
+    <!-- 4 THẺ THỐNG KÊ KPI -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+      <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
+        <div>
+          <span class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-slate-500 block">TỔNG CÔNG VĂN ĐI</span>
+          <div class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 leading-tight" id="kpi-total-docs">8</div>
+          <span class="text-[10.5px] text-teal-700 font-bold" id="kpi-year-label">Năm 2026</span>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center text-base font-bold shrink-0">
+          <i class="fa-solid fa-envelopes-bulk"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
+        <div>
+          <span class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-blue-700 block">BC • KH • LỊCH TRỰC</span>
+          <div class="text-xl sm:text-2xl font-black text-blue-950 mt-0.5 leading-tight" id="kpi-reports-plans">4</div>
+          <span class="text-[10.5px] text-blue-700 font-semibold">Chuyên môn & Trực</span>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center text-base font-bold shrink-0">
+          <i class="fa-solid fa-chart-pie"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
+        <div>
+          <span class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-indigo-700 block">THÔNG BÁO & GM</span>
+          <div class="text-xl sm:text-2xl font-black text-indigo-950 mt-0.5 leading-tight" id="kpi-notices-invitations">2</div>
+          <span class="text-[10.5px] text-indigo-700 font-semibold">Điều hành & Giao ban</span>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-base font-bold shrink-0">
+          <i class="fa-solid fa-bullhorn"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
+        <div>
+          <span class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 block">CÓ TỆP ĐÍNH KÈM</span>
+          <div class="text-xl sm:text-2xl font-black text-emerald-950 mt-0.5 leading-tight" id="kpi-attached-files">0</div>
+          <span class="text-[10.5px] text-emerald-700 font-semibold">Lưu trữ Google Drive</span>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-base font-bold shrink-0">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- BỘ LỌC TÌM KIẾM, NĂM, NGÀY & LOẠI VĂN BẢN -->
+    <section class="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-xl border border-slate-300 shrink-0">
+            <label for="filter-year-select" class="text-xs font-extrabold text-slate-600 uppercase">Năm:</label>
+            <select id="filter-year-select" onchange="window.onFilterParamsChange()" class="bg-transparent border-none outline-none font-extrabold text-xs text-teal-900 cursor-pointer">
+              <option value="2026" selected>2026</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+              <option value="all">Tất cả</option>
+            </select>
+          </div>
+
+          <div class="sm:hidden ml-auto flex items-center gap-1.5 text-[11px] font-bold text-slate-600">
+            <span class="px-2 py-1 rounded-lg bg-teal-50 text-teal-800 border border-teal-200 font-extrabold flex items-center gap-1">
+              <i class="fa-solid fa-arrow-down-wide-short text-teal-600"></i> Mới nhất
+            </span>
+            <span>(<b id="filtered-records-count-mobile" class="text-teal-900 font-black">8</b>)</span>
+          </div>
+        </div>
+
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="filter-search-input" placeholder="Tìm số hiệu (VD: 14/LT-TYT), trích yếu nội dung, tên tệp..." oninput="window.onFilterParamsChange()" class="w-full pl-8 pr-8 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white">
+          <button type="button" id="clear-search-btn" onclick="window.clearSearchInput()" class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer">
+            <i class="fa-solid fa-circle-xmark text-xs"></i>
+          </button>
+        </div>
+
+        <div class="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 font-bold shrink-0">
+          <span class="px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800 border border-teal-200 text-[11px] font-extrabold flex items-center gap-1">
+            <i class="fa-solid fa-arrow-down-wide-short text-teal-600"></i> Mới nhất lên đầu
+          </span>
+          <span>• Hiện: <b id="filtered-records-count" class="text-teal-900 font-black">8</b></span>
+        </div>
+      </div>
+
+      <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2">
+        <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 flex-1">
+          <div class="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-slate-300">
+            <span class="text-[11px] font-bold text-slate-500 shrink-0">Từ:</span>
+            <input type="date" id="filter-date-from" onchange="window.onFilterParamsChange()" class="w-full bg-transparent font-bold text-xs text-slate-800 outline-none cursor-pointer">
+          </div>
+          <div class="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-slate-300">
+            <span class="text-[11px] font-bold text-slate-500 shrink-0">Đến:</span>
+            <input type="date" id="filter-date-to" onchange="window.onFilterParamsChange()" class="w-full bg-transparent font-bold text-xs text-slate-800 outline-none cursor-pointer">
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 justify-end flex-wrap">
+          <button type="button" onclick="window.setQuickDateFilter('today')" class="px-2.5 py-1.5 rounded-lg bg-teal-100 hover:bg-teal-200 active:scale-95 text-teal-900 font-extrabold text-[11px] transition flex items-center gap-1 cursor-pointer">
+            <i class="fa-regular fa-calendar-check"></i> Hôm nay
+          </button>
+          <button type="button" onclick="window.setQuickDateFilter('week')" class="px-2.5 py-1.5 rounded-lg bg-sky-100 hover:bg-sky-200 active:scale-95 text-sky-900 font-extrabold text-[11px] transition cursor-pointer">
+            Tuần này
+          </button>
+          <button type="button" onclick="window.setQuickDateFilter('month')" class="px-2.5 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 active:scale-95 text-blue-900 font-extrabold text-[11px] transition cursor-pointer">
+            Tháng này
+          </button>
+          <button type="button" id="clear-date-filter-btn" onclick="window.clearDateFilter()" class="hidden px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-extrabold text-[11px] transition flex items-center gap-1 shadow-2xs cursor-pointer">
+            <i class="fa-solid fa-xmark"></i> Bỏ lọc ngày
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 text-xs font-bold" id="doc-type-filter-bar">
+        <button type="button" onclick="window.setFilterType('all')" id="type-btn-all" class="px-3 py-1.5 rounded-xl bg-teal-700 text-white transition shadow-2xs whitespace-nowrap cursor-pointer">Tất cả</button>
+        <button type="button" onclick="window.setFilterType('BC')" id="type-btn-BC" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap cursor-pointer">Báo Cáo (BC)</button>
+        <button type="button" onclick="window.setFilterType('KH')" id="type-btn-KH" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap cursor-pointer">Kế Hoạch (KH)</button>
+        <button type="button" onclick="window.setFilterType('LT')" id="type-btn-LT" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap cursor-pointer">Lịch Trực (LT)</button>
+        <button type="button" onclick="window.setFilterType('TB')" id="type-btn-TB" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap cursor-pointer">Thông Báo (TB)</button>
+        <button type="button" onclick="window.setFilterType('TTr')" id="type-btn-TTr" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap cursor-pointer">Tờ Trình (TTr)</button>
+        <button type="button" onclick="window.setFilterType('QĐ')" id="type-btn-QĐ" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap cursor-pointer">Quyết Định (QĐ)</button>
+        <button type="button" onclick="window.setFilterType('GGT')" id="type-btn-GGT" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap cursor-pointer">Giấy Giới Thiệu (GGT)</button>
+        <button type="button" onclick="window.setFilterType('GM')" id="type-btn-GM" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap cursor-pointer">Giấy Mời (GM)</button>
+        <button type="button" onclick="window.setFilterType('CV')" id="type-btn-CV" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap cursor-pointer">Công Văn (CV)</button>
+      </div>
+    </section>
+
+    <!-- DANH SÁCH THẺ TRÊN ĐIỆN THOẠI -->
+    <section id="mobile-dispatch-cards" class="md:hidden space-y-2.5"></section>
+
+    <!-- BẢNG SỔ TRÊN MÁY TÍNH -->
+    <section class="hidden md:flex bg-white rounded-2xl border border-slate-300 shadow-xs overflow-hidden flex-col">
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-100 text-slate-800 uppercase font-black text-[11px] border-b border-slate-300">
+              <th class="p-3 w-12 text-center">STT</th>
+              <th class="p-3 w-32 text-center">Số, Ký Hiệu</th>
+              <th class="p-3 w-36 text-center">Loại Văn Bản</th>
+              <th class="p-3 w-28 text-center">Ngày Ký</th>
+              <th class="p-3">Tên Loại Và Trích Yếu Nội Dung</th>
+              <th class="p-3 w-52 text-center">Tệp Đính Kèm</th>
+              <th class="p-3 w-28 text-center">Xem</th>
+            </tr>
+          </thead>
+          <tbody id="dispatch-table-body" class="divide-y divide-slate-200"></tbody>
+        </table>
+      </div>
+
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex flex-wrap justify-between items-center text-xs text-slate-600 font-medium">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-shield-halved text-teal-600"></i>
+          <span>Chế độ bảo vệ dữ liệu sổ công văn đi (Chỉ cho phép xem & đăng ký công văn mới, không có nút sửa/xóa).</span>
+        </div>
+        <span class="text-slate-500 font-bold font-mono">Trạm Y tế xã Mộ Đức</span>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-slate-200 bg-white py-3 px-4 text-center text-xs text-slate-600 font-medium mt-auto">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5">
+      <div>© 2026 <b>Trạm Y Tế Xã Mộ Đức</b> • Tỉnh Quảng Ngãi</div>
+      <div class="flex items-center gap-2 font-semibold text-slate-700">
+        <span>SỔ VĂN BẢN ĐI NĐ 30/2020/NĐ-CP</span>
+        <span>•</span>
+        <a href="index.html" class="text-teal-700 hover:underline">Về Cổng Chính</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL PREVIEW XEM TRƯỚC CÔNG VĂN -->
+  <div id="preview-doc-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xs z-50 hidden flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl border border-slate-300 overflow-hidden flex flex-col h-[92vh]">
+      <div class="p-2.5 sm:p-3.5 bg-slate-900 text-white flex flex-wrap justify-between items-center gap-2 flex-none">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <div class="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black text-xs shrink-0">
+            <i class="fa-solid fa-file-lines"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span id="preview-modal-badge" class="px-2 py-0.5 rounded bg-teal-800 text-teal-200 font-mono text-[10.5px] font-bold">14/BC-TYT</span>
+              <h3 class="font-extrabold text-xs sm:text-sm leading-tight truncate" id="preview-modal-title">Xem Trước Công Văn</h3>
+            </div>
+            <p class="text-[10.5px] text-slate-300 truncate mt-0.5 hidden sm:block" id="preview-modal-sub">Trích yếu nội dung công văn</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0 ml-auto">
+          <button type="button" id="preview-download-btn" onclick="window.downloadCurrentOriginalFile()" class="hidden px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-download"></i>
+            <span>Tải Tệp</span>
+          </button>
+          <button type="button" onclick="window.closePreviewModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="preview-files-switcher" class="hidden bg-slate-100 border-b border-slate-300 px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-none text-xs"></div>
+
+      <div class="flex-1 bg-slate-200/90 overflow-auto custom-scrollbar relative p-2 sm:p-4 flex flex-col items-center justify-center w-full" id="preview-modal-body"></div>
+
+      <div class="p-2.5 bg-white border-t border-slate-200 flex flex-wrap justify-between items-center gap-2 text-xs flex-none">
+        <div class="text-slate-600 font-medium truncate max-w-[220px] sm:max-w-md flex items-center gap-1.5 text-[11px]">
+          <i class="fa-solid fa-circle-info text-teal-600"></i>
+          <span id="preview-file-source-text" class="truncate">Thông tin công văn</span>
+        </div>
+        <div class="flex items-center gap-1.5 ml-auto">
+          <button type="button" onclick="window.copyCurrentViewDocText()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-[11px] transition flex items-center gap-1 cursor-pointer">
+            <i class="fa-solid fa-copy text-teal-700"></i> Copy Zalo
+          </button>
+          <button type="button" onclick="window.closePreviewModal()" class="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-[11px] transition cursor-pointer">
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ĐĂNG KÝ CÔNG VĂN ĐI MỚI -->
+  <div id="doc-entry-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto">
+    <div class="bg-white border border-slate-300 rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden my-auto flex flex-col max-h-[94vh]">
+      
+      <div class="p-3.5 bg-slate-900 text-white flex justify-between items-center flex-none">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold">
+            <i class="fa-solid fa-file-circle-plus"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base leading-tight">Đăng Ký Số Công Văn Đi Mới</h3>
+            <p class="text-[11px] text-slate-300">Cấp số tự động • Đính kèm nhiều tệp • Xác thực 180 giây</p>
+          </div>
+        </div>
+        <button type="button" onclick="window.closeDocEntryModal()" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form onsubmit="window.handleDocEntrySubmit(event)" class="p-3.5 sm:p-5 space-y-3.5 text-xs overflow-y-auto custom-scrollbar flex-1">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Loại văn bản: <span class="text-rose-600">*</span></label>
+            <select id="entry-doc-type" onchange="window.onDocTypeChange(this.value)" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-teal-900 outline-none focus:ring-2 focus:ring-teal-500">
+              <option value="BC">Báo cáo (BC)</option>
+              <option value="KH">Kế hoạch (KH)</option>
+              <option value="LT">Lịch trực (LT)</option>
+              <option value="TB">Thông báo (TB)</option>
+              <option value="TTr">Tờ trình (TTr)</option>
+              <option value="QĐ">Quyết định (QĐ)</option>
+              <option value="GGT">Giấy giới thiệu (GGT)</option>
+              <option value="GM">Giấy mời (GM)</option>
+              <option value="CV">Công văn hành chính (CV)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Số thứ tự & Ký hiệu: <span class="text-rose-600">*</span></label>
+            <div class="flex items-center gap-1.5">
+              <input type="number" id="entry-doc-seq" min="1" max="9999" required oninput="window.updateFullNumberPreview()" class="w-20 p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-black text-center text-slate-900 outline-none focus:ring-2 focus:ring-teal-500">
+              <span class="text-slate-400 font-bold">→</span>
+              <input type="text" id="entry-doc-fullnumber" class="flex-1 p-2.5 bg-teal-50 border border-teal-300 rounded-xl font-mono font-black text-teal-950 text-center outline-none focus:ring-2 focus:ring-teal-500">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Ngày ký ban hành: <span class="text-rose-600">*</span></label>
+          <input type="date" id="entry-doc-date" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Tên loại và Trích yếu nội dung: <span class="text-rose-600">*</span></label>
+          <textarea id="entry-doc-title" rows="3" required placeholder="Nhập trích yếu nội dung văn bản..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500 leading-relaxed"></textarea>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label class="font-bold text-teal-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-paperclip text-teal-600"></i>
+              <span>Tệp đính kèm (Không bắt buộc - Chọn nhiều file):</span>
+            </label>
+            <span class="text-[10px] text-emerald-700 font-extrabold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Nhiều file</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+            <div class="sm:col-span-6">
+              <input type="file" id="entry-doc-file" multiple onchange="window.handleFileSelect(event)" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-100 file:text-teal-800 hover:file:bg-teal-200 cursor-pointer">
+            </div>
+            <div class="sm:col-span-6 flex items-center gap-1">
+              <input type="url" id="entry-doc-url" placeholder="Hoặc dán link Drive rồi bấm +" class="flex-1 p-2 bg-white border border-slate-300 rounded-xl text-xs font-mono text-slate-800 outline-none focus:ring-1 focus:ring-teal-500">
+              <button type="button" onclick="window.addUrlAttachmentFromInput()" class="px-2.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs shrink-0 cursor-pointer">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="entry-files-list-wrapper" class="hidden space-y-1.5 pt-1">
+            <div class="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
+              <span>Đã chọn (<b id="entry-files-count" class="text-teal-800">0</b> tệp):</span>
+              <button type="button" onclick="window.clearSelectedFile()" class="text-rose-600 hover:underline font-bold cursor-pointer">Xóa tất cả tệp</button>
+            </div>
+            <div id="entry-files-list" class="space-y-1 max-h-36 overflow-y-auto custom-scrollbar pr-1"></div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Ghi chú hồ sơ lưu trữ:</label>
+          <input type="text" id="entry-doc-note" placeholder="VD: Bản chính lưu văn thư; gửi UBND xã..." class="w-full p
