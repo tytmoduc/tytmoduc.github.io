@@ -1106,7 +1106,7 @@
             <td class="p-2.5 border-r border-slate-200 align-top space-y-2">
               ${morningEvents.length > 0
                 ? morningEvents.map(renderEventCardHtml).join("")
-                : `<div class="p-2.5 rounded-xl border border-dashed border-slate-200 text-slate-400 text-[11px] italic">Ban Giám đốc làm việc, chỉ đạo chuyên môn tại các điểm trạm</div>`
+                : `<div class="p-2.5 rounded-xl border border-dashed border-slate-200 text-slate-400 text-[11px] italic">Ban Giám đốc làm việc, chỉ đạo chuyên môn tại các điểm trạm phụ trách</div>`
               }
             </td>
 
@@ -1114,7 +1114,7 @@
             <td class="p-2.5 border-r border-slate-200 align-top space-y-2">
               ${afternoonEvents.length > 0
                 ? afternoonEvents.map(renderEventCardHtml).join("")
-                : `<div class="p-2.5 rounded-xl border border-dashed border-slate-200 text-slate-400 text-[11px] italic">Ban Giám đốc giải quyết công việc hành chính và kiểm tra điểm trạm</div>`
+                : `<div class="p-2.5 rounded-xl border border-dashed border-slate-200 text-slate-400 text-[11px] italic">Ban Giám đốc làm việc, chỉ đạo chuyên môn tại các điểm trạm phụ trách</div>`
               }
             </td>
 
@@ -1759,7 +1759,7 @@
       const header = ["Lãnh Đạo Ban Giám Đốc", "Chức Vụ", "SĐT", ...currentWeekDays.map(d => `${d.dayName} (${d.shortDate})`)];
       const rows = [
         ["UBND XÃ MỘ ĐỨC - TRẠM Y TẾ"],
-        [`BẢNG PHÂN CÔNG 05 LÃNH ĐẠO BAN GIÁM ĐỐC (${currentWeekDays[0].dateStr} - ${currentWeekDays[6].dateStr})`],
+        [`LỊCH LÀM VIỆC BAN GIÁM ĐỐC (${currentWeekDays[0].dateStr} - ${currentWeekDays[6].dateStr})`],
         [],
         header
       ];
