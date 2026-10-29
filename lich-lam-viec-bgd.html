@@ -1,0 +1,1951 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Lịch Làm Việc Của Ban Giám Đốc - Trạm Y Tế Xã Mộ Đức</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&family=Times+New+Roman&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+    .font-times { font-family: 'Times New Roman', Times, serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    .today-row-highlight {
+      background-color: #fffbeb !important;
+      border-left: 4px solid #f59e0b !important;
+    }
+
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body > *:not(#print-bgd-container) { display: none !important; }
+      #print-bgd-container {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 8mm 10mm !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        color: #000000 !important;
+        background: #ffffff !important;
+      }
+      table.print-bordered {
+        border-collapse: collapse !important;
+        width: 100% !important;
+      }
+      table.print-bordered th, table.print-bordered td {
+        border: 1px solid #000000 !important;
+        padding: 5px 6px !important;
+        vertical-align: top !important;
+      }
+      @page { size: A4 landscape; margin: 8mm; }
+    }
+    #print-bgd-container { display: none; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-teal-100 selection:text-teal-900">
+
+  <!-- TOAST THÔNG BÁO -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-[90vw]"></div>
+
+  <!-- HEADER ĐIỀU HÀNH CHÍNH -->
+  <header class="sticky top-0 z-40 bg-white border-b border-slate-200 px-3 sm:px-6 py-2.5 shadow-xs">
+    <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
+      
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <a href="index.html" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 flex items-center justify-center transition shrink-0" title="Về Cổng điều hành chính">
+            <i class="fa-solid fa-arrow-left text-sm"></i>
+          </a>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <h1 class="font-extrabold text-sm sm:text-lg text-slate-900 truncate flex items-center gap-1.5">
+                <i class="fa-solid fa-calendar-check text-teal-600"></i>
+                <span>LỊCH LÀM VIỆC CỦA BAN GIÁM ĐỐC</span>
+              </h1>
+              <span class="px-2 py-0.5 rounded-md bg-teal-100 text-teal-900 border border-teal-300 text-[10px] font-extrabold uppercase tracking-wider shrink-0">
+                Liên thông Google Sheet
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-500 font-medium truncate">
+              Trạm Y Tế Xã Mộ Đức • Tự động tổng hợp từ Lịch trực 24/24, Lịch họp - Tập huấn & Google Sheet BGĐ
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cụm nút công cụ điều hành -->
+      <div class="flex items-center gap-1.5 sm:gap-2 justify-end flex-wrap">
+        <button type="button" onclick="openAddEventModal()" class="px-3.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 active:scale-95 text-white font-extrabold text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+          <i class="fa-solid fa-plus text-amber-300"></i>
+          <span>Thêm Lịch Công Tác</span>
+        </button>
+
+        <button type="button" onclick="saveCurrentWeekToCloud(false)" id="btn-save-cloud" class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="Lưu toàn bộ lịch công tác tuần này lên Google Sheet">
+          <i class="fa-solid fa-cloud-arrow-up text-amber-300" id="save-cloud-icon"></i>
+          <span>Lưu Lên Sheet</span>
+        </button>
+
+        <button type="button" onclick="syncAllSources(false)" class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="Đồng bộ tức thời từ Google Sheet BGĐ, Lịch trực và Lịch họp">
+          <i class="fa-solid fa-arrows-rotate" id="sync-icon"></i>
+          <span>Đồng Bộ</span>
+        </button>
+
+        <button type="button" onclick="copyZaloBriefing()" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="Sao chép lịch công tác tuần gửi nhóm Zalo">
+          <i class="fa-solid fa-comment-dots"></i>
+          <span class="hidden sm:inline">Copy Zalo</span>
+        </button>
+
+        <button type="button" onclick="exportScheduleWord()" class="px-3 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="Tải file Word (.doc) chuẩn NĐ 30/2020/NĐ-CP">
+          <i class="fa-solid fa-file-word"></i>
+          <span class="hidden md:inline">Word (.doc)</span>
+        </button>
+
+        <button type="button" onclick="printScheduleA4()" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="In Lịch Làm Việc Ban Giám Đốc khổ A4">
+          <i class="fa-solid fa-print"></i>
+          <span class="hidden md:inline">In Lịch A4</span>
+        </button>
+
+        <button type="button" onclick="exportScheduleExcel()" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="Xuất lịch làm việc ra Excel">
+          <i class="fa-solid fa-file-excel"></i>
+          <span class="hidden lg:inline">Excel</span>
+        </button>
+
+        <button type="button" onclick="openAppsScriptModal()" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs transition flex items-center gap-1 cursor-pointer" title="Xem mã Google Apps Script (.gs)">
+          <i class="fa-solid fa-code text-teal-700"></i>
+          <span class="hidden xl:inline">Mã .gs</span>
+        </button>
+
+        <button type="button" onclick="openCloudConfigModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 flex items-center justify-center transition cursor-pointer shrink-0" title="Cấu hình Link Google Apps Script">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-2.5 sm:px-6 py-3.5 flex-1 w-full space-y-3.5">
+
+    <!-- 5 THẺ LÃNH ĐẠO BAN GIÁM ĐỐC TRẠM Y TẾ XÃ MỘ ĐỨC -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3" id="bgd-leaders-cards">
+      <!-- Render động 5 đồng chí trong Ban Giám đốc -->
+    </section>
+
+    <!-- THANH ĐIỀU HƯỚNG TUẦN, LỌC LÃNH ĐẠO & CHUYỂN CHẾ ĐỘ XEM -->
+    <section class="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
+      
+      <!-- Điều hướng tuần -->
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <button type="button" onclick="changeWeek(-1)" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 font-bold text-xs text-slate-800 transition cursor-pointer flex items-center gap-1">
+          <i class="fa-solid fa-chevron-left text-[10px]"></i> Tuần trước
+        </button>
+
+        <div class="flex items-center gap-1.5 bg-teal-50/70 px-3 py-1.5 rounded-xl border border-teal-300 text-xs">
+          <span class="font-extrabold text-teal-800 uppercase text-[11px]">Tuần:</span>
+          <input type="date" id="week-start-picker" onchange="onPickWeekDate(this.value)" class="bg-transparent font-extrabold text-teal-950 outline-none cursor-pointer">
+          <span class="text-teal-600 font-bold">→</span>
+          <span id="week-end-label" class="font-mono font-extrabold text-teal-900">--/--/----</span>
+        </div>
+
+        <button type="button" onclick="changeWeek(1)" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 font-bold text-xs text-slate-800 transition cursor-pointer flex items-center gap-1">
+          Tuần sau <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+
+        <button type="button" onclick="goToCurrentWeek()" class="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 font-extrabold text-xs transition cursor-pointer">
+          Hôm nay / Tuần này
+        </button>
+      </div>
+
+      <!-- Bộ lọc Lãnh đạo & Chế độ hiển thị -->
+      <div class="flex items-center gap-2 flex-wrap justify-between lg:justify-end">
+        <div class="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs">
+          <i class="fa-solid fa-user-tie text-teal-700"></i>
+          <select id="leader-filter-select" onchange="onFilterLeaderChange(this.value)" class="bg-transparent font-extrabold text-slate-900 outline-none cursor-pointer">
+            <option value="all">Tất cả Ban Giám đốc (05 Đ/c)</option>
+            <option value="bgd_duc">BS. Phạm Minh Đức (Giám đốc)</option>
+            <option value="bgd_nguyen">BS. Nguyễn Thị Như Nguyện (PGĐ)</option>
+            <option value="bgd_phu">BS. Nguyễn Phu (PGĐ)</option>
+            <option value="bgd_viet">ĐD. Võ Thị Thanh Việt (PGĐ)</option>
+            <option value="bgd_thanh">ĐD. Trần Thị Kim Thanh (PGĐ)</option>
+          </select>
+        </div>
+
+        <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-extrabold">
+          <button type="button" id="btn-view-daily" onclick="switchViewMode('daily')" class="px-3 py-1.5 rounded-lg bg-teal-700 text-white shadow-2xs transition cursor-pointer flex items-center gap-1.5">
+            <i class="fa-solid fa-table-list"></i>
+            <span>Lịch Tuần (Sáng/Chiều/Trực)</span>
+          </button>
+          <button type="button" id="btn-view-matrix" onclick="switchViewMode('matrix')" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer flex items-center gap-1.5">
+            <i class="fa-solid fa-table-cells"></i>
+            <span>Ma Trận 5 Lãnh Đạo</span>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- CHÚ THÍCH NGUỒN DỮ LIỆU LIÊN THÔNG & TRẠNG THÁI CLOUD -->
+    <section class="flex flex-wrap items-center justify-between gap-2 px-1 text-xs">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="font-bold text-slate-500">Nguồn dữ liệu liên thông:</span>
+        <span class="px-2.5 py-0.5 rounded-md bg-rose-100 text-rose-900 border border-rose-300 font-bold text-[11px] flex items-center gap-1">
+          <i class="fa-solid fa-shield-heart text-rose-600"></i> Trực 24/24 (Từ Lịch Trực)
+        </span>
+        <span class="px-2.5 py-0.5 rounded-md bg-orange-100 text-orange-900 border border-orange-300 font-bold text-[11px] flex items-center gap-1">
+          <i class="fa-solid fa-graduation-cap text-orange-600"></i> Họp & Tập huấn (Từ Lịch Họp)
+        </span>
+        <span class="px-2.5 py-0.5 rounded-md bg-teal-100 text-teal-900 border border-teal-300 font-bold text-[11px] flex items-center gap-1">
+          <i class="fa-solid fa-cloud text-teal-700"></i> Công tác BGĐ (Lưu Google Sheet)
+        </span>
+        <span id="cloud-status-badge" class="px-2 py-0.5 rounded-md bg-slate-200 text-slate-700 text-[10.5px] font-bold">
+          Đang sẵn sàng
+        </span>
+      </div>
+      <div class="flex items-center gap-3 text-[11px] font-bold">
+        <a href="lich-truc.html" class="text-teal-700 hover:underline flex items-center gap-1">
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Mở Lịch Trực
+        </a>
+        <a href="lich-hop-tap-huan.html" class="text-orange-700 hover:underline flex items-center gap-1">
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Mở Lịch Họp & Tập Huấn
+        </a>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- CHẾ ĐỘ 1: BẢNG LỊCH LÀM VIỆC TUẦN (THỨ/NGÀY - SÁNG - CHIỀU - TRỰC)  -->
+    <!-- =================================================================== -->
+    <section id="view-daily-container" class="bg-white rounded-2xl border border-slate-300 shadow-xs overflow-hidden">
+      <div class="p-3.5 bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div>
+          <h2 class="font-extrabold text-xs sm:text-sm uppercase flex items-center gap-2">
+            <i class="fa-solid fa-calendar-week text-amber-300"></i>
+            <span id="schedule-table-heading">LỊCH LÀM VIỆC TUẦN CỦA BAN GIÁM ĐỐC</span>
+          </h2>
+          <p class="text-[11px] text-slate-300 mt-0.5">
+            Tự động đối chiếu ca trực 24/24 tại 04 điểm trạm, lịch đi họp/tập huấn và lịch công tác chỉ đạo của 05 đồng chí Ban Giám đốc
+          </p>
+        </div>
+
+        <div class="flex items-center gap-1.5 flex-wrap self-end sm:self-center shrink-0">
+          <button type="button" onclick="resetDefaultExecutiveTasks()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-[11px] transition flex items-center gap-1 cursor-pointer" title="Khôi phục khung lịch điều hành mẫu của tuần này">
+            <i class="fa-solid fa-rotate-left text-amber-300"></i>
+            <span>Khôi phục mẫu tuần</span>
+          </button>
+          <button type="button" onclick="exportScheduleWord()" class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-file-word"></i>
+            <span>Word Lịch Tuần</span>
+          </button>
+          <button type="button" onclick="printScheduleA4()" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-print"></i>
+            <span>In PDF A4</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-xs border-collapse min-w-[920px]">
+          <thead>
+            <tr class="bg-slate-100 text-slate-800 uppercase font-black text-[11px] border-b-2 border-slate-300 text-center">
+              <th class="p-3 border-r border-slate-300 w-36">Thứ / Ngày</th>
+              <th class="p-3 border-r border-slate-300 w-[32%] text-left">
+                <i class="fa-solid fa-sun text-amber-500 mr-1"></i>Buổi Sáng (07h00 - 11h30)
+              </th>
+              <th class="p-3 border-r border-slate-300 w-[32%] text-left">
+                <i class="fa-solid fa-cloud-sun text-indigo-600 mr-1"></i>Buổi Chiều (13h30 - 17h00)
+              </th>
+              <th class="p-3 text-left">
+                <i class="fa-solid fa-shield-heart text-rose-600 mr-1"></i>Trực Lãnh Đạo & Trực 24/24 (04 Điểm)
+              </th>
+            </tr>
+          </thead>
+          <tbody id="daily-schedule-tbody" class="divide-y divide-slate-200">
+            <!-- Render động 7 ngày từ Thứ Hai đến Chủ Nhật -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- CHẾ ĐỘ 2: MA TRẬN 5 LÃNH ĐẠO BAN GIÁM ĐỐC × 7 NGÀY TRONG TUẦN       -->
+    <!-- =================================================================== -->
+    <section id="view-matrix-container" class="hidden bg-white rounded-2xl border border-slate-300 shadow-xs overflow-hidden">
+      <div class="p-3.5 bg-slate-800 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div>
+          <h2 class="font-extrabold text-xs sm:text-sm uppercase flex items-center gap-2">
+            <i class="fa-solid fa-users-viewfinder text-amber-300"></i>
+            <span>BẢNG PHÂN CÔNG CHI TIẾT 05 LÃNH ĐẠO BAN GIÁM ĐỐC TRONG TUẦN</span>
+          </h2>
+          <p class="text-[11px] text-slate-300 mt-0.5">
+            Theo dõi nhanh lịch trực, lịch đi họp, kiểm tra điểm trạm và giải quyết công việc của từng lãnh đạo (01 Giám đốc & 04 Phó Giám đốc)
+          </p>
+        </div>
+
+        <!-- Cụm nút In PDF A4 / Xuất Word / Xuất Excel dành riêng cho Ma trận 5 Lãnh đạo -->
+        <div class="flex items-center gap-1.5 flex-wrap self-end sm:self-center shrink-0">
+          <button type="button" onclick="exportMatrixScheduleWord()" class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Tải file Word (.doc) bảng Ma trận 5 Lãnh đạo chuẩn NĐ 30/2020/NĐ-CP">
+            <i class="fa-solid fa-file-word"></i>
+            <span>Word Ma Trận (.doc)</span>
+          </button>
+          <button type="button" onclick="printMatrixScheduleA4()" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="In hoặc lưu PDF khổ A4 ngang bảng Ma trận 5 Lãnh đạo">
+            <i class="fa-solid fa-print"></i>
+            <span>In PDF Ma Trận A4</span>
+          </button>
+          <button type="button" onclick="exportMatrixScheduleExcel()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Xuất bảng Ma trận 5 Lãnh đạo ra file Excel">
+            <i class="fa-solid fa-file-excel"></i>
+            <span>Excel Ma Trận</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-xs border-collapse min-w-[980px]">
+          <thead id="matrix-schedule-thead">
+            <!-- Render động tiêu đề 7 ngày -->
+          </thead>
+          <tbody id="matrix-schedule-tbody" class="divide-y divide-slate-200">
+            <!-- Render động 5 hàng tương ứng 5 đồng chí BGĐ -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-slate-200 bg-white py-3 px-4 text-center text-xs text-slate-600 font-medium mt-auto">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5">
+      <div>© 2026 <b>Trạm Y Tế Xã Mộ Đức</b> • Tỉnh Quảng Ngãi</div>
+      <div class="flex items-center gap-2 font-semibold text-slate-700">
+        <span>HỆ THỐNG LỊCH LÀM VIỆC BAN GIÁM ĐỐC LIÊN THÔNG GOOGLE SHEET</span>
+        <span>•</span>
+        <a href="index.html" class="text-teal-700 hover:underline">Về Cổng Chính</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL: THÊM / SỬA LỊCH CÔNG TÁC BAN GIÁM ĐỐC (CÓ XÁC THỰC GOOGLE AUTHENTICATOR 180S) -->
+  <div id="bgd-event-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-white border border-slate-300 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden my-auto">
+      <div class="p-3.5 bg-slate-900 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold">
+            <i class="fa-solid fa-calendar-plus"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm leading-tight" id="modal-event-title">Thêm Lịch Công Tác Ban Giám Đốc</h3>
+            <p class="text-[11px] text-slate-300">Lưu đồng thời trên máy & đồng bộ lên Google Sheet</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeAddEventModal()" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleSaveBgdEvent(event)" class="p-4 space-y-3 text-xs">
+        <input type="hidden" id="event-id-input" value="">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Ngày công tác: <span class="text-rose-600">*</span></label>
+            <input type="date" id="event-date-input" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Buổi / Thời gian: <span class="text-rose-600">*</span></label>
+            <select id="event-session-input" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-teal-950 outline-none focus:ring-2 focus:ring-teal-500">
+              <option value="morning">Buổi Sáng (07h00 - 11h30)</option>
+              <option value="afternoon">Buổi Chiều (13h30 - 17h00)</option>
+              <option value="allday">Cả Ngày (Sáng & Chiều)</option>
+              <option value="duty">Trực Lãnh Đạo / Trực 24/24</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Lãnh đạo tham gia (05 Đ/c): <span class="text-rose-600">*</span></label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-200" id="event-leaders-checkboxes">
+            <!-- Render checkbox 5 lãnh đạo -->
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Giờ cụ thể (nếu có):</label>
+            <input type="text" id="event-time-input" placeholder="VD: 07h30 - 09h30" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Địa điểm / Điểm trạm:</label>
+            <input type="text" id="event-location-input" placeholder="VD: Điểm trạm chính / UBND xã..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Nội dung công tác / Chỉ đạo: <span class="text-rose-600">*</span></label>
+          <textarea id="event-title-input" rows="3" required placeholder="Nhập nội dung làm việc, họp giao ban, kiểm tra chuyên môn..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500 leading-relaxed"></textarea>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Thành phần phối hợp / Ghi chú:</label>
+          <input type="text" id="event-note-input" placeholder="VD: Cùng Tổ Hành chính, Tổ Dược, Trưởng các điểm trạm..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
+        </div>
+
+        <!-- BẢO MẬT 2 LỚP GOOGLE AUTHENTICATOR (LẤY MÃ TRƯỚC, LƯU SAU - 180 GIÂY) -->
+        <div class="p-3.5 bg-gradient-to-br from-teal-50 via-slate-50 to-emerald-50 rounded-2xl border-2 border-teal-500/60 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-teal-600 text-amber-300 flex items-center justify-center font-black text-xs shrink-0">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <span class="font-black text-teal-950 text-xs uppercase">Mã Google Authenticator <span class="text-rose-600">*</span></span>
+            </div>
+
+            <div class="flex items-center gap-1 text-[11px] bg-white px-2.5 py-0.5 rounded-lg border border-teal-300 font-bold text-teal-900 shrink-0">
+              <i class="fa-solid fa-clock text-teal-600 text-[10px]"></i>
+              <span id="entry-gauth-countdown" class="font-mono font-black text-teal-800">180s</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div class="relative flex-1">
+              <input type="text" id="entry-gauth-code" inputmode="numeric" maxlength="6" placeholder="Nhập 6 số..."
+                     oninput="this.value = this.value.replace(/[^0-9]/g, ''); onEntryGauthCodeInput();"
+                     class="w-full px-3 py-2 bg-white border-2 border-teal-500 rounded-xl font-mono font-black text-sm tracking-[4px] text-slate-900 outline-none">
+              <span id="entry-gauth-valid-badge" class="hidden absolute right-2 top-2 px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-black">
+                ✓ Hợp lệ
+              </span>
+            </div>
+            <button type="button" onclick="checkGauthCodeImmediately()" class="px-3 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl font-bold text-xs transition shrink-0 flex items-center gap-1 cursor-pointer">
+              <i class="fa-solid fa-check"></i>
+              <span>Kiểm Tra</span>
+            </button>
+          </div>
+          <p id="entry-gauth-error" class="hidden text-rose-600 font-bold text-[11px]"></p>
+
+          <div class="border-t border-teal-200/60 pt-2">
+            <button type="button" onclick="toggleEntryQrAccordion()" class="text-teal-700 hover:text-teal-900 font-bold text-[11px] flex items-center gap-1.5 cursor-pointer">
+              <i class="fa-solid fa-qrcode"></i>
+              <span>Bấm để xem mã QR cài Google Authenticator (dathieu102@gmail.com)</span>
+              <i class="fa-solid fa-chevron-down text-[9px]" id="entry-qr-icon"></i>
+            </button>
+
+            <div id="entry-qr-container" class="hidden mt-2 p-3 bg-white rounded-xl border border-teal-200 text-center space-y-2">
+              <div class="flex justify-center">
+                <img id="entry-qr-image" src="" alt="QR Code" class="w-32 h-32 bg-white p-1 rounded-xl border border-slate-300">
+              </div>
+              <div class="text-[11px] text-slate-500">
+                Khóa nhập tay: <code class="font-mono font-black text-teal-900 bg-slate-100 px-2 py-0.5 rounded select-all">TYTMODUCDATHIEU2</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-200 flex justify-end gap-2">
+          <button type="button" onclick="closeAddEventModal()" class="px-4 py-2 rounded-xl text-slate-600 font-bold hover:bg-slate-100 transition cursor-pointer">
+            Hủy
+          </button>
+          <button type="submit" id="btn-submit-bgd-event" class="px-5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-extrabold transition shadow-xs cursor-pointer">
+            <i class="fa-solid fa-floppy-disk mr-1"></i> Xác Nhận & Lưu Lịch
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CẤU HÌNH LINK GOOGLE APPS SCRIPT LỊCH BAN GIÁM ĐỐC -->
+  <div id="cloud-config-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-300 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+      <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold">
+            <i class="fa-solid fa-gear"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base leading-tight">CẤU HÌNH GOOGLE APPS SCRIPT (LỊCH BGĐ)</h3>
+            <p class="text-[11px] text-slate-300">Liên thông dữ liệu Lịch làm việc Ban Giám đốc với Google Sheet</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeCloudConfigModal()" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-3.5 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Web App URL của Lịch Làm Việc BGĐ (Đã tích hợp sẵn):</label>
+          <input type="url" id="bgd-api-url-input" value="https://script.google.com/macros/s/AKfycbzPQBMmxDON5PhYhg4ly62uNCHDgRIeWy1lzejWkSMKwmkK8inqjlBP-kfgS6-wHCTe/exec" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono text-xs text-slate-900 outline-none focus:ring-2 focus:ring-teal-500">
+        </div>
+        <div class="p-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 space-y-1 text-[11px]">
+          <div class="font-extrabold text-slate-900"><i class="fa-solid fa-link text-teal-700 mr-1"></i>Các Link Google Apps Script đã tích hợp sẵn trong code:</div>
+          <div class="truncate">• <b>Lịch Làm Việc BGĐ:</b> <code class="font-mono text-[10px] text-teal-800">https://script.google.com/macros/s/AKfycbzPQBMmxDON5PhYhg4ly62uNCHDgRIeWy1lzejWkSMKwmkK8inqjlBP-kfgS6-wHCTe/exec</code></div>
+          <div class="truncate">• <b>Lịch Trực 24/24:</b> <code class="font-mono text-[10px] text-rose-800">https://script.google.com/macros/s/AKfycbxargASuNxzYJPtSw52uounHzcixO1Sthc-IXnaSwLLiUtz8XQHveuorG8pHOLbwQCI/exec</code></div>
+          <div class="truncate">• <b>Lịch Họp & Tập Huấn:</b> <code class="font-mono text-[10px] text-orange-800">https://script.google.com/macros/s/AKfycbw9IDJhGC2UQ6mKnn1NjlTIiZACzj8uvwZJj28dgpbSVWREHqljf3aYC6ihmbslqg_jUg/exec</code></div>
+        </div>
+        <div class="p-3 rounded-xl bg-teal-50 border border-teal-200 text-teal-900 space-y-1 text-[11px]">
+          <div class="font-extrabold"><i class="fa-solid fa-circle-info mr-1"></i>Hướng dẫn nhanh:</div>
+          <div>1. Link Google Apps Script đã được gắn cố định trực tiếp vào mã HTML.</div>
+          <div>2. Nếu bạn tạo Web App mới riêng cho Lịch BGĐ, chỉ cần dán link mới vào ô trên và bấm <b>Lưu Cấu Hình</b> (hoặc bấm <b>Khôi Phục Mặc Định</b> để về link gốc).</div>
+        </div>
+      </div>
+
+      <div class="p-3.5 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs">
+        <div class="flex items-center gap-1.5">
+          <button type="button" onclick="testBgdCloudConnection()" class="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 font-bold transition cursor-pointer">
+            <i class="fa-solid fa-signal mr-1"></i> Kiểm Tra Kết Nối
+          </button>
+          <button type="button" onclick="resetDefaultBgdCloudUrl()" class="px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold transition cursor-pointer">
+            Mặc Định
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeCloudConfigModal()" class="px-3.5 py-2 rounded-xl text-slate-600 font-bold hover:bg-slate-200 transition cursor-pointer">
+            Đóng
+          </button>
+          <button type="button" onclick="saveCloudConfigUrl()" class="px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl font-bold transition shadow-xs cursor-pointer">
+            Lưu Cấu Hình
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: XEM & SAO CHÉP MÃ GOOGLE APPS SCRIPT (.GS) -->
+  <div id="apps-script-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-white border border-slate-300 rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden my-auto flex flex-col max-h-[90vh]">
+      <div class="p-4 bg-slate-900 text-white flex justify-between items-center flex-none">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold">
+            <i class="fa-solid fa-code"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base leading-tight">MÃ NGUỒN GOOGLE APPS SCRIPT (.GS) - LỊCH LÀM VIỆC BGĐ</h3>
+            <p class="text-[11px] text-slate-300">Tự động tạo bảng LichLamViecBGD trên Google Sheet và đồng bộ 2 chiều</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeAppsScriptModal()" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-3 overflow-y-auto custom-scrollbar flex-1 bg-slate-50 text-xs">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-slate-700">Dán toàn bộ mã dưới đây vào Tiện ích mở rộng → Apps Script:</span>
+          <button type="button" onclick="copyAppsScriptCode()" class="px-3.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+            <i class="fa-solid fa-copy"></i> Sao Chép Toàn Bộ Mã (.gs)
+          </button>
+        </div>
+        <textarea id="apps-script-code-textarea" rows="16" readonly class="w-full p-3 font-mono text-[11px] leading-relaxed bg-slate-900 text-teal-300 rounded-xl outline-none border border-slate-700 select-all custom-scrollbar"></textarea>
+      </div>
+
+      <div class="p-3 bg-slate-100 border-t border-slate-200 flex justify-end flex-none text-xs">
+        <button type="button" onclick="closeAppsScriptModal()" class="px-4 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition cursor-pointer">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KHUNG IN A4 DÀNH CHO TRÌNH DUYỆT -->
+  <div id="print-bgd-container" class="w-full text-black font-times"></div>
+
+  <script>
+    // =========================================================================
+    // 1. DANH SÁCH BAN GIÁM ĐỐC TRẠM Y TẾ XÃ MỘ ĐỨC (05 ĐỒNG CHÍ: 01 GĐ & 04 PGĐ)
+    // =========================================================================
+    const BGD_LEADERS = [
+      {
+        id: "bgd_duc",
+        name: "BS. Phạm Minh Đức",
+        rawName: "Phạm Minh Đức",
+        shortName: "BS Đức",
+        aliases: ["phạm minh đức", "bs đức", "bs. đức", "giám đốc", "ban giám đốc", "lãnh đạo trạm"],
+        role: "Giám đốc Trạm Y tế",
+        station: "Điểm y tế số 1 (Mộ Đức)",
+        stationIdx: 1,
+        phone: "0914158350",
+        badgeClass: "bg-emerald-100 text-emerald-900 border-emerald-300",
+        avatarBg: "bg-emerald-700"
+      },
+      {
+        id: "bgd_nguyen",
+        name: "BS. Nguyễn Thị Như Nguyện",
+        rawName: "Nguyễn Thị Như Nguyện",
+        shortName: "BS Nguyện",
+        aliases: ["nguyễn thị như nguyện", "như nguyện", "bs nguyện", "bs. nguyện", "phó giám đốc", "ban giám đốc"],
+        role: "Phó Giám đốc",
+        station: "Điểm trạm chính (Đức Tân)",
+        stationIdx: 0,
+        phone: "0962849485",
+        badgeClass: "bg-blue-100 text-blue-900 border-blue-300",
+        avatarBg: "bg-blue-700"
+      },
+      {
+        id: "bgd_phu",
+        name: "BS. Nguyễn Phu",
+        rawName: "Nguyễn Phu",
+        shortName: "BS Phu",
+        aliases: ["nguyễn phu", "bs phu", "bs. phu", "phó giám đốc", "ban giám đốc"],
+        role: "Phó Giám đốc",
+        station: "Điểm y tế số 2 (Đức Hòa)",
+        stationIdx: 2,
+        phone: "0777401717",
+        badgeClass: "bg-amber-100 text-amber-900 border-amber-300",
+        avatarBg: "bg-amber-600"
+      },
+      {
+        id: "bgd_viet",
+        name: "ĐD. Võ Thị Thanh Việt",
+        rawName: "Võ Thị Thanh Việt",
+        shortName: "ĐD Việt",
+        aliases: ["võ thị thanh việt", "thanh việt", "đd việt", "đd. việt", "nhs việt", "phó giám đốc", "ban giám đốc"],
+        role: "Phó Giám đốc",
+        station: "Điểm y tế số 1 (Mộ Đức) & Điểm số 3 (Đức Phú)",
+        stationIdx: 1,
+        phone: "0974930431",
+        badgeClass: "bg-purple-100 text-purple-900 border-purple-300",
+        avatarBg: "bg-purple-700"
+      },
+      {
+        id: "bgd_thanh",
+        name: "ĐD. Trần Thị Kim Thanh",
+        rawName: "Trần Thị Kim Thanh",
+        shortName: "ĐD Thanh",
+        aliases: ["trần thị kim thanh", "kim thanh", "đd thanh", "đd. thanh", "phó giám đốc", "ban giám đốc"],
+        role: "Phó Giám đốc",
+        station: "Điểm y tế số 2 (Đức Hòa) & Tổ Hành chính",
+        stationIdx: 2,
+        phone: "0903700722",
+        badgeClass: "bg-rose-100 text-rose-900 border-rose-300",
+        avatarBg: "bg-rose-700"
+      }
+    ];
+
+    const STATIONS_META = [
+      { idx: 0, name: "Điểm trạm chính (Đức Tân)", short: "Đức Tân" },
+      { idx: 1, name: "Điểm y tế số 1 (Mộ Đức)", short: "Mộ Đức" },
+      { idx: 2, name: "Điểm y tế số 2 (Đức Hòa)", short: "Đức Hòa" },
+      { idx: 3, name: "Điểm y tế số 3 (Đức Phú)", short: "Đức Phú" }
+    ];
+
+    // =========================================================================
+    // CẤU HÌNH LINK GOOGLE APPS SCRIPT TÍCH HỢP TRỰC TIẾP TRONG CODE HTML
+    // =========================================================================
+    const DEFAULT_BGD_API_URL = "https://script.google.com/macros/s/AKfycbzPQBMmxDON5PhYhg4ly62uNCHDgRIeWy1lzejWkSMKwmkK8inqjlBP-kfgS6-wHCTe/exec";
+    const DEFAULT_SCHEDULE_API_URL = "https://script.google.com/macros/s/AKfycbxargASuNxzYJPtSw52uounHzcixO1Sthc-IXnaSwLLiUtz8XQHveuorG8pHOLbwQCI/exec";
+    const DEFAULT_MEETINGS_API_URL = "https://script.google.com/macros/s/AKfycbw9IDJhGC2UQ6mKnn1NjlTIiZACzj8uvwZJj28dgpbSVWREHqljf3aYC6ihmbslqg_jUg/exec";
+    const DEFAULT_TASKS_API_URL = "https://script.google.com/macros/s/AKfycbzm7GcXOJnmCzFvp1WHy1TCex45KocdorP2wYkizmXnOffD4mwBPq3HAse3ak-4ibsS/exec";
+    const DEFAULT_STAFF_API_URL = "https://script.google.com/macros/s/AKfycbz8rE8UkPQOG-gk_annTiMfKic9qoUQRn-X-qII3Dtme_xPMwecwi0YzbxoSHlLbNZmBg/exec";
+
+    const SCHEDULE_API_URL = localStorage.getItem('lichTrucApiUrl') || DEFAULT_SCHEDULE_API_URL;
+    const MEETINGS_API_URL = localStorage.getItem('TYT_MEETINGS_API_URL') || DEFAULT_MEETINGS_API_URL;
+
+    // Tự động ghi nhận link Lịch làm việc BGĐ mới nhất vào bộ nhớ trình duyệt
+    localStorage.setItem('TYT_BGD_SCHEDULE_API_URL', DEFAULT_BGD_API_URL);
+    localStorage.setItem('lichTrucApiUrl', SCHEDULE_API_URL);
+    localStorage.setItem('TYT_MEETINGS_API_URL', MEETINGS_API_URL);
+    localStorage.setItem('TYT_TASKS_API_URL', DEFAULT_TASKS_API_URL);
+    localStorage.setItem('TYT_STAFF_API_URL', DEFAULT_STAFF_API_URL);
+
+    function getBgdCloudApiUrl() {
+      const saved = localStorage.getItem('TYT_BGD_SCHEDULE_API_URL');
+      if (saved && saved.trim().startsWith('https://script.google.com/')) {
+        return saved.trim();
+      }
+      localStorage.setItem('TYT_BGD_SCHEDULE_API_URL', DEFAULT_BGD_API_URL);
+      return DEFAULT_BGD_API_URL;
+    }
+
+    // Mã Google Authenticator (RFC 6238 - hiệu lực 180 giây)
+    const GAUTH_ACCOUNT = "dathieu102@gmail.com";
+    const GAUTH_ISSUER = "TYT Mộ Đức";
+    const DEFAULT_GAUTH_SECRET = "TYTMODUCDATHIEU2";
+    let gauthStepTimerInterval = null;
+    let gauthRemainingSeconds = 180;
+
+    // Dữ liệu lịch trực 04 điểm trạm mặc định
+    const OFFICIAL_DUTY_MAP = {
+      "2026-10-12": ["Bs Thuyên", "ĐD Lài", "BS Phu", "NHS Trâm"],
+      "2026-10-13": ["Ys Tuệ", "ĐD Nguyệt", "ĐD Thanh", "NHS Lan"],
+      "2026-10-14": ["NHS Thuỳ", "BS Đức", "NHS Thắm", "ĐD Ly Va"],
+      "2026-10-15": ["Ys Thủy", "NHS Tin", "ĐD Trúc", "NHS Bé"],
+      "2026-10-16": ["Bs Thuyên", "ĐD Lài", "BS Phu", "NHS Trâm"],
+      "2026-10-17": ["CN Thu", "ĐD Nguyệt", "ĐD Thanh", "NHS Lan"],
+      "2026-10-18": ["NHS Thuỳ", "BS Đức", "NHS Thắm", "ĐD Ly Va"],
+      "2026-10-19": ["Ys Thủy", "NHS Tin", "ĐD Trúc", "NHS Bé"],
+      "2026-10-20": ["ĐD Vinh", "ĐD Lài", "Ys Phương", "Ys Vũ"]
+    };
+
+    const ANCHOR_OCT16 = new Date(2026, 9, 16, 0, 0, 0);
+    const STATION_ROSTERS = [
+      {
+        staff: ['Bs Thuyên', 'CN Thu', 'NHS Thuỳ', 'Ys Thủy', 'ĐD Vinh', 'BS Nguyện', 'NHS Thy'],
+        getStaff(diffDays) {
+          const cycle = Math.floor(diffDays / 7);
+          const step = ((diffDays % 7) + 7000) % 7;
+          return this.staff[((step + cycle) % 7 + 7) % 7];
+        }
+      },
+      {
+        staff: ['ĐD Lài', 'ĐD Nguyệt', 'BS Đức', 'NHS Tin'],
+        getStaff(diffDays) {
+          return this.staff[((diffDays % 4) + 4000) % 4];
+        }
+      },
+      {
+        staff: ['BS Phu', 'ĐD Thanh', 'NHS Thắm', 'ĐD Trúc', 'Ys Phương'],
+        getStaff(diffDays) {
+          return this.staff[((diffDays % 5) + 5000) % 5];
+        }
+      },
+      {
+        staff: ['NHS Trâm', 'NHS Lan', 'ĐD Ly Va', 'NHS Bé', 'Ys Vũ', 'ĐD Việt'],
+        getStaff(diffDays) {
+          return this.staff[((diffDays % 6) + 6000) % 6];
+        }
+      }
+    ];
+
+    let currentMondayIso = "";
+    let currentWeekDays = []; // [{ iso, dateStr, dayName, isToday }]
+    let currentViewMode = "daily";
+    let currentLeaderFilter = "all";
+    let bgdCustomEventsStore = {}; // { [mondayIso]: [ { id, dateIso, session, time, leaderIds, title, location, note } ] }
+    let syncedMeetingsList = [];
+
+    function getLocalISODate(d) {
+      if (!d || !(d instanceof Date) || isNaN(d.getTime())) d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function getMondayOfDate(d) {
+      const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const day = date.getDay();
+      const diff = (day === 0 ? -6 : 1) - day;
+      date.setDate(date.getDate() + diff);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    }
+
+    function formatDmy(isoStr) {
+      if (!isoStr) return "";
+      const p = String(isoStr).split("-");
+      return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : isoStr;
+    }
+
+    function buildDefaultWeekExecutiveEvents(mondayIso, weekDays) {
+      if (!weekDays || weekDays.length < 7) return [];
+      return [
+        {
+          id: `bgd_def_${mondayIso}_1`,
+          dateIso: weekDays[0].iso,
+          session: "morning",
+          time: "07h30 - 09h00",
+          leaderIds: ["bgd_duc", "bgd_nguyen", "bgd_phu", "bgd_viet", "bgd_thanh"],
+          title: "Chào cờ đầu tuần, giao ban Ban Giám đốc và triển khai nhiệm vụ trọng tâm tuần tại 04 điểm trạm",
+          location: "Điểm trạm chính (Đức Tân)",
+          note: "05 đồng chí Ban Giám đốc và Tổ trưởng chuyên môn"
+        },
+        {
+          id: `bgd_def_${mondayIso}_2`,
+          dateIso: weekDays[0].iso,
+          session: "afternoon",
+          time: "14h00 - 16h30",
+          leaderIds: ["bgd_duc", "bgd_thanh"],
+          title: "Duyệt văn bản đi, rà soát hồ sơ hành chính - tài chính và kiểm tra công tác dược, vắc xin",
+          location: "Điểm trạm chính & Điểm số 1",
+          note: "Phối hợp Tổ Hành chính và Tổ Dược"
+        },
+        {
+          id: `bgd_def_${mondayIso}_3`,
+          dateIso: weekDays[1].iso,
+          session: "morning",
+          time: "08h00 - 11h00",
+          leaderIds: ["bgd_nguyen", "bgd_viet"],
+          title: "Kiểm tra công tác khám chữa bệnh BHYT, an toàn tiêm chủng và quản lý bệnh không lây nhiễm",
+          location: "Điểm trạm chính & Điểm số 3 (Đức Phú)",
+          note: "Các bộ phận chuyên môn"
+        },
+        {
+          id: `bgd_def_${mondayIso}_4`,
+          dateIso: weekDays[2].iso,
+          session: "morning",
+          time: "08h00 - 11h00",
+          leaderIds: ["bgd_duc", "bgd_phu"],
+          title: "Giám sát công tác phòng chống dịch bệnh Sốt xuất huyết, Tay chân miệng và vệ sinh môi trường",
+          location: "Điểm y tế số 1 (Mộ Đức) & Điểm số 2 (Đức Hòa)",
+          note: "Cùng cán bộ phụ trách dịch tễ và Y tế thôn"
+        },
+        {
+          id: `bgd_def_${mondayIso}_5`,
+          dateIso: weekDays[3].iso,
+          session: "afternoon",
+          time: "14h00 - 16h30",
+          leaderIds: ["bgd_nguyen", "bgd_thanh"],
+          title: "Kiểm tra công tác chuyển đổi số y tế, liên thông dữ liệu khám chữa bệnh BHYT (QĐ 130/QĐ-BYT)",
+          location: "04 điểm trạm",
+          note: "Cán bộ phụ trách CNTT và khám chữa bệnh"
+        },
+        {
+          id: `bgd_def_${mondayIso}_6`,
+          dateIso: weekDays[4].iso,
+          session: "afternoon",
+          time: "14h00 - 16h30",
+          leaderIds: ["bgd_duc", "bgd_nguyen", "bgd_phu", "bgd_viet", "bgd_thanh"],
+          title: "Họp hội ý Ban Giám đốc đánh giá kết quả công tác tuần và duyệt lịch trực, lịch công tác tuần tới",
+          location: "Điểm trạm chính (Đức Tân)",
+          note: "Toàn thể Ban Giám đốc (05 Đ/c)"
+        }
+      ];
+    }
+
+    function loadBgdEventsStore() {
+      try {
+        const raw = localStorage.getItem("TYT_BGD_SCHEDULE_STORE_V2");
+        if (raw) {
+          bgdCustomEventsStore = JSON.parse(raw) || {};
+        }
+      } catch (e) {
+        bgdCustomEventsStore = {};
+      }
+    }
+
+    function saveBgdEventsStore() {
+      try {
+        localStorage.setItem("TYT_BGD_SCHEDULE_STORE_V2", JSON.stringify(bgdCustomEventsStore));
+      } catch (e) {}
+    }
+
+    function getWeekCustomEvents(mondayIso) {
+      if (!bgdCustomEventsStore[mondayIso]) {
+        bgdCustomEventsStore[mondayIso] = buildDefaultWeekExecutiveEvents(mondayIso, currentWeekDays);
+        saveBgdEventsStore();
+      }
+      return bgdCustomEventsStore[mondayIso];
+    }
+
+    function setWeekFromDate(refDate) {
+      const monday = getMondayOfDate(refDate);
+      currentMondayIso = getLocalISODate(monday);
+      const todayIso = getLocalISODate(new Date());
+      const dayNames = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
+
+      currentWeekDays = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        const iso = getLocalISODate(d);
+        currentWeekDays.push({
+          idx: i,
+          iso,
+          dateStr: `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`,
+          shortDate: `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`,
+          dayName: dayNames[i],
+          isToday: iso === todayIso,
+          isWeekend: i >= 5
+        });
+      }
+
+      const picker = document.getElementById("week-start-picker");
+      if (picker) picker.value = currentMondayIso;
+
+      const endLabel = document.getElementById("week-end-label");
+      if (endLabel) endLabel.innerText = currentWeekDays[6].dateStr;
+
+      const heading = document.getElementById("schedule-table-heading");
+      if (heading) {
+        heading.innerText = `LỊCH LÀM VIỆC TUẦN CỦA BAN GIÁM ĐỐC (TỪ ${currentWeekDays[0].dateStr} ĐẾN ${currentWeekDays[6].dateStr})`;
+      }
+
+      getWeekCustomEvents(currentMondayIso);
+      renderAllBgdViews();
+    }
+
+    function changeWeek(offset) {
+      const p = currentMondayIso.split("-");
+      const d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+      d.setDate(d.getDate() + offset * 7);
+      setWeekFromDate(d);
+      syncAllSources(true);
+    }
+
+    function onPickWeekDate(val) {
+      if (!val) return;
+      const p = val.split("-");
+      const d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+      setWeekFromDate(d);
+      syncAllSources(true);
+    }
+
+    function goToCurrentWeek() {
+      setWeekFromDate(new Date());
+      syncAllSources(true);
+      showToast("Đã chuyển về tuần hiện tại!", "info");
+    }
+
+    function onFilterLeaderChange(val) {
+      currentLeaderFilter = val || "all";
+      renderAllBgdViews();
+    }
+
+    function switchViewMode(mode) {
+      currentViewMode = mode;
+      const dailyBox = document.getElementById("view-daily-container");
+      const matrixBox = document.getElementById("view-matrix-container");
+      const btnDaily = document.getElementById("btn-view-daily");
+      const btnMatrix = document.getElementById("btn-view-matrix");
+
+      if (mode === "daily") {
+        dailyBox?.classList.remove("hidden");
+        matrixBox?.classList.add("hidden");
+        if (btnDaily) btnDaily.className = "px-3 py-1.5 rounded-lg bg-teal-700 text-white shadow-2xs transition cursor-pointer flex items-center gap-1.5";
+        if (btnMatrix) btnMatrix.className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer flex items-center gap-1.5";
+      } else {
+        dailyBox?.classList.add("hidden");
+        matrixBox?.classList.remove("hidden");
+        if (btnMatrix) btnMatrix.className = "px-3 py-1.5 rounded-lg bg-teal-700 text-white shadow-2xs transition cursor-pointer flex items-center gap-1.5";
+        if (btnDaily) btnDaily.className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer flex items-center gap-1.5";
+      }
+    }
+
+    // Lấy ca trực 04 điểm trạm của 1 ngày bất kỳ
+    function getFourStationsDutyForDay(isoDate, dayIndexInWeek) {
+      let cachedWeekGrid = null;
+      try {
+        const raw = localStorage.getItem("TYT_LICH_TRUC_SAVED_WEEKS_V3");
+        if (raw) {
+          const weeksMap = JSON.parse(raw);
+          if (weeksMap[currentMondayIso] && Array.isArray(weeksMap[currentMondayIso].grid)) {
+            cachedWeekGrid = weeksMap[currentMondayIso].grid;
+          }
+        }
+      } catch (e) {}
+
+      const p = isoDate.split("-");
+      const dateObj = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+      const diffDays = Math.round((dateObj.getTime() - ANCHOR_OCT16.getTime()) / 86400000);
+
+      return STATIONS_META.map((st, rIdx) => {
+        let staffName = "-";
+        if (cachedWeekGrid && cachedWeekGrid[rIdx] && cachedWeekGrid[rIdx][dayIndexInWeek + 1]) {
+          staffName = cachedWeekGrid[rIdx][dayIndexInWeek + 1];
+        } else if (OFFICIAL_DUTY_MAP[isoDate] && OFFICIAL_DUTY_MAP[isoDate][rIdx]) {
+          staffName = OFFICIAL_DUTY_MAP[isoDate][rIdx];
+        } else if (STATION_ROSTERS[rIdx]) {
+          staffName = STATION_ROSTERS[rIdx].getStaff(diffDays);
+        }
+
+        // Kiểm tra xem người trực có thuộc Ban Giám đốc không
+        const matchedLeader = BGD_LEADERS.find(ld => {
+          const s = String(staffName || "").toLowerCase().trim();
+          return s === ld.shortName.toLowerCase() || s === ld.rawName.toLowerCase() || s.includes(ld.shortName.toLowerCase());
+        });
+
+        return {
+          stationIdx: rIdx,
+          stationName: st.name,
+          stationShort: st.short,
+          staffName: staffName || "-",
+          leader: matchedLeader || null
+        };
+      });
+    }
+
+    // Lọc các cuộc họp / tập huấn có Ban Giám đốc tham gia vào ngày isoDate
+    function getSyncedMeetingsForDay(isoDate, shortDateStr) {
+      let list = syncedMeetingsList;
+      if (!Array.isArray(list) || list.length === 0) {
+        try {
+          const raw = localStorage.getItem("TYT_MEETINGS_DATA");
+          if (raw) list = JSON.parse(raw) || [];
+        } catch (e) {}
+      }
+      if (!Array.isArray(list)) return [];
+
+      return list.filter(m => {
+        if (!m) return false;
+        const sDate = String(m.startDate || "").slice(0, 10);
+        const eDate = String(m.endDate || "").slice(0, 10);
+        const timeStr = String(m.time || "");
+        const dateMatched = (sDate === isoDate) || (eDate === isoDate) ||
+          (sDate && eDate && sDate <= isoDate && eDate >= isoDate) ||
+          (shortDateStr && timeStr.includes(shortDateStr));
+        if (!dateMatched) return false;
+
+        const staffText = String(m.staff || "").toLowerCase();
+        const topicText = String(m.topic || "").toLowerCase();
+        const isAllOrBgd = /ban giám đốc|bgđ|lãnh đạo|toàn trạm|tất cả/i.test(staffText + " " + topicText);
+        const matchedLeaders = BGD_LEADERS.filter(ld =>
+          isAllOrBgd || ld.aliases.some(al => staffText.includes(al))
+        );
+        return matchedLeaders.length > 0;
+      }).map(m => {
+        const staffText = String(m.staff || "").toLowerCase();
+        const isAll = /ban giám đốc|bgđ|toàn trạm|tất cả/i.test(staffText);
+        const matchedLeaderIds = isAll
+          ? BGD_LEADERS.map(l => l.id)
+          : BGD_LEADERS.filter(ld => ld.aliases.some(al => staffText.includes(al))).map(l => l.id);
+
+        const isAfternoon = /chiều|13h|14h|15h|16h/i.test(String(m.time || ""));
+        return {
+          id: `sync_meet_${m.id || Math.random()}`,
+          isSyncedMeeting: true,
+          dateIso: isoDate,
+          session: isAfternoon ? "afternoon" : "morning",
+          time: m.time || "Theo giấy mời",
+          leaderIds: matchedLeaderIds.length > 0 ? matchedLeaderIds : ["bgd_duc"],
+          title: `[Lịch họp/Tập huấn] ${m.topic || "Hội nghị chuyên môn"}`,
+          location: m.location || "Theo thông báo",
+          note: `Cán bộ: ${m.staff || "Ban Giám đốc"}`
+        };
+      });
+    }
+
+    function renderLeadersTopCards() {
+      const container = document.getElementById("bgd-leaders-cards");
+      if (!container) return;
+
+      const weekEvents = getWeekCustomEvents(currentMondayIso);
+
+      container.innerHTML = BGD_LEADERS.map(ld => {
+        // Đếm số buổi công tác và số ca trực 24/24 trong tuần
+        const workCount = weekEvents.filter(ev => Array.isArray(ev.leaderIds) && ev.leaderIds.includes(ld.id)).length;
+        const dutyDays = [];
+        currentWeekDays.forEach((d, idx) => {
+          const duties = getFourStationsDutyForDay(d.iso, idx);
+          duties.forEach(dt => {
+            if (dt.leader && dt.leader.id === ld.id) {
+              dutyDays.push(`${d.dayName.replace('Thứ ', 'T').replace('Chủ Nhật', 'CN')} (${d.shortDate})`);
+            }
+          });
+        });
+
+        const isFiltered = (currentLeaderFilter === ld.id);
+        return `
+          <div onclick="onFilterLeaderChange('${isFiltered ? 'all' : ld.id}')" 
+               class="bg-white p-3 rounded-2xl border ${isFiltered ? 'border-teal-600 ring-2 ring-teal-500/30 bg-teal-50/20' : 'border-slate-200 hover:border-teal-400'} shadow-2xs transition cursor-pointer flex flex-col justify-between gap-2">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="w-9 h-9 rounded-xl ${ld.avatarBg} text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                  ${ld.shortName.split(' ').pop().slice(0, 2).toUpperCase()}
+                </div>
+                <div class="min-w-0">
+                  <div class="font-extrabold text-xs text-slate-900 truncate" title="${ld.name}">${ld.name}</div>
+                  <div class="text-[10.5px] font-bold text-teal-700 truncate">${ld.role}</div>
+                </div>
+              </div>
+              <span class="px-1.5 py-0.5 rounded text-[9.5px] font-extrabold border ${ld.badgeClass} shrink-0">
+                ${workCount} lịch
+              </span>
+            </div>
+
+            <div class="text-[10.5px] text-slate-600 space-y-1 pt-1 border-t border-slate-100">
+              <div class="truncate" title="${ld.station}">
+                <i class="fa-solid fa-hospital text-slate-400 mr-1"></i>${ld.station}
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-slate-700"><i class="fa-solid fa-phone text-teal-600 mr-1 text-[9px]"></i>${ld.phone}</span>
+                ${dutyDays.length > 0
+                  ? `<span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-extrabold text-[9.5px]">Trực: ${dutyDays.join(', ')}</span>`
+                  : `<span class="text-[9.5px] text-slate-400 italic">Trực hành chính</span>`
+                }
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderEventCardHtml(ev) {
+      const leadersBadges = (ev.leaderIds || []).map(lid => {
+        const ld = BGD_LEADERS.find(x => x.id === lid);
+        if (!ld) return "";
+        return `<span class="px-2 py-0.5 rounded-md border text-[10px] font-extrabold ${ld.badgeClass}">${ld.name}</span>`;
+      }).join("");
+
+      const isSynced = Boolean(ev.isSyncedMeeting);
+      return `
+        <div class="p-2.5 rounded-xl border ${isSynced ? 'bg-orange-50/70 border-orange-200' : 'bg-slate-50 border-slate-200 hover:border-teal-300'} space-y-1.5 transition group">
+          <div class="flex items-start justify-between gap-1.5">
+            <div class="flex flex-wrap items-center gap-1">
+              ${ev.time ? `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono font-bold text-[10px]"><i class="fa-regular fa-clock mr-1"></i>${ev.time}</span>` : ''}
+              ${leadersBadges}
+            </div>
+            ${!isSynced ? `
+              <div class="flex items-center gap-1 opacity-80 group-hover:opacity-100 shrink-0">
+                <button type="button" onclick="openEditEventModal('${ev.id}')" class="w-6 h-6 rounded-lg bg-white hover:bg-amber-50 text-slate-500 hover:text-amber-700 border border-slate-200 flex items-center justify-center cursor-pointer" title="Chỉnh sửa">
+                  <i class="fa-solid fa-pen text-[10px]"></i>
+                </button>
+                <button type="button" onclick="deleteBgdEvent('${ev.id}')" class="w-6 h-6 rounded-lg bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 flex items-center justify-center cursor-pointer" title="Xóa lịch này">
+                  <i class="fa-solid fa-trash-can text-[10px]"></i>
+                </button>
+              </div>
+            ` : `<span class="px-1.5 py-0.5 rounded bg-orange-200 text-orange-900 text-[9.5px] font-black">Liên thông</span>`}
+          </div>
+
+          <div class="font-bold text-slate-900 text-xs leading-snug">${ev.title}</div>
+
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10.5px] text-slate-600">
+            ${ev.location ? `<span><i class="fa-solid fa-location-dot text-teal-600 mr-1"></i><b>${ev.location}</b></span>` : ''}
+            ${ev.note ? `<span class="italic text-slate-500"><i class="fa-solid fa-users text-slate-400 mr-1"></i>${ev.note}</span>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDailyScheduleTable() {
+      const tbody = document.getElementById("daily-schedule-tbody");
+      if (!tbody) return;
+
+      const customEvents = getWeekCustomEvents(currentMondayIso);
+
+      tbody.innerHTML = currentWeekDays.map((day, idx) => {
+        const syncedMeets = getSyncedMeetingsForDay(day.iso, day.shortDate);
+        const dayAllEvents = [
+          ...customEvents.filter(e => e.dateIso === day.iso),
+          ...syncedMeets
+        ].filter(ev => {
+          if (currentLeaderFilter === "all") return true;
+          return Array.isArray(ev.leaderIds) && ev.leaderIds.includes(currentLeaderFilter);
+        });
+
+        const morningEvents = dayAllEvents.filter(e => e.session === "morning" || e.session === "allday");
+        const afternoonEvents = dayAllEvents.filter(e => e.session === "afternoon" || e.session === "allday");
+        const extraDutyEvents = dayAllEvents.filter(e => e.session === "duty");
+
+        const stationDuties = getFourStationsDutyForDay(day.iso, idx);
+        const bgdOnDutyList = stationDuties.filter(d => d.leader);
+
+        return `
+          <tr class="${day.isToday ? 'today-row-highlight' : (day.isWeekend ? 'bg-rose-50/25' : 'hover:bg-slate-50/60')} transition">
+            <!-- Cột Thứ / Ngày -->
+            <td class="p-3 border-r border-slate-200 text-center align-top">
+              <div class="font-black text-xs sm:text-sm ${day.isWeekend ? 'text-rose-700' : 'text-slate-900'}">${day.dayName}</div>
+              <div class="font-mono font-bold text-xs text-slate-600 mt-0.5">${day.dateStr}</div>
+              ${day.isToday ? `<span class="inline-block mt-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[9.5px] font-black uppercase">Hôm nay</span>` : ''}
+              <div class="mt-2">
+                <button type="button" onclick="openAddEventModal('${day.iso}')" class="px-2 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 font-bold text-[10.5px] inline-flex items-center gap-1 cursor-pointer">
+                  <i class="fa-solid fa-plus text-[9px]"></i> Thêm
+                </button>
+              </div>
+            </td>
+
+            <!-- Cột Buổi Sáng -->
+            <td class="p-2.5 border-r border-slate-200 align-top space-y-2">
+              ${morningEvents.length > 0
+                ? morningEvents.map(renderEventCardHtml).join("")
+                : `<div class="p-2.5 rounded-xl border border-dashed border-slate-200 text-slate-400 text-[11px] italic">Ban Giám đốc làm việc, chỉ đạo chuyên môn tại các điểm trạm</div>`
+              }
+            </td>
+
+            <!-- Cột Buổi Chiều -->
+            <td class="p-2.5 border-r border-slate-200 align-top space-y-2">
+              ${afternoonEvents.length > 0
+                ? afternoonEvents.map(renderEventCardHtml).join("")
+                : `<div class="p-2.5 rounded-xl border border-dashed border-slate-200 text-slate-400 text-[11px] italic">Ban Giám đốc giải quyết công việc hành chính và kiểm tra điểm trạm</div>`
+              }
+            </td>
+
+            <!-- Cột Trực Lãnh Đạo & Trực 24/24 -->
+            <td class="p-2.5 align-top space-y-2">
+              ${bgdOnDutyList.length > 0 ? `
+                <div class="p-2 rounded-xl bg-rose-50 border border-rose-200 space-y-1">
+                  <div class="text-[10px] font-black uppercase text-rose-800 flex items-center gap-1">
+                    <i class="fa-solid fa-star text-rose-600"></i> Lãnh đạo trực 24/24:
+                  </div>
+                  ${bgdOnDutyList.map(d => `
+                    <div class="flex items-center justify-between text-xs font-bold text-rose-950">
+                      <span>${d.leader.name} (${d.stationShort})</span>
+                      <a href="tel:${d.leader.phone}" class="font-mono text-[11px] text-rose-700 hover:underline">${d.leader.phone}</a>
+                    </div>
+                  `).join("")}
+                </div>
+              ` : ''}
+
+              ${extraDutyEvents.map(renderEventCardHtml).join("")}
+
+              <div class="p-2 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                <div class="text-[10px] font-extrabold text-slate-500 uppercase">Kíp trực 04 điểm trạm (24/24):</div>
+                <div class="grid grid-cols-2 gap-1 text-[11px]">
+                  ${stationDuties.map(st => `
+                    <div class="px-1.5 py-1 rounded bg-white border border-slate-200 truncate">
+                      <span class="text-slate-500 font-semibold">${st.stationShort}:</span>
+                      <b class="${st.leader ? 'text-rose-700' : 'text-slate-900'}">${st.staffName}</b>
+                    </div>
+                  `).join("")}
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderMatrixScheduleTable() {
+      const thead = document.getElementById("matrix-schedule-thead");
+      const tbody = document.getElementById("matrix-schedule-tbody");
+      if (!thead || !tbody) return;
+
+      thead.innerHTML = `
+        <tr class="bg-slate-100 text-slate-800 font-black text-[11px] border-b-2 border-slate-300 text-center">
+          <th class="p-2.5 border-r border-slate-300 w-48 text-left">Lãnh Đạo Ban Giám Đốc</th>
+          ${currentWeekDays.map(d => `
+            <th class="p-2 border-r border-slate-300 ${d.isToday ? 'bg-amber-100 text-amber-950' : (d.isWeekend ? 'bg-rose-50 text-rose-800' : '')}">
+              <div>${d.dayName}</div>
+              <div class="font-mono text-[10.5px] font-bold">${d.shortDate}</div>
+            </th>
+          `).join("")}
+        </tr>
+      `;
+
+      const customEvents = getWeekCustomEvents(currentMondayIso);
+
+      tbody.innerHTML = BGD_LEADERS.filter(ld => currentLeaderFilter === "all" || ld.id === currentLeaderFilter).map(ld => {
+        return `
+          <tr class="hover:bg-slate-50/70 transition">
+            <td class="p-3 border-r border-slate-200 align-top bg-slate-50/60">
+              <div class="font-extrabold text-xs text-slate-900">${ld.name}</div>
+              <div class="text-[10.5px] font-bold text-teal-700 mt-0.5">${ld.role}</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">${ld.station}</div>
+              <div class="font-mono text-[10.5px] font-bold text-slate-700 mt-1"><i class="fa-solid fa-phone text-teal-600 mr-1 text-[9px]"></i>${ld.phone}</div>
+            </td>
+            ${currentWeekDays.map((day, dIdx) => {
+              const syncedMeets = getSyncedMeetingsForDay(day.iso, day.shortDate);
+              const myEvents = [
+                ...customEvents.filter(e => e.dateIso === day.iso),
+                ...syncedMeets
+              ].filter(e => Array.isArray(e.leaderIds) && e.leaderIds.includes(ld.id));
+
+              const duties = getFourStationsDutyForDay(day.iso, dIdx).filter(dt => dt.leader && dt.leader.id === ld.id);
+
+              return `
+                <td class="p-2 border-r border-slate-200 align-top space-y-1.5 ${day.isToday ? 'bg-amber-50/40' : ''}">
+                  ${duties.map(dt => `
+                    <div class="p-1.5 rounded-lg bg-rose-100 border border-rose-300 text-rose-950 text-[10.5px] font-extrabold">
+                      <i class="fa-solid fa-shield-heart text-rose-600 mr-1"></i>Trực 24/24 (${dt.stationShort})
+                    </div>
+                  `).join("")}
+
+                  ${myEvents.length > 0 ? myEvents.map(ev => `
+                    <div class="p-1.5 rounded-lg bg-white border border-slate-200 shadow-2xs space-y-0.5">
+                      <div class="font-extrabold text-[10px] text-teal-800">
+                        ${ev.session === 'morning' ? 'Sáng' : ev.session === 'afternoon' ? 'Chiều' : ev.session === 'allday' ? 'Cả ngày' : 'Trực'}
+                        ${ev.time ? ` (${ev.time})` : ''}
+                      </div>
+                      <div class="font-semibold text-[11px] text-slate-900 leading-snug">${ev.title}</div>
+                      ${ev.location ? `<div class="text-[10px] text-slate-500"><i class="fa-solid fa-location-dot mr-0.5"></i>${ev.location}</div>` : ''}
+                    </div>
+                  `).join("") : (duties.length === 0 ? `<div class="text-[10.5px] text-slate-400 italic">Trực chỉ đạo tại ${ld.station.split('(')[0]}</div>` : '')}
+                </td>
+              `;
+            }).join("")}
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderAllBgdViews() {
+      renderLeadersTopCards();
+      renderDailyScheduleTable();
+      renderMatrixScheduleTable();
+    }
+
+    // =========================================================================
+    // XÁC THỰC GOOGLE AUTHENTICATOR (180 GIÂY)
+    // =========================================================================
+    function base32ToBytes(base32) {
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+      let bits = "";
+      const clean = String(base32 || "").toUpperCase().replace(/[^A-Z2-7]/g, "");
+      for (let i = 0; i < clean.length; i++) {
+        const val = alphabet.indexOf(clean[i]);
+        if (val !== -1) bits += val.toString(2).padStart(5, '0');
+      }
+      const bytes = new Uint8Array(Math.floor(bits.length / 8));
+      for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = parseInt(bits.substr(i * 8, 8), 2);
+      }
+      return bytes;
+    }
+
+    async function computeTOTP(secretBase32, timeStepOffset = 0) {
+      try {
+        const bytes = base32ToBytes(secretBase32);
+        const epoch = Math.floor(Date.now() / 1000);
+        const counter = Math.floor(epoch / 30) + timeStepOffset;
+        const counterBuffer = new ArrayBuffer(8);
+        const view = new DataView(counterBuffer);
+        view.setUint32(0, 0, false);
+        view.setUint32(4, counter, false);
+
+        const key = await crypto.subtle.importKey("raw", bytes, { name: "HMAC", hash: { name: "SHA-1" } }, false, ["sign"]);
+        const signature = await crypto.subtle.sign("HMAC", key, counterBuffer);
+        const sigBytes = new Uint8Array(signature);
+        const offset = sigBytes[sigBytes.length - 1] & 0x0f;
+        const codeBinary =
+          ((sigBytes[offset] & 0x7f) << 24) |
+          ((sigBytes[offset + 1] & 0xff) << 16) |
+          ((sigBytes[offset + 2] & 0xff) << 8) |
+          (sigBytes[offset + 3] & 0xff);
+        return String(codeBinary % 1000000).padStart(6, '0');
+      } catch (err) {
+        return "";
+      }
+    }
+
+    async function verifyGoogleAuthCode(inputCode) {
+      const secret = localStorage.getItem("TYT_GAUTH_SECRET") || DEFAULT_GAUTH_SECRET;
+      const cleanInput = String(inputCode || "").trim();
+      if (cleanInput.length !== 6 || gauthRemainingSeconds <= 0) return false;
+      const validOffsets = [0, -1, -2, -3, -4, -5, -6, 1];
+      for (const offset of validOffsets) {
+        const expected = await computeTOTP(secret, offset);
+        if (expected === cleanInput) return true;
+      }
+      return false;
+    }
+
+    function initEntryGauthUi() {
+      const codeInput = document.getElementById("entry-gauth-code");
+      const errorMsg = document.getElementById("entry-gauth-error");
+      const validBadge = document.getElementById("entry-gauth-valid-badge");
+      const secret = localStorage.getItem("TYT_GAUTH_SECRET") || DEFAULT_GAUTH_SECRET;
+
+      if (codeInput) codeInput.value = "";
+      if (errorMsg) errorMsg.classList.add("hidden");
+      if (validBadge) validBadge.classList.add("hidden");
+
+      const otpAuthUri = `otpauth://totp/${encodeURIComponent(GAUTH_ISSUER)}:${encodeURIComponent(GAUTH_ACCOUNT)}?secret=${secret}&issuer=${encodeURIComponent(GAUTH_ISSUER)}`;
+      const qrImage = document.getElementById("entry-qr-image");
+      if (qrImage) qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(otpAuthUri)}`;
+
+      if (gauthStepTimerInterval) clearInterval(gauthStepTimerInterval);
+      gauthRemainingSeconds = 180;
+      const updateStep = () => {
+        const countdownEl = document.getElementById("entry-gauth-countdown");
+        if (countdownEl) countdownEl.innerText = `${gauthRemainingSeconds}s`;
+        if (gauthRemainingSeconds > 0) gauthRemainingSeconds--;
+        else gauthRemainingSeconds = 180;
+      };
+      updateStep();
+      gauthStepTimerInterval = setInterval(updateStep, 1000);
+    }
+
+    async function onEntryGauthCodeInput() {
+      const input = document.getElementById("entry-gauth-code");
+      const errorMsg = document.getElementById("entry-gauth-error");
+      const validBadge = document.getElementById("entry-gauth-valid-badge");
+      if (errorMsg) errorMsg.classList.add("hidden");
+      if (validBadge) validBadge.classList.add("hidden");
+
+      if (input && input.value.length === 6) {
+        const ok = await verifyGoogleAuthCode(input.value);
+        if (ok) {
+          validBadge?.classList.remove("hidden");
+        } else if (errorMsg) {
+          errorMsg.innerText = "Mã xác thực 6 số chưa chính xác!";
+          errorMsg.classList.remove("hidden");
+        }
+      }
+    }
+
+    async function checkGauthCodeImmediately() {
+      const val = document.getElementById("entry-gauth-code")?.value.trim() || "";
+      if (val.length !== 6) {
+        showToast("Vui lòng nhập đủ 6 chữ số từ ứng dụng Google Authenticator!", "warning");
+        return;
+      }
+      const ok = await verifyGoogleAuthCode(val);
+      if (ok) {
+        document.getElementById("entry-gauth-valid-badge")?.classList.remove("hidden");
+        showToast("Mã xác thực Google Authenticator hợp lệ!", "success");
+      } else {
+        showToast("Mã xác thực chưa đúng, vui lòng kiểm tra lại!", "error");
+      }
+    }
+
+    function toggleEntryQrAccordion() {
+      document.getElementById("entry-qr-container")?.classList.toggle("hidden");
+    }
+
+    // =========================================================================
+    // THÊM / SỬA / XÓA LỊCH CÔNG TÁC BAN GIÁM ĐỐC
+    // =========================================================================
+    function renderModalLeadersCheckboxes(selectedIds = ["bgd_duc"]) {
+      const box = document.getElementById("event-leaders-checkboxes");
+      if (!box) return;
+      box.innerHTML = BGD_LEADERS.map(ld => {
+        const checked = selectedIds.includes(ld.id) ? "checked" : "";
+        return `
+          <label class="flex items-center gap-2 p-1.5 rounded-lg bg-white border border-slate-200 cursor-pointer hover:border-teal-400">
+            <input type="checkbox" name="bgdLeaderCheckbox" value="${ld.id}" ${checked} class="rounded text-teal-600 focus:ring-teal-500">
+            <span class="font-bold text-slate-800 text-[11px]">${ld.name} <span class="text-slate-400 font-normal">(${ld.role.replace('Trạm Y tế', '').trim()})</span></span>
+          </label>
+        `;
+      }).join("");
+    }
+
+    function openAddEventModal(defaultDateIso = "") {
+      document.getElementById("modal-event-title").innerText = "Thêm Lịch Công Tác Ban Giám Đốc";
+      document.getElementById("event-id-input").value = "";
+      document.getElementById("event-date-input").value = defaultDateIso || currentWeekDays[0]?.iso || getLocalISODate(new Date());
+      document.getElementById("event-session-input").value = "morning";
+      document.getElementById("event-time-input").value = "08h00 - 11h00";
+      document.getElementById("event-location-input").value = "Điểm trạm chính (Đức Tân)";
+      document.getElementById("event-title-input").value = "";
+      document.getElementById("event-note-input").value = "";
+      renderModalLeadersCheckboxes(["bgd_duc"]);
+      initEntryGauthUi();
+      document.getElementById("bgd-event-modal").classList.remove("hidden");
+    }
+
+    function openEditEventModal(eventId) {
+      const list = getWeekCustomEvents(currentMondayIso);
+      const ev = list.find(x => x.id === eventId);
+      if (!ev) return;
+
+      document.getElementById("modal-event-title").innerText = "Chỉnh Sửa Lịch Công Tác Ban Giám Đốc";
+      document.getElementById("event-id-input").value = ev.id;
+      document.getElementById("event-date-input").value = ev.dateIso;
+      document.getElementById("event-session-input").value = ev.session || "morning";
+      document.getElementById("event-time-input").value = ev.time || "";
+      document.getElementById("event-location-input").value = ev.location || "";
+      document.getElementById("event-title-input").value = ev.title || "";
+      document.getElementById("event-note-input").value = ev.note || "";
+      renderModalLeadersCheckboxes(ev.leaderIds || ["bgd_duc"]);
+      initEntryGauthUi();
+      document.getElementById("bgd-event-modal").classList.remove("hidden");
+    }
+
+    function closeAddEventModal() {
+      document.getElementById("bgd-event-modal").classList.add("hidden");
+      if (gauthStepTimerInterval) {
+        clearInterval(gauthStepTimerInterval);
+        gauthStepTimerInterval = null;
+      }
+    }
+
+    async function handleSaveBgdEvent(e) {
+      e.preventDefault();
+      const enteredCode = document.getElementById("entry-gauth-code")?.value.trim() || "";
+      const isValid = await verifyGoogleAuthCode(enteredCode);
+      if (!isValid) {
+        showToast("Vui lòng nhập mã Google Authenticator 6 số hợp lệ trước khi lưu lịch!", "error");
+        document.getElementById("entry-gauth-code")?.focus();
+        return;
+      }
+
+      const checkedLeaders = Array.from(document.querySelectorAll('input[name="bgdLeaderCheckbox"]:checked')).map(cb => cb.value);
+      if (checkedLeaders.length === 0) {
+        showToast("Vui lòng chọn ít nhất 01 Lãnh đạo tham gia!", "warning");
+        return;
+      }
+
+      const editingId = document.getElementById("event-id-input").value;
+      const dateIso = document.getElementById("event-date-input").value;
+      const session = document.getElementById("event-session-input").value;
+      const time = document.getElementById("event-time-input").value.trim();
+      const location = document.getElementById("event-location-input").value.trim();
+      const title = document.getElementById("event-title-input").value.trim();
+      const note = document.getElementById("event-note-input").value.trim();
+
+      const targetMondayIso = getLocalISODate(getMondayOfDate(new Date(dateIso)));
+      if (!bgdCustomEventsStore[targetMondayIso]) {
+        bgdCustomEventsStore[targetMondayIso] = [];
+      }
+
+      const eventObj = {
+        id: editingId || `bgd_${Date.now()}`,
+        dateIso,
+        session,
+        time,
+        leaderIds: checkedLeaders,
+        title,
+        location,
+        note
+      };
+
+      if (editingId) {
+        const idx = bgdCustomEventsStore[currentMondayIso].findIndex(x => x.id === editingId);
+        if (idx !== -1) bgdCustomEventsStore[currentMondayIso].splice(idx, 1);
+      }
+      bgdCustomEventsStore[targetMondayIso].push(eventObj);
+
+      saveBgdEventsStore();
+      closeAddEventModal();
+      renderAllBgdViews();
+      await saveCurrentWeekToCloud(true);
+      showToast("Đã lưu lịch công tác Ban Giám đốc & đồng bộ Google Sheet!", "success");
+    }
+
+    async function deleteBgdEvent(eventId) {
+      const list = getWeekCustomEvents(currentMondayIso);
+      bgdCustomEventsStore[currentMondayIso] = list.filter(x => x.id !== eventId);
+      saveBgdEventsStore();
+      renderAllBgdViews();
+      await saveCurrentWeekToCloud(true);
+      showToast("Đã xóa mục lịch công tác!", "info");
+    }
+
+    function resetDefaultExecutiveTasks() {
+      bgdCustomEventsStore[currentMondayIso] = buildDefaultWeekExecutiveEvents(currentMondayIso, currentWeekDays);
+      saveBgdEventsStore();
+      renderAllBgdViews();
+      showToast("Đã khôi phục khung lịch điều hành mẫu của tuần!", "success");
+    }
+
+    // =========================================================================
+    // ĐỒNG BỘ 2 CHIỀU VỚI GOOGLE SHEET QUA GOOGLE APPS SCRIPT
+    // =========================================================================
+    async function saveCurrentWeekToCloud(isSilent = false) {
+      const apiUrl = getBgdCloudApiUrl();
+      if (!apiUrl) return;
+
+      const icon = document.getElementById("save-cloud-icon");
+      const badge = document.getElementById("cloud-status-badge");
+      if (icon) icon.classList.add("fa-fade");
+      if (badge) badge.innerText = "Đang lưu lên Google Sheet...";
+
+      try {
+        const events = getWeekCustomEvents(currentMondayIso);
+        const res = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "saveBgdWeek",
+            weekStart: currentMondayIso,
+            events
+          })
+        });
+        const data = await res.json();
+        if (data && data.status === "success") {
+          if (badge) badge.innerText = `Đã lưu Sheet (${new Date().toLocaleTimeString('vi-VN')})`;
+          if (!isSilent) showToast(`Đã lưu ${events.length} lịch công tác tuần lên Google Sheet!`, "success");
+        } else {
+          if (badge) badge.innerText = "Đã lưu trên máy";
+          if (!isSilent) showToast("Đã lưu trên thiết bị.", "info");
+        }
+      } catch (err) {
+        if (badge) badge.innerText = "Lưu cục bộ (Offline)";
+        if (!isSilent) showToast("Đang lưu cục bộ trên máy.", "warning");
+      } finally {
+        if (icon) icon.classList.remove("fa-fade");
+      }
+    }
+
+    async function syncAllSources(isSilent = false) {
+      const syncIcon = document.getElementById("sync-icon");
+      const badge = document.getElementById("cloud-status-badge");
+      if (syncIcon) syncIcon.classList.add("fa-spin");
+      if (badge) badge.innerText = "Đang đồng bộ...";
+
+      try {
+        const bgdUrl = getBgdCloudApiUrl();
+        const [bgdRes, dutyRes, meetRes] = await Promise.all([
+          fetch(`${bgdUrl}?action=loadBgdWeek&weekStart=${currentMondayIso}&t=${Date.now()}`).then(r => r.json()).catch(() => null),
+          fetch(`${SCHEDULE_API_URL}?action=load&weekStart=${currentMondayIso}&t=${Date.now()}`).then(r => r.json()).catch(() => null),
+          fetch(`${MEETINGS_API_URL}?action=load&t=${Date.now()}`).then(r => r.json()).catch(() => null)
+        ]);
+
+        if (bgdRes && bgdRes.status === "success" && Array.isArray(bgdRes.events) && bgdRes.events.length > 0) {
+          bgdCustomEventsStore[currentMondayIso] = bgdRes.events;
+          saveBgdEventsStore();
+        }
+
+        if (dutyRes && dutyRes.status === "success" && Array.isArray(dutyRes.grid)) {
+          let weeksMap = {};
+          try {
+            const raw = localStorage.getItem("TYT_LICH_TRUC_SAVED_WEEKS_V3");
+            if (raw) weeksMap = JSON.parse(raw) || {};
+          } catch (e) {}
+          weeksMap[currentMondayIso] = { grid: dutyRes.grid, updatedAt: new Date().toISOString() };
+          localStorage.setItem("TYT_LICH_TRUC_SAVED_WEEKS_V3", JSON.stringify(weeksMap));
+        }
+
+        const mArr = (meetRes && (meetRes.data || meetRes.records)) || null;
+        if (Array.isArray(mArr) && mArr.length > 0) {
+          syncedMeetingsList = mArr;
+          localStorage.setItem("TYT_MEETINGS_DATA", JSON.stringify(mArr));
+        }
+
+        renderAllBgdViews();
+        if (badge) badge.innerText = `Đã đồng bộ (${new Date().toLocaleTimeString('vi-VN')})`;
+        if (!isSilent) showToast("Đã đồng bộ Lịch BGĐ, Lịch trực 24/24 và Lịch họp thành công!", "success");
+      } catch (err) {
+        if (badge) badge.innerText = "Đang dùng dữ liệu trên máy";
+        if (!isSilent) showToast("Đang hiển thị dữ liệu lưu trên máy.", "info");
+      } finally {
+        if (syncIcon) syncIcon.classList.remove("fa-spin");
+      }
+    }
+
+    // =========================================================================
+    // IN A4, XUẤT WORD (.DOC), EXCEL (.XLSX) & COPY ZALO
+    // =========================================================================
+    function buildOfficialPrintHtml(mode = "daily") {
+      const now = new Date();
+      const customEvents = getWeekCustomEvents(currentMondayIso);
+
+      const headerBlock = `
+        <table style="width:100%; border:none; border-collapse:collapse; margin-bottom:8px; font-family:'Times New Roman',serif;">
+          <tr>
+            <td style="width:45%; text-align:center; vertical-align:top; border:none;">
+              <div style="font-size:11pt; text-transform:uppercase;">UBND XÃ MỘ ĐỨC</div>
+              <div style="font-size:12pt; font-weight:bold; text-transform:uppercase;">TRẠM Y TẾ</div>
+              <div style="width:60px; height:1px; background:#000; margin:2px auto;"></div>
+            </td>
+            <td style="width:55%; text-align:center; vertical-align:top; border:none;">
+              <div style="font-size:11pt; font-weight:bold; text-transform:uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+              <div style="font-size:12pt; font-weight:bold;">Độc lập - Tự do - Hạnh phúc</div>
+              <div style="width:130px; height:1px; background:#000; margin:2px auto;"></div>
+              <div style="font-size:11pt; font-style:italic; margin-top:2px;">Mộ Đức, ngày ${now.getDate()} tháng ${now.getMonth() + 1} năm ${now.getFullYear()}</div>
+            </td>
+          </tr>
+        </table>
+      `;
+
+      const footerBlock = `
+        <table style="width:100%; border:none; border-collapse:collapse; margin-top:14px; font-family:'Times New Roman',serif; page-break-inside:avoid;">
+          <tr>
+            <td style="width:55%; vertical-align:top; font-size:10pt; border:none;">
+              <div style="font-weight:bold; font-style:italic;">Nơi nhận:</div>
+              <div>- UBND xã Mộ Đức (b/c);</div>
+              <div>- Ban Giám đốc TYT (thực hiện);</div>
+              <div>- 04 điểm trạm y tế (p/h);</div>
+              <div>- Lưu: VT, TYT.</div>
+            </td>
+            <td style="width:45%; vertical-align:top; text-align:center; border:none;">
+              <div style="font-weight:bold; font-size:11.5pt;">GIÁM ĐỐC TRẠM Y TẾ</div>
+              <div style="font-style:italic; font-size:9.5pt; margin-bottom:48px;">(Ký, đóng dấu)</div>
+              <div style="font-weight:bold; font-size:12pt;">BS. Phạm Minh Đức</div>
+            </td>
+          </tr>
+        </table>
+      `;
+
+      if (mode === "matrix") {
+        const rowsHtml = BGD_LEADERS.map(ld => {
+          const cells = currentWeekDays.map((day, dIdx) => {
+            const syncedMeets = getSyncedMeetingsForDay(day.iso, day.shortDate);
+            const myEvents = [...customEvents.filter(e => e.dateIso === day.iso), ...syncedMeets]
+              .filter(e => Array.isArray(e.leaderIds) && e.leaderIds.includes(ld.id));
+            const duties = getFourStationsDutyForDay(day.iso, dIdx).filter(dt => dt.leader && dt.leader.id === ld.id);
+
+            const parts = [];
+            duties.forEach(dt => parts.push(`<b>[Trực 24/24: ${dt.stationShort}]</b>`));
+            myEvents.forEach(ev => {
+              const sLabel = ev.session === "morning" ? "Sáng" : ev.session === "afternoon" ? "Chiều" : "Cả ngày";
+              parts.push(`• <b>${sLabel}${ev.time ? ' (' + ev.time + ')' : ''}:</b> ${ev.title}`);
+            });
+            return `<td style="border:1px solid #000; padding:4px; font-size:9.5pt; vertical-align:top;">${parts.join("<br>") || "Trực chỉ đạo tại điểm trạm"}</td>`;
+          }).join("");
+
+          return `
+            <tr>
+              <td style="border:1px solid #000; padding:5px; font-size:10pt; font-weight:bold; vertical-align:top;">
+                ${ld.name}<br><span style="font-weight:normal; font-size:9pt;">${ld.role}<br>SĐT: ${ld.phone}</span>
+              </td>
+              ${cells}
+            </tr>
+          `;
+        }).join("");
+
+        return `
+          ${headerBlock}
+          <div style="text-align:center; margin:8px 0 10px;">
+            <div style="font-size:13.5pt; font-weight:bold; text-transform:uppercase;">BẢNG PHÂN CÔNG LỊCH LÀM VIỆC CỦA 05 LÃNH ĐẠO BAN GIÁM ĐỐC</div>
+            <div style="font-size:11pt; font-style:italic;">(Tuần lễ từ ngày ${currentWeekDays[0].dateStr} đến ngày ${currentWeekDays[6].dateStr})</div>
+          </div>
+          <table class="print-bordered" style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f1f5f9; font-weight:bold; text-align:center; font-size:10pt;">
+                <th style="border:1px solid #000; padding:5px; width:16%;">Lãnh Đạo BGĐ</th>
+                ${currentWeekDays.map(d => `<th style="border:1px solid #000; padding:5px;">${d.dayName}<br>${d.shortDate}</th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+          ${footerBlock}
+        `;
+      }
+
+      // Chế độ Lịch Tuần (Sáng / Chiều / Trực 24/24)
+      const dailyRows = currentWeekDays.map((day, idx) => {
+        const syncedMeets = getSyncedMeetingsForDay(day.iso, day.shortDate);
+        const dayAllEvents = [...customEvents.filter(e => e.dateIso === day.iso), ...syncedMeets];
+        const morningEvents = dayAllEvents.filter(e => e.session === "morning" || e.session === "allday");
+        const afternoonEvents = dayAllEvents.filter(e => e.session === "afternoon" || e.session === "allday");
+        const stationDuties = getFourStationsDutyForDay(day.iso, idx);
+
+        const formatEvList = (arr) => arr.length > 0 ? arr.map(ev => {
+          const lNames = (ev.leaderIds || []).map(id => BGD_LEADERS.find(x => x.id === id)?.shortName || "").filter(Boolean).join(", ");
+          return `<div>• ${ev.time ? `<b>${ev.time}:</b> ` : ''}${ev.title} <i>(${lNames}${ev.location ? ' - ' + ev.location : ''})</i></div>`;
+        }).join("") : `<i>Trực giải quyết công việc tại điểm trạm</i>`;
+
+        const dutySummary = stationDuties.map(st => `${st.stationShort}: <b>${st.staffName}</b>`).join(" | ");
+
+        return `
+          <tr>
+            <td style="border:1px solid #000; padding:5px; text-align:center; font-weight:bold; width:12%;">${day.dayName}<br>${day.dateStr}</td>
+            <td style="border:1px solid #000; padding:5px; width:34%;">${formatEvList(morningEvents)}</td>
+            <td style="border:1px solid #000; padding:5px; width:34%;">${formatEvList(afternoonEvents)}</td>
+            <td style="border:1px solid #000; padding:5px; width:20%; font-size:9.5pt;">${dutySummary}</td>
+          </tr>
+        `;
+      }).join("");
+
+      return `
+        ${headerBlock}
+        <div style="text-align:center; margin:8px 0 10px;">
+          <div style="font-size:14pt; font-weight:bold; text-transform:uppercase;">LỊCH LÀM VIỆC TUẦN CỦA BAN GIÁM ĐỐC TRẠM Y TẾ XÃ MỘ ĐỨC</div>
+          <div style="font-size:11pt; font-style:italic;">(Từ ngày ${currentWeekDays[0].dateStr} đến ngày ${currentWeekDays[6].dateStr})</div>
+        </div>
+        <table class="print-bordered" style="width:100%; border-collapse:collapse; font-size:10.5pt;">
+          <thead>
+            <tr style="background:#f1f5f9; font-weight:bold; text-align:center;">
+              <th style="border:1px solid #000; padding:5px;">Thứ / Ngày</th>
+              <th style="border:1px solid #000; padding:5px;">Buổi Sáng (07h00 - 11h30)</th>
+              <th style="border:1px solid #000; padding:5px;">Buổi Chiều (13h30 - 17h00)</th>
+              <th style="border:1px solid #000; padding:5px;">Trực 24/24 (04 Điểm Trạm)</th>
+            </tr>
+          </thead>
+          <tbody>${dailyRows}</tbody>
+        </table>
+        ${footerBlock}
+      `;
+    }
+
+    function printScheduleA4() {
+      const printBox = document.getElementById("print-bgd-container");
+      if (!printBox) return;
+      printBox.innerHTML = buildOfficialPrintHtml(currentViewMode);
+      setTimeout(() => window.print(), 200);
+    }
+
+    function printMatrixScheduleA4() {
+      const printBox = document.getElementById("print-bgd-container");
+      if (!printBox) return;
+      printBox.innerHTML = buildOfficialPrintHtml("matrix");
+      setTimeout(() => window.print(), 200);
+    }
+
+    function downloadWordFile(htmlBody, fileName) {
+      const wordDoc = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="utf-8"><style>@page { size: 29.7cm 21.0cm; margin: 1.2cm; mso-page-orientation: landscape; } body { font-family: 'Times New Roman', serif; font-size: 11pt; } table { border-collapse: collapse; width: 100%; }</style></head>
+        <body>${htmlBody}</body></html>
+      `;
+      const blob = new Blob(["\ufeff", wordDoc], { type: "application/msword;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      showToast(`Đã tải file Word (${fileName})!`, "success");
+    }
+
+    function exportScheduleWord() {
+      downloadWordFile(buildOfficialPrintHtml(currentViewMode), `Lich_Lam_Viec_BGD_${currentMondayIso}.doc`);
+    }
+
+    function exportMatrixScheduleWord() {
+      downloadWordFile(buildOfficialPrintHtml("matrix"), `Ma_Tran_5_Lanh_Dao_BGD_${currentMondayIso}.doc`);
+    }
+
+    function exportScheduleExcel() {
+      const customEvents = getWeekCustomEvents(currentMondayIso);
+      const rows = [
+        ["UBND XÃ MỘ ĐỨC - TRẠM Y TẾ"],
+        [`LỊCH LÀM VIỆC CỦA BAN GIÁM ĐỐC (${currentWeekDays[0].dateStr} - ${currentWeekDays[6].dateStr})`],
+        [],
+        ["Thứ", "Ngày", "Buổi", "Giờ", "Lãnh Đạo Tham Gia", "Nội Dung Công Tác", "Địa Điểm", "Ghi Chú"]
+      ];
+
+      currentWeekDays.forEach(day => {
+        const dayEvs = [...customEvents.filter(e => e.dateIso === day.iso), ...getSyncedMeetingsForDay(day.iso, day.shortDate)];
+        if (dayEvs.length === 0) {
+          rows.push([day.dayName, day.dateStr, "Cả ngày", "", "Ban Giám đốc", "Trực giải quyết công việc tại 04 điểm trạm", "04 điểm trạm", ""]);
+        } else {
+          dayEvs.forEach(ev => {
+            const lNames = (ev.leaderIds || []).map(id => BGD_LEADERS.find(x => x.id === id)?.name || id).join(", ");
+            const sLabel = ev.session === "morning" ? "Buổi Sáng" : ev.session === "afternoon" ? "Buổi Chiều" : ev.session === "allday" ? "Cả Ngày" : "Trực 24/24";
+            rows.push([day.dayName, day.dateStr, sLabel, ev.time || "", lNames, ev.title || "", ev.location || "", ev.note || ""]);
+          });
+        }
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Lich_BGD");
+      XLSX.writeFile(wb, `Lich_Lam_Viec_BGD_${currentMondayIso}.xlsx`);
+      showToast("Đã xuất file Excel Lịch tuần Ban Giám đốc!", "success");
+    }
+
+    function exportMatrixScheduleExcel() {
+      const customEvents = getWeekCustomEvents(currentMondayIso);
+      const header = ["Lãnh Đạo Ban Giám Đốc", "Chức Vụ", "SĐT", ...currentWeekDays.map(d => `${d.dayName} (${d.shortDate})`)];
+      const rows = [
+        ["UBND XÃ MỘ ĐỨC - TRẠM Y TẾ"],
+        [`BẢNG PHÂN CÔNG 05 LÃNH ĐẠO BAN GIÁM ĐỐC (${currentWeekDays[0].dateStr} - ${currentWeekDays[6].dateStr})`],
+        [],
+        header
+      ];
+
+      BGD_LEADERS.forEach(ld => {
+        const dayCols = currentWeekDays.map((day, dIdx) => {
+          const myEvents = [...customEvents.filter(e => e.dateIso === day.iso), ...getSyncedMeetingsForDay(day.iso, day.shortDate)]
+            .filter(e => Array.isArray(e.leaderIds) && e.leaderIds.includes(ld.id));
+          const duties = getFourStationsDutyForDay(day.iso, dIdx).filter(dt => dt.leader && dt.leader.id === ld.id);
+          const texts = [];
+          duties.forEach(dt => texts.push(`[Trực 24/24: ${dt.stationShort}]`));
+          myEvents.forEach(ev => texts.push(`${ev.time || ev.session}: ${ev.title}`));
+          return texts.join(" | ") || "Trực chỉ đạo tại điểm trạm";
+        });
+        rows.push([ld.name, ld.role, ld.phone, ...dayCols]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Ma_Tran_5_BGD");
+      XLSX.writeFile(wb, `Ma_Tran_5_Lanh_Dao_BGD_${currentMondayIso}.xlsx`);
+      showToast("Đã xuất file Excel Ma trận 5 Lãnh đạo!", "success");
+    }
+
+    function copyZaloBriefing() {
+      const customEvents = getWeekCustomEvents(currentMondayIso);
+      let msg = `📅 [LỊCH LÀM VIỆC BAN GIÁM ĐỐC - TYT XÃ MỘ ĐỨC]\n`;
+      msg += `Tuần từ ${currentWeekDays[0].dateStr} đến ${currentWeekDays[6].dateStr}:\n\n`;
+
+      currentWeekDays.forEach((day, idx) => {
+        const duties = getFourStationsDutyForDay(day.iso, idx).filter(d => d.leader);
+        const evs = [...customEvents.filter(e => e.dateIso === day.iso), ...getSyncedMeetingsForDay(day.iso, day.shortDate)];
+        msg += `🔹 ${day.dayName.toUpperCase()} (${day.shortDate}):\n`;
+        if (duties.length > 0) {
+          msg += `  • Trực lãnh đạo 24/24: ${duties.map(d => `${d.leader.name} (${d.stationShort})`).join(", ")}\n`;
+        }
+        if (evs.length > 0) {
+          evs.forEach(ev => {
+            const lNames = (ev.leaderIds || []).map(id => BGD_LEADERS.find(x => x.id === id)?.shortName || "").filter(Boolean).join(", ");
+            msg += `  • ${ev.time ? ev.time + ': ' : ''}${ev.title} (${lNames})\n`;
+          });
+        } else {
+          msg += `  • Trực chỉ đạo chuyên môn tại 04 điểm trạm.\n`;
+        }
+      });
+
+      const textarea = document.createElement("textarea");
+      textarea.value = msg;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+      showToast("Đã sao chép lịch công tác tuần gửi Zalo!", "success");
+    }
+
+    // =========================================================================
+    // MODAL CẤU HÌNH CLOUD & MÃ APPS SCRIPT (.GS)
+    // =========================================================================
+    function openCloudConfigModal() {
+      document.getElementById("bgd-api-url-input").value = getBgdCloudApiUrl();
+      document.getElementById("cloud-config-modal").classList.remove("hidden");
+    }
+
+    function closeCloudConfigModal() {
+      document.getElementById("cloud-config-modal").classList.add("hidden");
+    }
+
+    function resetDefaultBgdCloudUrl() {
+      localStorage.setItem("TYT_BGD_SCHEDULE_API_URL", DEFAULT_BGD_API_URL);
+      document.getElementById("bgd-api-url-input").value = DEFAULT_BGD_API_URL;
+      showToast("Đã khôi phục Link Google Apps Script mặc định!", "info");
+    }
+
+    function saveCloudConfigUrl() {
+      const val = document.getElementById("bgd-api-url-input").value.trim();
+      if (!val.startsWith("https://script.google.com/")) {
+        showToast("Đường dẫn Web App URL chưa đúng định dạng!", "error");
+        return;
+      }
+      localStorage.setItem("TYT_BGD_SCHEDULE_API_URL", val);
+      closeCloudConfigModal();
+      syncAllSources(false);
+    }
+
+    async function testBgdCloudConnection() {
+      const val = document.getElementById("bgd-api-url-input").value.trim() || getBgdCloudApiUrl();
+      try {
+        const res = await fetch(`${val}?action=ping&t=${Date.now()}`);
+        const data = await res.json();
+        if (data && data.status === "success") {
+          showToast("Kết nối Google Apps Script thành công!", "success");
+        } else {
+          showToast("Đã kết nối tới máy chủ Script!", "info");
+        }
+      } catch (e) {
+        showToast("Không thể kết nối, vui lòng kiểm tra quyền truy cập Anyone của Script!", "error");
+      }
+    }
+
+    function openAppsScriptModal() {
+      const codeEl = document.getElementById("apps-script-code-textarea");
+      if (codeEl) {
+        codeEl.value = `// Xem toàn bộ mã đầy đủ tại tệp google_apps_script_lich_bgd.gs bên cạnh.\n// Link Web App đã tích hợp: ${DEFAULT_BGD_API_URL}`;
+      }
+      document.getElementById("apps-script-modal").classList.remove("hidden");
+    }
+
+    function closeAppsScriptModal() {
+      document.getElementById("apps-script-modal").classList.add("hidden");
+    }
+
+    function copyAppsScriptCode() {
+      const textarea = document.getElementById("apps-script-code-textarea");
+      if (!textarea) return;
+      textarea.select();
+      document.execCommand("copy");
+      showToast("Đã sao chép mã!", "success");
+    }
+
+    function showToast(msg, type = "info") {
+      const container = document.getElementById("toast-container");
+      if (!container) return;
+      const toast = document.createElement("div");
+      const colors = {
+        success: "bg-emerald-800 text-white",
+        error: "bg-rose-800 text-white",
+        warning: "bg-amber-800 text-white",
+        info: "bg-slate-900 text-white"
+      };
+      toast.className = `px-4 py-2.5 rounded-xl shadow-lg text-xs font-bold transition-all pointer-events-auto ${colors[type] || colors.info}`;
+      toast.innerHTML = `<span>${msg}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3200);
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      loadBgdEventsStore();
+      setWeekFromDate(new Date());
+      syncAllSources(true);
+    });
+  </script>
+</body>
+</html>
